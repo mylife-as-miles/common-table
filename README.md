@@ -1,22 +1,32 @@
 # Common Table
 
-An immersive food discovery and dinner-planning app: illustrated neighborhood → tactile menu book → shared table → dinner plan. Built independently from the initial README; no Kitchen Studio code was accessed or copied. Local feature branch only, no public push or deployment.
+An immersive food discovery and dinner-planning app. Start with real location-based geography, or enter the illustrated demo neighborhood → tactile menu book → shared table → dinner plan. Built independently from the initial README; no Kitchen Studio code was accessed or copied. Local feature branch only, no public push or deployment.
 
-**Demo boundaries:** all six restaurants, menus, prices, ratings, dietary tags, and walking times are fictional or illustrative. Photography is atmosphere inspiration. Qloo, real invitations, live collaboration, venue verification, and bookings are **not integrated**. No location is collected or shared. No messages are sent.
+**Capability boundaries:** the real map uses OpenStreetMap geography, OpenFreeMap vector data and actual building heights where available. City search is connected. Device location is requested only after pressing **Use my location** and is kept in memory for this session; map/weather services receive the chosen area, but coordinates are not put in guest invitations or dinner plans. OpenWeather has a server-side integration and requires an API key before live weather works. All six dining-demo restaurants, menus, prices, ratings, dietary tags, and walking times remain fictional or illustrative. They are never moved onto your real map as nearby venues. Qloo, real restaurant recommendations, invitations, live collaboration, and bookings are **not integrated**. No messages are sent.
 
 ## Run
 
-Node 22 or later:
+Node 24.5 or later (the scripts support inherited HTTP proxies with Node's environment-proxy option):
 
 ```sh
 npm ci
 npm run dev -- --port 4174
 ```
 
-Open http://localhost:4174. `npm run build` typechecks and creates the production bundle; `npm run preview -- --port 4174` serves it.
+Open http://localhost:4174. `npm run build` typechecks and creates the production bundle. `npm start` serves both the built app and its API on port 4173; `PORT` and `HOST` can override that. Vite development/preview also provide the same API middleware.
+
+## Connect OpenWeather
+
+Copy `.env.example` to `.env.local`, set `OPENWEATHER_API_KEY`, and restart the server. Obtain the key from [OpenWeather](https://home.openweathermap.org/api_keys). Keep it server-side: **never use a `VITE_` prefix or commit `.env.local`**.
+
+The map and Photon-backed place search work without this key. Missing or invalid weather credentials produce an explicit unavailable state; no temperature is invented. Successful current-weather responses contain the chosen area's condition, temperature, feels-like temperature, wind and observation time. Browser requests round weather coordinates to three decimal places. Weather has a ten-minute server cache with request coalescing; geocoding is cached for fifteen minutes and rate limited. Providers' failures and quota responses are sanitized.
+
+Read-only endpoints: `GET /api/location-config`, `GET /api/geocode?q=...`, and `GET /api/weather?lat=...&lon=...`. The config endpoint exposes only a boolean, never a key. Geocoding tries OpenWeather when configured and falls back to Photon.
 
 ## Working experience
 
+- The default real map starts in a clearly labeled Brooklyn **starting view**, not an inferred user location. Search a city/neighborhood or explicitly request device location. Denial, cancellation, timeout and late results preserve the current area. Location is not persisted on reload.
+- Real-map rendering uses lazy-loaded MapLibre/OpenFreeMap with geographic buildings, visible attribution, camera controls and a chosen-area marker. Low-power mode or missing WebGL uses a standard Leaflet/OpenStreetMap map. It never falls back to invented geography while claiming to be real.
 - Enter through an authored Brooklyn supper atlas: raised brownstones, a riverfront and suspension bridge, park paths, folded paper, physical photo tokens, and a connection to your shared table. Drag, pan with arrow keys, zoom, reset, change the light, or flatten the city. An equivalent restaurant index supports list navigation.
 - Opening a restaurant carries the same photo and title into its physical menu through a finite shared-object transition. Map and book have distinct URLs (`#explore`, `#menu`), so browser Back restores the previous view. Mobile presents one paper page at a time with accessible tabs.
 - Bookmark contenders, veto a venue, see revised candidates, and undo any veto. Exhausted results never silently reintroduce a rejected venue.
@@ -28,7 +38,7 @@ Open http://localhost:4174. `npm run build` typechecks and creates the productio
 
 ## Accessibility and performance
 
-Semantic controls, labeled forms, native modal focus handling, mobile tab arrow-key navigation, focus restoration after guest cancel/remove, live feedback, and visible focus indicators. Tab-focusing an offscreen map token brings it into view without scrolling the hidden canvas. The service counter stays in document flow and never covers map controls. Honors reduced motion and offers a low-power setting. Depth uses SVG/CSS; finite page turns use Web Animations with cancellation, and shared photo/title motion uses the View Transition API with an immediate fallback. No WebGL, continuous render loop, or third-party requests are required. Fonts and photos are local.
+Semantic controls, labeled forms, native modal focus handling, mobile tab arrow-key navigation, focus restoration after guest cancel/remove, live feedback, and visible focus indicators. Tab-focusing an offscreen demo-map token brings it into view without scrolling the hidden canvas. The service counter stays in document flow and never covers map controls. Honors reduced motion and offers a low-power setting. The real map lazily loads WebGL-based MapLibre or a lighter Leaflet 2D renderer. The authored demo uses SVG/CSS and can run without third-party requests. Finite page turns use Web Animations with cancellation; shared photo/title motion uses the View Transition API with an immediate fallback. No perpetual animation loop is used. Fonts and illustrative dining photos are local; live map/geocode/weather data requires provider connectivity.
 
 ## Verify
 
@@ -42,10 +52,14 @@ Browser tests use system Chromium (`/usr/bin/chromium`); set `CHROMIUM_PATH` for
 
 Thirteen final screenshots are in `artifacts/`, including the atlas on desktop/mobile, evening light, the Waiter's pad, and the connected book/table/plan. Capture requires the dev server on port 4174 (or set `PREVIEW_URL`). An actual recorded interaction is in `artifacts/immersive/interaction-demo.mp4`; `scripts/record-demo.mjs` reproduces a WebM recording after `npx playwright install ffmpeg`.
 
+Current real-map screenshots and live-provider evidence are in `artifacts/location/`. `node scripts/capture-location.mjs` captures the real vector map in Brooklyn and a live searched Paris area; no weather response is simulated. Automated browser tests mock external tile/style requests and do not sweep public raster tile servers.
+
 ## Structure
 
 - `src/domain/`: typed demo data, reducer, ranking, validation, persistence, and future recommendation provider interface.
 - `src/components/`: physical atlas, menu book, shared table, plan receipt, and embodied Waiter.
+- `src/location/`: session-only chosen area, explicit geolocation, search cancellation, and stale-weather protection.
+- `server/`: OpenWeather/Photon API middleware and a standalone static/API server.
 - `src/App.tsx`: connected navigation, The Waiter, and demo disclosure.
 - `tests/`: domain and browser tests; `scripts/capture.mjs`: reproducible screenshot journey.
 
@@ -60,5 +74,7 @@ Thirteen final screenshots are in `artifacts/`, including the atlas on desktop/m
 ## Assets
 
 Cormorant Garamond and DM Sans from Google Fonts, subset and served locally (SIL Open Font License; `public/fonts/OFL-*.txt`). Illustrative photography from Unsplash; URLs in `public/images/SOURCES.txt`. The original schematic map is not a navigation service.
+
+Live provider references: [OpenFreeMap quick start](https://openfreemap.org/quick_start/), [MapLibre](https://maplibre.org/maplibre-gl-js/docs/), [OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/), [Photon](https://github.com/komoot/photon), [OpenWeather current weather](https://openweathermap.org/api/current). Credits stay visible on the map. The public services offer no app-specific availability guarantee; configurable/self-hosted providers remain an option for production scale.
 
 Reference research and the limits of accessible sources are documented in [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md). Bump informed spatial presence; Proofline informed physical origin and return. The atlas, character, UI, geometry, and behavior are original implementations.

@@ -2,6 +2,21 @@ import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
 
+test.beforeEach(async ({ page }) => {
+  await page.route("https://tile.openstreetmap.org/**", (route) =>
+    route.abort(),
+  );
+  await page.route("https://tiles.openfreemap.org/**", (route) =>
+    route.abort(),
+  );
+  await page.route("**/api/weather?**", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ status: "unavailable", code: "not_configured" }),
+    }),
+  );
+});
 const nav = (page: Page, name: string) =>
   page
     .getByRole("navigation", { name: "Main navigation" })
@@ -9,7 +24,9 @@ const nav = (page: Page, name: string) =>
 const note = (page: Page) => page.getByLabel("A note for the evening");
 async function openMenu(page: Page) {
   if (!(await page.locator(".menu-book").isVisible())) {
-    await page.getByRole("button", { name: /^Open (the )?menu$/, exact: true }).click();
+    await page
+      .getByRole("button", { name: /^Open (the )?menu$/, exact: true })
+      .click();
   }
   await expect(page.locator(".menu-book")).toBeVisible();
 }
@@ -18,7 +35,7 @@ async function approveAll(page: Page) {
     await approval.check();
 }
 async function choosePlan(page: Page) {
-  await page.goto("/");
+  await page.goto("/#explore");
   await openMenu(page);
   await page.getByRole("button", { name: "Bring this to the table" }).click();
   await expect(page).toHaveURL(/#table$/);
@@ -31,14 +48,20 @@ async function choosePlan(page: Page) {
 test("map, book, table and dinner plan retain the same chosen venue; Back returns to table", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#explore");
   await expect(page.locator(".immersive-atlas")).toBeVisible();
   await page.getByRole("button", { name: /^Places/ }).click();
-  await page.getByRole("complementary", { name: "Restaurants on this map" })
-    .getByRole("button", { name: /Olive & Ember/ }).click();
-  await expect(page.getByRole("article", { name: "Olive & Ember, selected restaurant" })).toBeVisible();
+  await page
+    .getByRole("complementary", { name: "Restaurants on this map" })
+    .getByRole("button", { name: /Olive & Ember/ })
+    .click();
+  await expect(
+    page.getByRole("article", { name: "Olive & Ember, selected restaurant" }),
+  ).toBeVisible();
   await openMenu(page);
-  await expect(page.locator(".book-restaurant-title")).toContainText("Olive & Ember");
+  await expect(page.locator(".book-restaurant-title")).toContainText(
+    "Olive & Ember",
+  );
   await page.getByRole("button", { name: "Bring this to the table" }).click();
   await expect(page).toHaveURL(/#table$/);
   await expect(page.locator("main")).toContainText("Olive & Ember");
@@ -62,7 +85,7 @@ test("map, book, table and dinner plan retain the same chosen venue; Back return
 test("shortlist toggles repeatedly without duplicate contenders", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#explore");
   await openMenu(page);
   const save = page.getByRole("button", {
     name: "Save Juniper & Rye to shortlist",
@@ -88,7 +111,7 @@ test("shortlist toggles repeatedly without duplicate contenders", async ({
 test("repeated vetoes revise recommendations, reach an honest empty state and can be undone", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#explore");
   await openMenu(page);
   for (let i = 0; i < 6; i++) {
     await page
@@ -109,7 +132,9 @@ test("repeated vetoes revise recommendations, reach an honest empty state and ca
     .getByRole("button", { name: "Reconsider Juniper & Rye", exact: true })
     .click();
   await expect(
-    page.locator(".book-restaurant-title").getByRole("heading", { name: "Juniper & Rye", exact: true }),
+    page
+      .locator(".book-restaurant-title")
+      .getByRole("heading", { name: "Juniper & Rye", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Next restaurant" }),
@@ -168,9 +193,14 @@ test("all dietary restrictions and the lowest budget are respected in candidate 
     "1 places fit this table",
   );
   await nav(page, "Explore").click();
+  await page
+    .getByRole("button", { name: "Open demo atlas", exact: true })
+    .click();
   await openMenu(page);
   await expect(
-    page.locator(".book-restaurant-title").getByRole("heading", { name: "Casa Nopal", exact: true }),
+    page
+      .locator(".book-restaurant-title")
+      .getByRole("heading", { name: "Casa Nopal", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".book-match-note")).toContainText(
     "Gluten-free + Vegan + Nut-free",
@@ -286,7 +316,7 @@ test("blocked browser storage keeps a temporary usable plan without claiming per
 test("keyboard dialog focus is contained; Escape and Waiter close return focus without actions", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#explore");
   const about = page.getByRole("button", { name: "About this demo" });
   await about.click();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -328,14 +358,16 @@ test("mobile pages support keyboard switching, no horizontal overflow and motion
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/#explore");
   await openMenu(page);
   await expect(page.getByRole("tab", { name: "The menu" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
   await expect(
-    page.locator(".book-restaurant-title").getByRole("heading", { name: "Juniper & Rye", exact: true }),
+    page
+      .locator(".book-restaurant-title")
+      .getByRole("heading", { name: "Juniper & Rye", exact: true }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "The menu" }).focus();
   await page.keyboard.press("ArrowLeft");

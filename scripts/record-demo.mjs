@@ -14,7 +14,9 @@ const context = await browser.newContext({
 const page = await context.newPage();
 const pause = () => page.waitForTimeout(1100);
 try {
-  await page.goto(process.env.PREVIEW_URL || "http://localhost:4174");
+  await page.goto(
+    `${process.env.PREVIEW_URL || "http://localhost:4174"}/#explore`,
+  );
   await page.evaluate(() => document.fonts.ready);
   await pause();
   await page.locator(".immersive-atlas").scrollIntoViewIfNeeded();

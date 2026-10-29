@@ -21,7 +21,9 @@ await page.addInitScript(() => {
 await mkdir("artifacts", { recursive: true });
 async function capture(name) {
   await page.locator("h1").waitFor();
-  await page.evaluate(async () => { await window.captureTransitionFinished; });
+  await page.evaluate(async () => {
+    await window.captureTransitionFinished;
+  });
   await page.evaluate(() => {
     if (document.activeElement instanceof HTMLElement)
       document.activeElement.blur();
@@ -33,7 +35,11 @@ async function capture(name) {
     .evaluateAll((images) =>
       Promise.all(images.map((img) => img.decode().catch(() => {}))),
     );
-  await page.waitForFunction(() => document.getAnimations().every(animation => animation.playState !== "running"));
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every((animation) => animation.playState !== "running"),
+  );
   await page.waitForTimeout(120);
   await page.screenshot({
     path: `artifacts/${name}.png`,
@@ -41,7 +47,9 @@ async function capture(name) {
   });
 }
 try {
-  await page.goto(process.env.PREVIEW_URL || "http://localhost:4174");
+  await page.goto(
+    `${process.env.PREVIEW_URL || "http://localhost:4174"}/#explore`,
+  );
   await capture("02-map-desktop");
   await page.getByRole("button", { name: "Switch to evening light" }).click();
   await capture("09-map-evening-desktop");

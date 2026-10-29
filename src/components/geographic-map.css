@@ -1,0 +1,500 @@
+.geographic-map {
+  position: relative;
+  width: 100%;
+  height: 650px;
+  min-height: 450px;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 5px;
+  background: #e8e5d2;
+  box-shadow:
+    0 3px 9px #424a2825,
+    inset 0 0 0 1px #bbbba1;
+  color: #44513a;
+}
+.geographic-map-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #e8e5d2;
+}
+.geographic-map .maplibregl-map,
+.geographic-map .leaflet-container {
+  font-family: "DM Sans", sans-serif;
+}
+.geo-map-material {
+  position: absolute;
+  inset: 0;
+  border: 7px solid #f0ead3;
+  box-shadow:
+    inset 0 0 0 1px #b5b59d5c,
+    inset 0 1px 7px #655d3826;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 5px;
+}
+.geo-map-material:after {
+  content: "";
+  position: absolute;
+  width: 35px;
+  height: 32px;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    140deg,
+    transparent 65%,
+    #fff9 79%,
+    #cec4a666 83%,
+    transparent 89%
+  );
+}
+.geo-area-label {
+  position: absolute;
+  left: 28px;
+  top: 27px;
+  z-index: 3;
+  padding: 17px 21px;
+  background: #f9f3e3ec;
+  border: 1px solid #c8c5a9;
+  box-shadow: 2px 4px 9px #4d553321;
+  max-width: calc(100% - 150px);
+  pointer-events: none;
+  transform: rotate(-0.5deg);
+}
+.geo-area-label > span {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 8px;
+  letter-spacing: 1.6px;
+  color: #899173;
+}
+.geo-area-label h2 {
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.6px;
+  margin: 10px 0 6px;
+  color: #4a5739;
+  text-wrap: balance;
+  max-width: 420px;
+}
+.geo-area-label > p {
+  font-size: 10px;
+  margin: 0;
+  color: #808a6a;
+}
+.geo-map-controls {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+}
+.geo-map-controls > button,
+.geo-zoom-controls {
+  background: #f9f4e5f2;
+  color: #65734d;
+  border: 1px solid #c5c6a8;
+  border-radius: 3px;
+  box-shadow: 0 2px 5px #5360351e;
+}
+.geo-map-controls > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 45px;
+  min-height: 44px;
+  padding: 10px;
+}
+.geo-map-controls > button > span {
+  font-size: 10px;
+}
+.geo-map-controls > button:first-child {
+  padding: 10px 11px;
+}
+.geo-map-controls button:hover {
+  background: #e7e9d2;
+}
+.geo-zoom-controls {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-top: 5px;
+}
+.geo-zoom-controls > button {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  min-height: 43px;
+  min-width: 43px;
+}
+.geo-zoom-controls > button + button {
+  border-top: 1px solid #d6d7bd;
+}
+.geo-map-controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.geo-map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 310px;
+  max-width: 85%;
+  padding: 25px;
+  background: #f6f0ddf5;
+  border: 1px solid #c4bea0;
+  box-shadow: 0 7px 25px #55603b24;
+  border-radius: 4px;
+  color: #78835e;
+  font-size: 12px;
+}
+.geo-map-loading > svg {
+  animation: geo-loader 1.8s linear infinite;
+  flex: none;
+}
+.geo-map-loading > button {
+  background: transparent;
+  color: #7b8462;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 10px;
+  min-height: 28px;
+  padding: 3px;
+}
+.geo-map-error {
+  position: absolute;
+  left: 50%;
+  top: 49%;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+  width: 390px;
+  max-width: calc(100% - 40px);
+  padding: 30px;
+  background: #f8f1dfee;
+  border: 1px solid #bfb99c;
+  box-shadow: 3px 8px 20px #49553229;
+  text-align: center;
+  border-radius: 3px;
+  color: #77815f;
+}
+.geo-map-error > h3 {
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 31px;
+  font-weight: 400;
+  color: #4c5a3b;
+  margin: 12px 0;
+}
+.geo-map-error > p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0 0 19px;
+  color: #7a8268;
+}
+.geo-map-error > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+}
+.geo-map-error button {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 1px solid #b9bea1;
+  border-radius: 2px;
+  background: #e8ead3;
+  color: #64734b;
+  padding: 10px 15px;
+  font-size: 11px;
+}
+.geo-map-error button:first-child {
+  background: #56633e;
+  color: #fbf4dd;
+  border-color: #56633e;
+}
+.geo-map-footer {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: 7px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 16px;
+  background: #f9f4e3f5;
+  border-top: 1px solid #cecfb5;
+  color: #677650;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.geo-map-footer > span:first-child {
+  font-size: 10px;
+}
+.geo-provider-attribution {
+  text-align: right;
+  color: #66754e;
+}
+.geo-provider-attribution > a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: #5c704a;
+}
+.geo-renderer-notice {
+  position: absolute;
+  left: 24px;
+  bottom: 65px;
+  z-index: 5;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: #f5f0dff0;
+  border: 1px solid #c3c8a7;
+  color: #717d59;
+  box-shadow: 0 2px 8px #4b593126;
+  font-size: 10px;
+  line-height: 1.5;
+  border-radius: 2px;
+}
+.geo-renderer-notice > button {
+  flex: none;
+  padding: 4px 0;
+  min-height: 25px;
+  border: 0;
+  background: transparent;
+  color: #64764a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 10px;
+}
+.geo-selected-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+  height: 56px;
+  pointer-events: none;
+}
+.geo-marker-head {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border: 3px solid #fff2d6;
+  outline: 1px solid #a8744d;
+  border-radius: 50%;
+  color: #fff5da;
+  background: #b37650;
+  box-shadow: 1px 4px 8px #394a3040;
+}
+.geo-marker-caption {
+  position: absolute;
+  top: 43px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 5px 8px;
+  background: #fbf4dfea;
+  border: 1px solid #c5bd9d;
+  border-radius: 2px;
+  color: #6b714f;
+  font-family: "DM Sans", sans-serif;
+  font-size: 9px;
+  line-height: 1.3;
+  box-shadow: 0 2px 4px #4b573125;
+}
+.geo-leaflet-marker {
+  border: 0 !important;
+  background: none !important;
+}
+.geo-leaflet-marker .geo-marker-head {
+  margin-left: 2px;
+}
+.geo-leaflet-marker .geo-marker-caption {
+  top: 43px;
+}
+.geographic-map .leaflet-control-container .leaflet-bottom {
+  bottom: 50px;
+}
+.geographic-map .maplibregl-canvas:focus-visible,
+.geographic-map .leaflet-container:focus-visible {
+  outline: 3px solid #a96845;
+  outline-offset: -5px;
+}
+.geographic-map button:focus-visible,
+.geographic-map a:focus-visible {
+  outline: 3px solid #a96845;
+  outline-offset: 3px;
+}
+.geographic-map-night .geo-map-material {
+  box-shadow:
+    inset 0 0 0 1px #a9b292,
+    inset 0 0 130px #344e4540;
+}
+.geographic-map-still * {
+  animation: none !important;
+  transition: none !important;
+}
+@keyframes geo-loader {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (min-width: 1600px) {
+  .geographic-map {
+    height: 720px;
+  }
+}
+@media (max-width: 760px) {
+  .geographic-map {
+    height: 650px;
+    border-radius: 4px;
+  }
+  .geo-map-material {
+    border-width: 5px;
+  }
+  .geo-area-label {
+    top: 19px;
+    left: 19px;
+    padding: 13px 15px;
+    max-width: calc(100% - 92px);
+  }
+  .geo-area-label h2 {
+    font-size: 27px;
+    line-height: 1.03;
+    margin: 8px 0 6px;
+    max-width: 240px;
+  }
+  .geo-area-label > span {
+    font-size: 7px;
+    letter-spacing: 1.2px;
+  }
+  .geo-area-label > p {
+    font-size: 9px;
+    line-height: 1.6;
+  }
+  .geo-map-controls {
+    right: 17px;
+    top: 18px;
+    gap: 6px;
+  }
+  .geo-map-controls > button {
+    min-width: 40px;
+    min-height: 41px;
+    padding: 9px;
+  }
+  .geo-map-controls > button:first-child {
+    padding: 8px 9px;
+  }
+  .geo-map-controls > button:first-child > svg {
+    width: 14px;
+  }
+  .geo-map-controls > button > span {
+    font-size: 9px;
+  }
+  .geo-zoom-controls > button {
+    min-width: 39px;
+    min-height: 41px;
+  }
+  .geo-map-footer {
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    display: block;
+    padding: 10px 13px;
+    font-size: 9px;
+    line-height: 1.7;
+  }
+  .geo-map-footer > span {
+    display: block;
+    text-align: left;
+  }
+  .geo-map-footer > span:first-child {
+    font-size: 9px;
+    margin-bottom: 2px;
+  }
+  .geo-provider-attribution {
+    font-size: 9px;
+  }
+  .geo-renderer-notice {
+    left: 17px;
+    right: 17px;
+    bottom: 85px;
+    max-width: none;
+    font-size: 10px;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .geo-map-error {
+    padding: 25px;
+    max-width: calc(100% - 36px);
+  }
+  .geo-map-error > h3 {
+    font-size: 29px;
+  }
+  .geo-map-error > p {
+    font-size: 11px;
+  }
+  .geo-map-loading {
+    font-size: 11px;
+    padding: 21px;
+  }
+  .geo-map-loading > button {
+    font-size: 10px;
+  }
+  .geo-map-error button {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .geographic-map * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.geo-area-label h2 {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .geo-map-footer,
+  .geo-map-footer > span:first-child,
+  .geo-provider-attribution {
+    font-size: 10px;
+  }
+  .geo-map-footer {
+    line-height: 1.6;
+  }
+  .geo-renderer-notice {
+    bottom: 92px;
+  }
+}
+/* Provider CSS also sets position:relative; keep the owned canvas sized after lazy CSS loads. */
+.geographic-map > .geographic-map-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

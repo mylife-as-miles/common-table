@@ -1,0 +1,116 @@
+{
+  "renderer": "maplibre",
+  "selectedArea": "Paris, Île-de-France, France",
+  "weatherState": "Weather not connected",
+  "errors": [],
+  "openFreeMapResponses": [
+    {
+      "status": 200,
+      "kind": "map-resource"
+    },
+    {
+      "status": 200,
+      "kind": "map-resource"
+    },
+    {
+      "status": 200,
+      "kind": "map-resource"
+    },
+    {
+      "status": 200,
+      "kind": "map-resource"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    }
+  ]
+}

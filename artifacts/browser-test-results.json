@@ -35,7 +35,8 @@
         "testIgnore": [],
         "testMatch": [
           "app.spec.ts",
-          "immersive.spec.ts"
+          "immersive.spec.ts",
+          "location.spec.ts"
         ],
         "timeout": 30000
       }
@@ -56,7 +57,8 @@
         "testIgnore": [],
         "testMatch": [
           "app.spec.ts",
-          "immersive.spec.ts"
+          "immersive.spec.ts",
+          "location.spec.ts"
         ],
         "timeout": 30000,
         "use": {
@@ -125,12 +127,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7157,
+                  "duration": 7763,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:24:48.842Z",
+                  "startTime": "2026-10-29T23:40:16.203Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -140,7 +142,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-963050e49ca7a7131b08",
           "file": "app.spec.ts",
-          "line": 31,
+          "line": 48,
           "column": 1
         },
         {
@@ -159,12 +161,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 6367,
+                  "duration": 7069,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:24:48.934Z",
+                  "startTime": "2026-10-29T23:40:16.076Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -174,7 +176,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-5761cef25feed89c36f6",
           "file": "app.spec.ts",
-          "line": 62,
+          "line": 85,
           "column": 1
         },
         {
@@ -193,12 +195,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 7593,
+                  "duration": 10324,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:24:55.716Z",
+                  "startTime": "2026-10-29T23:40:23.511Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -208,7 +210,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-68a3a58bcc6b46add889",
           "file": "app.spec.ts",
-          "line": 88,
+          "line": 111,
           "column": 1
         },
         {
@@ -227,12 +229,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2796,
+                  "duration": 3378,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:24:56.424Z",
+                  "startTime": "2026-10-29T23:40:24.358Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -242,7 +244,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-52f4d41e9d1541abc307",
           "file": "app.spec.ts",
-          "line": 119,
+          "line": 144,
           "column": 1
         },
         {
@@ -261,12 +263,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4251,
+                  "duration": 5546,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:24:59.263Z",
+                  "startTime": "2026-10-29T23:40:27.763Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -276,7 +278,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-984e519309e5b37a8e8b",
           "file": "app.spec.ts",
-          "line": 152,
+          "line": 177,
           "column": 1
         },
         {
@@ -292,15 +294,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7739,
+                  "duration": 8542,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:03.336Z",
+                  "startTime": "2026-10-29T23:40:33.357Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -310,7 +312,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-57e6eed5175288fcfcb8",
           "file": "app.spec.ts",
-          "line": 183,
+          "line": 213,
           "column": 1
         },
         {
@@ -326,15 +328,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 4899,
+                  "duration": 5358,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:03.555Z",
+                  "startTime": "2026-10-29T23:40:33.859Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -344,7 +346,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-18a9584e7f010f177915",
           "file": "app.spec.ts",
-          "line": 233,
+          "line": 263,
           "column": 1
         },
         {
@@ -360,15 +362,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 5506,
+                  "duration": 5851,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:08.486Z",
+                  "startTime": "2026-10-29T23:40:39.254Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -378,7 +380,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-77d12d126d0a741edfad",
           "file": "app.spec.ts",
-          "line": 253,
+          "line": 283,
           "column": 1
         },
         {
@@ -394,15 +396,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4175,
+                  "duration": 4713,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:11.097Z",
+                  "startTime": "2026-10-29T23:40:41.938Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -412,7 +414,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-e42dbc55791b731526b4",
           "file": "app.spec.ts",
-          "line": 286,
+          "line": 316,
           "column": 1
         },
         {
@@ -428,15 +430,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 3123,
+                  "duration": 3291,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:14.042Z",
+                  "startTime": "2026-10-29T23:40:45.129Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -446,7 +448,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-fac17d825ebe4286fffb",
           "file": "app.spec.ts",
-          "line": 326,
+          "line": 356,
           "column": 1
         },
         {
@@ -462,15 +464,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3630,
+                  "duration": 3931,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:15.298Z",
+                  "startTime": "2026-10-29T23:40:46.670Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -480,7 +482,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-1c4d6f701d82199127a6",
           "file": "app.spec.ts",
-          "line": 381,
+          "line": 413,
           "column": 5
         },
         {
@@ -496,15 +498,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 3962,
+                  "duration": 4981,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:17.184Z",
+                  "startTime": "2026-10-29T23:40:48.434Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -514,7 +516,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-1c5728fb640ec614d14b",
           "file": "app.spec.ts",
-          "line": 381,
+          "line": 413,
           "column": 5
         },
         {
@@ -530,15 +532,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2545,
+                  "duration": 3033,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:18.948Z",
+                  "startTime": "2026-10-29T23:40:50.636Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -548,7 +550,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-9fd2d5b8b11f707b29de",
           "file": "app.spec.ts",
-          "line": 381,
+          "line": 413,
           "column": 5
         },
         {
@@ -564,15 +566,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 5633,
+                  "duration": 8291,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:21.173Z",
+                  "startTime": "2026-10-29T23:40:53.435Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -582,7 +584,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-509afe49979705c3b45b",
           "file": "app.spec.ts",
-          "line": 381,
+          "line": 413,
           "column": 5
         },
         {
@@ -598,15 +600,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2820,
+                  "duration": 3584,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:21.516Z",
+                  "startTime": "2026-10-29T23:40:53.702Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -616,7 +618,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-09aa1f36090cb49c5e29",
           "file": "app.spec.ts",
-          "line": 381,
+          "line": 413,
           "column": 5
         },
         {
@@ -632,15 +634,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2750,
+                  "duration": 4556,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:24.347Z",
+                  "startTime": "2026-10-29T23:40:57.311Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -650,7 +652,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-869c401e3818da2d807a",
           "file": "app.spec.ts",
-          "line": 381,
+          "line": 413,
           "column": 5
         },
         {
@@ -666,15 +668,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 2142,
+                  "duration": 3843,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:26.817Z",
+                  "startTime": "2026-10-29T23:41:01.757Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -684,7 +686,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-9a57240540fe18a70138",
           "file": "app.spec.ts",
-          "line": 381,
+          "line": 413,
           "column": 5
         },
         {
@@ -700,15 +702,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4298,
+                  "duration": 6206,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:27.139Z",
+                  "startTime": "2026-10-29T23:41:01.904Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -718,7 +720,7 @@
           ],
           "id": "c31ff144dc4fee3acd0a-5abc187f47beb54d4ece",
           "file": "app.spec.ts",
-          "line": 381,
+          "line": 413,
           "column": 5
         }
       ]
@@ -742,15 +744,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 7010,
+                  "duration": 10212,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:29.002Z",
+                  "startTime": "2026-10-29T23:41:05.667Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -760,7 +762,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-39d9d0a89e18aa1bd628",
           "file": "immersive.spec.ts",
-          "line": 42,
+          "line": 77,
           "column": 1
         },
         {
@@ -776,15 +778,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 14171,
+                  "duration": 18072,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:31.501Z",
+                  "startTime": "2026-10-29T23:41:08.232Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -794,7 +796,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-1c6d6b4f2264ee7913a0",
           "file": "immersive.spec.ts",
-          "line": 64,
+          "line": 110,
           "column": 1
         },
         {
@@ -810,15 +812,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 15700,
+                  "duration": 20099,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:36.039Z",
+                  "startTime": "2026-10-29T23:41:15.934Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -828,7 +830,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-e8d73dc9ccd1051ec5d0",
           "file": "immersive.spec.ts",
-          "line": 91,
+          "line": 189,
           "column": 1
         },
         {
@@ -844,15 +846,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4735,
+                  "duration": 8088,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:45.696Z",
+                  "startTime": "2026-10-29T23:41:26.336Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -862,7 +864,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-f14bd34013bba3ab3ceb",
           "file": "immersive.spec.ts",
-          "line": 116,
+          "line": 230,
           "column": 1
         },
         {
@@ -878,15 +880,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3592,
+                  "duration": 7034,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:50.458Z",
+                  "startTime": "2026-10-29T23:41:34.453Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -896,7 +898,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-a3b17f98f2ed52131d0a",
           "file": "immersive.spec.ts",
-          "line": 137,
+          "line": 275,
           "column": 1
         },
         {
@@ -912,15 +914,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 3519,
+                  "duration": 6379,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:51.778Z",
+                  "startTime": "2026-10-29T23:41:36.052Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -930,7 +932,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-5737946ab62a22ec8633",
           "file": "immersive.spec.ts",
-          "line": 166,
+          "line": 333,
           "column": 1
         },
         {
@@ -946,15 +948,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2066,
+                  "duration": 3749,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:54.076Z",
+                  "startTime": "2026-10-29T23:41:41.554Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -964,7 +966,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-50cc2d2a2e6ece1ab623",
           "file": "immersive.spec.ts",
-          "line": 185,
+          "line": 377,
           "column": 1
         },
         {
@@ -980,15 +982,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 11007,
+                  "duration": 18283,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:55.312Z",
+                  "startTime": "2026-10-29T23:41:42.479Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -998,7 +1000,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-32536a13819e4625a0ca",
           "file": "immersive.spec.ts",
-          "line": 211,
+          "line": 421,
           "column": 1
         },
         {
@@ -1014,15 +1016,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5371,
+                  "duration": 10203,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:25:56.161Z",
+                  "startTime": "2026-10-29T23:41:45.317Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1032,7 +1034,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-6b4f37163c06bcd49369",
           "file": "immersive.spec.ts",
-          "line": 237,
+          "line": 485,
           "column": 1
         },
         {
@@ -1048,15 +1050,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5565,
+                  "duration": 7272,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:26:01.559Z",
+                  "startTime": "2026-10-29T23:41:55.542Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1066,7 +1068,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-093f0e3b05b1550a1915",
           "file": "immersive.spec.ts",
-          "line": 258,
+          "line": 526,
           "column": 1
         },
         {
@@ -1082,15 +1084,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
                   "status": "passed",
-                  "duration": 4105,
+                  "duration": 4402,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:26:06.351Z",
+                  "startTime": "2026-10-29T23:42:00.800Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1100,7 +1102,7 @@
           ],
           "id": "30afde42ea2f96b2b15f-3a00f28a2e45b6417a58",
           "file": "immersive.spec.ts",
-          "line": 280,
+          "line": 569,
           "column": 3
         },
         {
@@ -1116,15 +1118,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 1,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3251,
+                  "duration": 3155,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-29T22:26:07.155Z",
+                  "startTime": "2026-10-29T23:42:02.839Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1134,7 +1136,433 @@
           ],
           "id": "30afde42ea2f96b2b15f-08af77c15f617ce18bc9",
           "file": "immersive.spec.ts",
-          "line": 280,
+          "line": 569,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "location.spec.ts",
+      "file": "location.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real geography loads without asking for device location, with weather time and provider attribution",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1992,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:05.249Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-e148adba2abedc1d179a",
+          "file": "location.spec.ts",
+          "line": 200,
+          "column": 1
+        },
+        {
+          "title": "device location is used only after the explicit button and updates the actual map and weather coordinates",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3564,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:06.024Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-0f84c37c67df6a471aa5",
+          "file": "location.spec.ts",
+          "line": 233,
+          "column": 1
+        },
+        {
+          "title": "denied device permission keeps the map usable and city search remains available",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 2459,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:07.251Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-91ea20b988c2ab972f9a",
+          "file": "location.spec.ts",
+          "line": 273,
+          "column": 1
+        },
+        {
+          "title": "cancelling a location request prevents a late GPS response from replacing a chosen city",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2631,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:09.625Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-cbdc2548c8d9172c5b4b",
+          "file": "location.spec.ts",
+          "line": 303,
+          "column": 1
+        },
+        {
+          "title": "city search handles empty results, repeated submissions, network errors and timeout recovery",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 3548,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:09.735Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-b6518b27f5a96046c1de",
+          "file": "location.spec.ts",
+          "line": 342,
+          "column": 1
+        },
+        {
+          "title": "newer city searches and clear/cancel cannot be overwritten by late search responses",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2720,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:12.282Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-926ec884345ad46cfd9f",
+          "file": "location.spec.ts",
+          "line": 405,
+          "column": 1
+        },
+        {
+          "title": "weather belongs to the selected coordinates, refreshes explicitly, and rejects late data from a previous city",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 2823,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:13.306Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-e562d6311845885b2009",
+          "file": "location.spec.ts",
+          "line": 486,
+          "column": 1
+        },
+        {
+          "title": "missing credentials and weather upstream failure are honest and never block the geographic map",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2621,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:15.019Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-d18768614db5e70ec698",
+          "file": "location.spec.ts",
+          "line": 549,
+          "column": 1
+        },
+        {
+          "title": "real city geography never relocates fictional restaurants, and the authored dinner demo remains separate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 4094,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:16.171Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-ec85dc47ca2925479366",
+          "file": "location.spec.ts",
+          "line": 585,
+          "column": 1
+        },
+        {
+          "title": "the real vector renderer can load a local minimal style fixture without external map requests",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "fixture-renderer",
+                  "description": "maplibre"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2052,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:17.660Z",
+                  "annotations": [
+                    {
+                      "type": "fixture-renderer",
+                      "description": "maplibre"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-9ed1981e7d2b42c230ce",
+          "file": "location.spec.ts",
+          "line": 612,
+          "column": 1
+        },
+        {
+          "title": "WCAG A/AA automated scan: desktop real location controls and attribution",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2363,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:19.723Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-cf48183c9a96b20247ad",
+          "file": "location.spec.ts",
+          "line": 651,
+          "column": 3
+        },
+        {
+          "title": "WCAG A/AA automated scan: mobile real location controls and attribution",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1995,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T23:42:20.301Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-91955bedf9a1a69d8d85",
+          "file": "location.spec.ts",
+          "line": 651,
           "column": 3
         }
       ]
@@ -1142,9 +1570,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-29T22:24:47.948Z",
-    "duration": 82686.317,
-    "expected": 30,
+    "startTime": "2026-10-29T23:40:14.605Z",
+    "duration": 127807.19799999999,
+    "expected": 42,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

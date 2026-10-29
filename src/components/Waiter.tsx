@@ -35,7 +35,8 @@ interface WaiterProps {
   state: AppState;
   dispatch: Dispatch<AppAction>;
   view: View;
-  mode: "map" | "book";
+  mode: "map" | "book" | "real";
+  realLocation?: string;
   lowPower: boolean;
   storageAvailable: boolean;
   open: boolean;
@@ -228,6 +229,7 @@ export function Waiter({
   dispatch,
   view,
   mode,
+  realLocation,
   lowPower,
   storageAvailable,
   open,
@@ -309,6 +311,12 @@ export function Waiter({
   }
   function ringBell() {
     setRing((value) => value + 1);
+    if (mode === "real" && course === "place") {
+      setResponse(
+        `You’re exploring ${realLocation || "your chosen area"}. This is real geography; nearby dining recommendations are not connected yet. Your demo dinner plan stays as it was.`,
+      );
+      return;
+    }
     const tips =
       course === "table"
         ? [
@@ -336,6 +344,12 @@ export function Waiter({
     setResponse(tips[ringTip.current++ % tips.length]);
   }
   function nextPossibility() {
+    if (mode === "real") {
+      setResponse(
+        "Real nearby restaurant recommendations are not connected yet. You can try the clearly labeled fictional dining journey, or refine your table’s tastes.",
+      );
+      return;
+    }
     seenVenues.current.add(selected.id);
     let candidate = alternatives.find(
       (item) => !seenVenues.current.has(item.venue.id),
@@ -549,7 +563,35 @@ export function Waiter({
                 </button>
               ))}
             </div>
-            {course === "place" ? (
+            {course === "place" && mode === "real" ? (
+              <div className="cw-course-content">
+                <span className="cw-order-kicker">
+                  A REAL CORNER OF THE WORLD
+                </span>
+                <h3>{realLocation || "Your chosen area"}</h3>
+                <p className="cw-guidance">
+                  “The map follows your chosen area. Nearby dining
+                  recommendations are still to come; I won’t place our fictional
+                  restaurants here.”
+                </p>
+                <p className="cw-small-note">
+                  Real geography and local weather are separate from the six
+                  fictional Brooklyn restaurants in our demo dining journey.
+                  Your existing table and plan stay unchanged.
+                </p>
+                <div className="cw-pad-actions">
+                  <button
+                    className="cw-secondary"
+                    onClick={() => navigate("table")}
+                  >
+                    Refine our tastes <Users size={14} />
+                  </button>
+                  <button className="cw-primary" onClick={openMenu}>
+                    Open demo menu <BookOpen size={15} />
+                  </button>
+                </div>
+              </div>
+            ) : course === "place" ? (
               <div className="cw-course-content">
                 <span className="cw-order-kicker">
                   {mode === "map"

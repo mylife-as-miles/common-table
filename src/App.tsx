@@ -20,6 +20,8 @@ import { SharedTable } from "./components/SharedTable";
 import { DinnerPlan } from "./components/DinnerPlan";
 import { ImmersiveMap } from "./components/ImmersiveMap";
 import { Waiter } from "./components/Waiter";
+import { LocationAtlas } from "./components/LocationAtlas";
+import { useLocationContext } from "./location/useLocationContext";
 
 type View = "explore" | "table" | "plan";
 const viewFromHash = (): View =>
@@ -29,12 +31,19 @@ const viewFromHash = (): View =>
       ? "plan"
       : "explore";
 const modeFromHash = () =>
-  location.hash === "#menu" ? ("book" as const) : ("map" as const);
+  location.hash === "#menu"
+    ? ("book" as const)
+    : location.hash === "#explore"
+      ? ("map" as const)
+      : ("real" as const);
 export default function App() {
   const { state, dispatch, ranked, selectedVenue, storageAvailable } =
     useCommonTable();
   const [view, setView] = useState<View>(viewFromHash);
-  const [mode, setMode] = useState<"book" | "map">(modeFromHash);
+  const [mode, setMode] = useState<"book" | "map" | "real">(modeFromHash);
+  const locationContext = useLocationContext(
+    view === "explore" && mode === "real",
+  );
   const [lowPower, setLowPower] = useState(() => {
     try {
       return localStorage.getItem("common-table-low-power") === "true";
@@ -48,7 +57,7 @@ export default function App() {
   const heading = useRef<HTMLHeadingElement>(null);
   const aboutRef = useRef<HTMLDialogElement>(null);
   const transition = useRef<ViewTransition | null>(null);
-  const modeIntent = useRef<"map" | "book">(modeFromHash());
+  const modeIntent = useRef<"map" | "book" | "real">(modeFromHash());
   useEffect(() => {
     const change = () => {
       const nextView = viewFromHash();
@@ -77,7 +86,7 @@ export default function App() {
     if (lowPower) transition.current?.skipTransition();
   }, [lowPower]);
   useEffect(() => () => transition.current?.skipTransition(), []);
-  const switchMode = (next: "map" | "book") => {
+  const switchMode = (next: "map" | "book" | "real") => {
     if (modeIntent.current === next) return;
     modeIntent.current = next;
     transition.current?.skipTransition();
@@ -105,13 +114,19 @@ export default function App() {
       next === "explore"
         ? modeIntent.current === "book"
           ? "menu"
-          : "explore"
+          : modeIntent.current === "real"
+            ? "nearby"
+            : "explore"
         : next;
     setWaiterOpen(false);
     requestAnimationFrame(() => heading.current?.focus());
   };
   const openMenu = () => {
     switchMode("book");
+    navigate("explore");
+  };
+  const openRealMap = () => {
+    switchMode("real");
     navigate("explore");
   };
   const openMap = () => {
@@ -166,9 +181,9 @@ export default function App() {
       <header className="site-header">
         <a
           className="brand"
-          href="#explore"
+          href="#nearby"
           aria-label="Common Table home"
-          onClick={openMap}
+          onClick={openRealMap}
         >
           <span className="brand-icon">
             <Utensils size={23} strokeWidth={1.35} />
@@ -183,7 +198,9 @@ export default function App() {
             <button
               key={item}
               aria-current={view === item ? "page" : undefined}
-              onClick={() => (item === "explore" ? openMap() : navigate(item))}
+              onClick={() =>
+                item === "explore" ? openRealMap() : navigate(item)
+              }
             >
               <span className="nav-number">0{i + 1}</span>
               {item === "explore"
@@ -236,8 +253,13 @@ export default function App() {
             {view === "explore" ? (
               <>
                 <span className="location-label">
-                  <MapPin size={15} /> Brooklyn, New York{" "}
-                  <span className="tiny-demo">DEMO</span>
+                  <MapPin size={15} />{" "}
+                  {mode === "real"
+                    ? locationContext.location.label
+                    : "Brooklyn, New York"}{" "}
+                  <span className="tiny-demo">
+                    {mode === "real" ? "REAL MAP" : "DEMO"}
+                  </span>
                 </span>
                 <button
                   className="primary-button"
@@ -254,7 +276,14 @@ export default function App() {
           </div>
         </section>
         {view === "explore" ? (
-          mode === "map" && ranked.length > 0 ? (
+          mode === "real" ? (
+            <LocationAtlas
+              context={locationContext}
+              lowPower={lowPower}
+              onDemo={openMap}
+              onWaiter={() => setWaiterOpen(true)}
+            />
+          ) : mode === "map" && ranked.length > 0 ? (
             <ImmersiveMap
               venues={ranked.map((item) => item.venue)}
               selected={selectedVenue}
@@ -476,11 +505,16 @@ export default function App() {
         dispatch={dispatch}
         view={view}
         mode={mode}
+        realLocation={
+          mode === "real" ? locationContext.location.label : undefined
+        }
         lowPower={lowPower}
         storageAvailable={storageAvailable}
         open={waiterOpen}
         onOpenChange={setWaiterOpen}
-        onNavigate={(next) => (next === "explore" ? openMap() : navigate(next))}
+        onNavigate={(next) =>
+          next === "explore" ? openRealMap() : navigate(next)
+        }
         onOpenMenu={openMenu}
         onSelectVenue={(id) => dispatch({ type: "select", venueId: id })}
       />
@@ -536,9 +570,12 @@ export default function App() {
           <em>what’s to come.</em>
         </h2>
         <p>
-          This is an interactive demo with fictional Brooklyn restaurants,
-          illustrative menus, prices, dietary options, ratings, walking times,
-          and photography.
+          The real map uses OpenStreetMap-based geography. Device location is
+          requested only after you choose Use my location; map and weather
+          providers receive the chosen area. Dining features remain an
+          interactive demo with fictional Brooklyn restaurants, illustrative
+          menus, prices, dietary options, ratings, walking times, and
+          photography.
         </p>
         <p>
           Recommendations use a local taste, budget, and dietary filter.{" "}
@@ -547,8 +584,9 @@ export default function App() {
         </p>
         <p>
           Plans can be saved on this device and exported as text. Nothing is
-          booked, sent, or shared automatically. No location is collected.
-          Always confirm dietary needs directly with a restaurant.
+          booked, sent, or shared automatically. No location is automatically
+          collected or shared with guests. Always confirm dietary needs directly
+          with a restaurant.
         </p>
         <button className="primary-button" onClick={() => setAbout(false)}>
           Pull up a chair <ArrowRight size={16} />

@@ -1,5 +1,7 @@
 # Common Table UI handoff
 
+**Current location integration:** see [location/HANDOFF.md](location/HANDOFF.md) for the real map, city/device location, OpenWeather setup, live screenshots and the latest 42-browser/47-domain-and-backend validation. The sections below record the earlier immersive dining-demo revision.
+
 Built on `feat/immersive-common-table`, from the repository's initial README. No public push or deployment, no private Kitchen Studio code, and no prototype ZIP was needed.
 
 ## Preview
