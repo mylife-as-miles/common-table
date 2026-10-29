@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -7,9 +8,9 @@ import {
   Leaf,
   Map,
   MapPin,
-  Minus,
   Plus,
-  SlidersHorizontal,
+  ChevronLeft,
+  BellRing,
   Utensils,
   X,
 } from "lucide-react";
@@ -17,7 +18,8 @@ import { useCommonTable, venues } from "./domain";
 import MenuBook from "./components/MenuBook";
 import { SharedTable } from "./components/SharedTable";
 import { DinnerPlan } from "./components/DinnerPlan";
-import { NeighborhoodMap } from "./components/NeighborhoodMap";
+import { ImmersiveMap } from "./components/ImmersiveMap";
+import { Waiter } from "./components/Waiter";
 
 type View = "explore" | "table" | "plan";
 const viewFromHash = (): View =>
@@ -26,11 +28,13 @@ const viewFromHash = (): View =>
     : location.hash === "#plan"
       ? "plan"
       : "explore";
+const modeFromHash = () =>
+  location.hash === "#menu" ? ("book" as const) : ("map" as const);
 export default function App() {
   const { state, dispatch, ranked, selectedVenue, storageAvailable } =
     useCommonTable();
   const [view, setView] = useState<View>(viewFromHash);
-  const [mode, setMode] = useState<"book" | "map">("book");
+  const [mode, setMode] = useState<"book" | "map">(modeFromHash);
   const [lowPower, setLowPower] = useState(() => {
     try {
       return localStorage.getItem("common-table-low-power") === "true";
@@ -43,10 +47,17 @@ export default function App() {
   const [about, setAbout] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const aboutRef = useRef<HTMLDialogElement>(null);
-  const waiterRef = useRef<HTMLButtonElement>(null);
+  const transition = useRef<ViewTransition | null>(null);
+  const modeIntent = useRef<"map" | "book">(modeFromHash());
   useEffect(() => {
     const change = () => {
-      setView(viewFromHash());
+      const nextView = viewFromHash();
+      setView(nextView);
+      if (nextView === "explore" && modeIntent.current !== modeFromHash()) {
+        modeIntent.current = modeFromHash();
+        transition.current?.skipTransition();
+        setMode(modeFromHash());
+      }
       setWaiterOpen(false);
       requestAnimationFrame(() => heading.current?.focus());
     };
@@ -63,21 +74,57 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [notice]);
   useEffect(() => {
-    if (!waiterOpen) return;
-    const dismiss = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setWaiterOpen(false);
-        waiterRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", dismiss);
-    return () => window.removeEventListener("keydown", dismiss);
-  }, [waiterOpen]);
+    if (lowPower) transition.current?.skipTransition();
+  }, [lowPower]);
+  useEffect(() => () => transition.current?.skipTransition(), []);
+  const switchMode = (next: "map" | "book") => {
+    if (modeIntent.current === next) return;
+    modeIntent.current = next;
+    transition.current?.skipTransition();
+    const update = () => flushSync(() => setMode(modeIntent.current));
+    if (
+      lowPower ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !document.startViewTransition
+    ) {
+      update();
+      return;
+    }
+    const active = document.startViewTransition(update);
+    transition.current = active;
+    active.ready.catch(() => {});
+    active.finished
+      .catch(() => {})
+      .finally(() => {
+        if (transition.current === active) transition.current = null;
+      });
+  };
   const navigate = (next: View) => {
     setView(next);
-    location.hash = next === "explore" ? "explore" : next;
+    location.hash =
+      next === "explore"
+        ? modeIntent.current === "book"
+          ? "menu"
+          : "explore"
+        : next;
     setWaiterOpen(false);
     requestAnimationFrame(() => heading.current?.focus());
+  };
+  const openMenu = () => {
+    switchMode("book");
+    navigate("explore");
+  };
+  const openMap = () => {
+    switchMode("map");
+    navigate("explore");
+  };
+  const shortlistSelected = () => {
+    dispatch({ type: "shortlist", venueId: selectedVenue.id });
+    setNotice(
+      state.shortlist.includes(selectedVenue.id)
+        ? "Removed from your shortlist."
+        : "Kept on your shortlist.",
+    );
   };
   const move = (direction: number) => {
     if (!ranked.length) return;
@@ -96,7 +143,6 @@ export default function App() {
   const reason =
     ranked.find((x) => x.venue.id === selectedVenue.id)?.reasons.join(" · ") ??
     "Adjust your table’s tastes to find a fit.";
-  const planned = venues.find((x) => x.id === state.plan.venueId);
   const togglePower = () => {
     setLowPower(!lowPower);
     try {
@@ -105,18 +151,6 @@ export default function App() {
       /* Optional preference */
     }
   };
-  const waiterMessage =
-    view === "plan"
-      ? state.plan.saved
-        ? "Your plan is tucked away. You can copy the details when you’re ready."
-        : "A little detail goes a long way. Pick a date and time, then confirm the table’s demo approvals to save your evening."
-      : view === "table"
-        ? state.participants.length === 1
-          ? "A table for one is a lovely start. Set your tastes, or add a demo guest to see how the group fit changes."
-          : `${state.participants.length} tastes, one table. I’ll keep everyone’s budget and dietary needs in mind.`
-        : ranked.length
-          ? `${selectedVenue.name} looks promising. ${ranked[0]?.venue.id === selectedVenue.id ? "It’s the strongest fit for your table right now." : "Take a look inside, or turn the page for another possibility."}`
-          : "Nothing fits every preference yet. Try adjusting a budget or undoing a pass; I won’t quietly ignore anyone’s needs.";
   return (
     <div className={`app ${lowPower ? "low-power" : ""}`}>
       <a
@@ -134,7 +168,7 @@ export default function App() {
           className="brand"
           href="#explore"
           aria-label="Common Table home"
-          onClick={() => navigate("explore")}
+          onClick={openMap}
         >
           <span className="brand-icon">
             <Utensils size={23} strokeWidth={1.35} />
@@ -149,7 +183,7 @@ export default function App() {
             <button
               key={item}
               aria-current={view === item ? "page" : undefined}
-              onClick={() => navigate(item)}
+              onClick={() => (item === "explore" ? openMap() : navigate(item))}
             >
               <span className="nav-number">0{i + 1}</span>
               {item === "explore"
@@ -213,210 +247,203 @@ export default function App() {
                 </button>
               </>
             ) : (
-              <button
-                className="text-button"
-                onClick={() => navigate("explore")}
-              >
+              <button className="text-button" onClick={openMap}>
                 Back to the neighborhood <ArrowRight size={16} />
               </button>
             )}
           </div>
         </section>
         {view === "explore" ? (
-          <section
-            className={`explore-layout ${mode === "map" ? "wide-map" : ""}`}
-            aria-label="Restaurant discovery"
-          >
-            <aside className="discovery-sidebar">
-              <div className="sidebar-title">
-                <span className="eyebrow">THE NEIGHBORHOOD</span>
-                <span className="mini-line" />
-              </div>
-              <NeighborhoodMap
-                venues={ranked.map((x) => x.venue)}
-                selected={selectedVenue}
-                onSelect={(id) => dispatch({ type: "select", venueId: id })}
-                onOpenMenu={() => setMode("map")}
-              />
-              <div className="sidebar-location">
-                <h2>
-                  A little closer to
-                  <br />
-                  <em>your kind of place.</em>
-                </h2>
-                <p>
-                  Good corners of Brooklyn,
-                  <br />
-                  chosen around your table.
-                </p>
-              </div>
-              <button
-                className="taste-button"
-                onClick={() => navigate("table")}
-              >
-                <span className="taste-icon">
-                  <SlidersHorizontal size={16} />
-                </span>
-                <span>
-                  <b>Your table’s tastes</b>
-                  <small>
-                    {state.participants.length === 1
-                      ? "Just you, for now"
-                      : `${state.participants.length} people · every taste counts`}{" "}
-                    · ${Math.min(...state.participants.map((x) => x.budget))}{" "}
-                    budget
-                  </small>
-                </span>
-                <ArrowUpRight size={16} />
-              </button>
-              <div className="discovery-note">
-                <Leaf size={19} strokeWidth={1.2} />
-                <p>
-                  A thoughtful shortlist,
-                  <br />
-                  not an endless scroll.
-                </p>
-              </div>
-            </aside>
-            <div className="discovery-main">
-              <button
-                className="mobile-neighborhood"
-                onClick={() => setMode(mode === "book" ? "map" : "book")}
-              >
-                <MapPin size={17} />
-                <span>
-                  Brooklyn, a little closer
-                  <small>{ranked.length} places around your table</small>
-                </span>
-                <b>
-                  {mode === "book" ? "Open map" : "Open menu"}{" "}
-                  <ArrowUpRight size={13} />
-                </b>
-              </button>
-              <div className="book-toolbar">
-                <span>
-                  <span className="status-dot" /> {ranked.length} places to find
-                  common ground
-                </span>
-                <div className="view-switch" aria-label="Discovery view">
-                  <button
-                    aria-pressed={mode === "book"}
-                    onClick={() => setMode("book")}
-                  >
-                    <BookOpen size={14} /> Menu
-                  </button>
-                  <button
-                    aria-pressed={mode === "map"}
-                    onClick={() => setMode("map")}
-                  >
-                    <Map size={14} /> Map
-                  </button>
-                </div>
-              </div>
-              {!ranked.length ? (
-                <div className="empty-discovery">
-                  <Leaf size={40} />
-                  <h2>Let’s make a little room.</h2>
+          mode === "map" && ranked.length > 0 ? (
+            <ImmersiveMap
+              venues={ranked.map((item) => item.venue)}
+              selected={selectedVenue}
+              participants={state.participants}
+              shortlist={state.shortlist}
+              plannedVenueId={state.plan.venueId}
+              onSelect={(id) => dispatch({ type: "select", venueId: id })}
+              onOpenMenu={openMenu}
+              onShortlist={shortlistSelected}
+              onTable={() => navigate("table")}
+              onAskWaiter={() => setWaiterOpen(true)}
+              lowPower={lowPower}
+            />
+          ) : (
+            <section
+              className="explore-layout book-world"
+              aria-label="Restaurant discovery"
+            >
+              <aside className="discovery-sidebar book-journey-rail">
+                <span className="eyebrow">THE EVENING IS UNFOLDING</span>
+                <button className="atlas-return" onClick={openMap}>
+                  <span className="folded-atlas" aria-hidden="true">
+                    <Map size={33} strokeWidth={1} />
+                  </span>
+                  <span>
+                    Back to the
+                    <br />
+                    <em>neighborhood.</em>
+                    <small>
+                      <ChevronLeft size={12} /> Unfold your map
+                    </small>
+                  </span>
+                </button>
+                <div className="rail-place-note">
+                  <span className="eyebrow">YOU’RE READING</span>
+                  <h2>{selectedVenue.name}</h2>
                   <p>
-                    No demo restaurant meets every budget and dietary need.
-                    Adjust your table, or revisit a place you passed.
+                    {selectedVenue.neighborhood}
+                    <br />
+                    {selectedVenue.cuisine}
                   </p>
-                  <button
-                    className="primary-button"
-                    onClick={() => navigate("table")}
-                  >
-                    Review your table <ArrowRight size={16} />
-                  </button>
-                  {state.vetoes.map((id) => (
-                    <button
-                      className="text-button"
-                      key={id}
-                      onClick={() =>
-                        dispatch({ type: "undo-veto", venueId: id })
-                      }
-                    >
-                      Reconsider {venues.find((v) => v.id === id)?.name}{" "}
-                      <Plus size={14} />
-                    </button>
-                  ))}
                 </div>
-              ) : mode === "book" ? (
-                <MenuBook
-                  chosen={state.plan.venueId === selectedVenue.id}
-                  venue={selectedVenue}
-                  shortlisted={state.shortlist.includes(selectedVenue.id)}
-                  onShortlist={() => {
-                    dispatch({ type: "shortlist", venueId: selectedVenue.id });
-                    setNotice(
-                      state.shortlist.includes(selectedVenue.id)
-                        ? "Removed from your shortlist."
-                        : "Kept on your shortlist.",
-                    );
-                  }}
-                  onVeto={() => {
-                    dispatch({ type: "veto", venueId: selectedVenue.id });
-                    setNotice(
-                      `Passed on ${selectedVenue.name}. Your suggestions have been revised.`,
-                    );
-                  }}
-                  onNext={() => move(1)}
-                  onPrevious={() => move(-1)}
-                  onChoose={choose}
-                  index={Math.max(
-                    0,
-                    ranked.findIndex((x) => x.venue.id === selectedVenue.id),
-                  )}
-                  total={ranked.length}
-                  reason={reason}
-                  lowPower={lowPower}
-                />
-              ) : (
-                <div className="expanded-map-wrap">
-                  <NeighborhoodMap
-                    expanded
-                    venues={ranked.map((x) => x.venue)}
-                    selected={selectedVenue}
-                    onSelect={(id) => dispatch({ type: "select", venueId: id })}
-                  />
-                  <div className="map-venue-card">
-                    <img
-                      src={selectedVenue.image}
-                      alt={`Illustrative interior for ${selectedVenue.name}`}
-                    />
-                    <div>
-                      <span className="eyebrow">A PLACE FOR YOUR TABLE</span>
-                      <h2>{selectedVenue.name}</h2>
-                      <p>
-                        {selectedVenue.cuisine} · ${selectedVenue.price} /
-                        person
-                      </p>
-                    </div>
-                    <button
-                      className="primary-button"
-                      onClick={() => setMode("book")}
-                    >
-                      Open menu <BookOpen size={16} />
+                <button
+                  className="taste-button"
+                  onClick={() => navigate("table")}
+                >
+                  <span className="rail-people" aria-hidden="true">
+                    {state.participants.slice(0, 3).map((person) => (
+                      <i key={person.id} style={{ background: person.color }}>
+                        {person.name[0]}
+                      </i>
+                    ))}
+                  </span>
+                  <span>
+                    <b>
+                      {state.participants.length === 1
+                        ? "A table just for you"
+                        : `${state.participants.length} tastes, one table`}
+                    </b>
+                    <small>Every preference comes with you</small>
+                  </span>
+                  <ArrowUpRight size={14} />
+                </button>
+                <div className="discovery-note">
+                  <Leaf size={19} strokeWidth={1.2} />
+                  <p>
+                    From a place on the map
+                    <br />
+                    to a story at the table.
+                  </p>
+                </div>
+                <button
+                  className="rail-service"
+                  onClick={() => setWaiterOpen(true)}
+                >
+                  <BellRing size={18} strokeWidth={1.2} />
+                  <span>
+                    A word with
+                    <br />
+                    <b>The Waiter</b>
+                  </span>
+                  <ArrowUpRight size={14} />
+                </button>
+              </aside>
+              <div className="discovery-main">
+                <button className="mobile-neighborhood" onClick={openMap}>
+                  <MapPin size={17} />
+                  <span>
+                    Brooklyn, a little closer
+                    <small>{ranked.length} places around your table</small>
+                  </span>
+                  <b>
+                    {mode === "book" ? "Open map" : "Open menu"}{" "}
+                    <ArrowUpRight size={13} />
+                  </b>
+                </button>
+                <div className="book-toolbar">
+                  <span>
+                    <span className="status-dot" /> {ranked.length} places to
+                    find common ground
+                  </span>
+                  <div className="view-switch" aria-label="Discovery view">
+                    <button aria-pressed={mode === "book"} onClick={openMenu}>
+                      <BookOpen size={14} /> Menu
+                    </button>
+                    <button aria-pressed={mode === "map"} onClick={openMap}>
+                      <Map size={14} /> Map
                     </button>
                   </div>
                 </div>
-              )}
-              <div className="under-book">
-                <span>FICTIONAL PLACES. REAL POSSIBILITIES.</span>
-                <p>
-                  {mode === "book"
-                    ? "Turn a page. Find a feeling."
-                    : "Choose a pin. Meet your next favorite."}{" "}
-                  <span>✳</span>
-                </p>
-                <span>THE BROOKLYN EDITION · VOL. 01</span>
+                {!ranked.length ? (
+                  <div className="empty-discovery">
+                    <Leaf size={40} />
+                    <h2>Let’s make a little room.</h2>
+                    <p>
+                      No demo restaurant meets every budget and dietary need.
+                      Adjust your table, or revisit a place you passed.
+                    </p>
+                    <button
+                      className="primary-button"
+                      onClick={() => navigate("table")}
+                    >
+                      Review your table <ArrowRight size={16} />
+                    </button>
+                    {state.vetoes.map((id) => (
+                      <button
+                        className="text-button"
+                        key={id}
+                        onClick={() =>
+                          dispatch({ type: "undo-veto", venueId: id })
+                        }
+                      >
+                        Reconsider {venues.find((v) => v.id === id)?.name}{" "}
+                        <Plus size={14} />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <MenuBook
+                    chosen={state.plan.venueId === selectedVenue.id}
+                    venue={selectedVenue}
+                    shortlisted={state.shortlist.includes(selectedVenue.id)}
+                    onShortlist={() => {
+                      dispatch({
+                        type: "shortlist",
+                        venueId: selectedVenue.id,
+                      });
+                      setNotice(
+                        state.shortlist.includes(selectedVenue.id)
+                          ? "Removed from your shortlist."
+                          : "Kept on your shortlist.",
+                      );
+                    }}
+                    onVeto={() => {
+                      dispatch({ type: "veto", venueId: selectedVenue.id });
+                      setNotice(
+                        `Passed on ${selectedVenue.name}. Your suggestions have been revised.`,
+                      );
+                    }}
+                    onNext={() => move(1)}
+                    onPrevious={() => move(-1)}
+                    onChoose={choose}
+                    index={Math.max(
+                      0,
+                      ranked.findIndex((x) => x.venue.id === selectedVenue.id),
+                    )}
+                    total={ranked.length}
+                    reason={reason}
+                    lowPower={lowPower}
+                  />
+                )}
+                <div className="under-book">
+                  <span>FICTIONAL PLACES. REAL POSSIBILITIES.</span>
+                  <p>
+                    {mode === "book"
+                      ? "Turn a page. Find a feeling."
+                      : "Choose a pin. Meet your next favorite."}{" "}
+                    <span>✳</span>
+                  </p>
+                  <span>THE BROOKLYN EDITION · VOL. 01</span>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )
         ) : view === "table" ? (
           <SharedTable
             state={state}
             dispatch={dispatch}
-            onExplore={() => navigate("explore")}
+            onExplore={openMenu}
             onPlan={() => navigate("plan")}
           />
         ) : (
@@ -424,7 +451,7 @@ export default function App() {
             storageAvailable={storageAvailable}
             state={state}
             dispatch={dispatch}
-            onExplore={() => navigate("explore")}
+            onExplore={openMenu}
             onTable={() => navigate("table")}
           />
         )}
@@ -444,81 +471,19 @@ export default function App() {
           </div>
         )}
       </main>
-      <div className="waiter-dock">
-        <div className="waiter-avatar" aria-hidden="true">
-          <Utensils size={19} strokeWidth={1.4} />
-        </div>
-        <div className="waiter-intro">
-          <b>
-            The Waiter <span>AT YOUR SERVICE</span>
-          </b>
-          <p>
-            {view === "explore" ? (
-              <>
-                A good evening starts with a place that feels{" "}
-                <em>just right.</em>
-              </>
-            ) : planned ? (
-              <>A place at {planned.name}. The rest is coming together.</>
-            ) : (
-              <>Let’s find a little common ground.</>
-            )}
-          </p>
-        </div>
-        <button
-          ref={waiterRef}
-          className="waiter-toggle"
-          aria-expanded={waiterOpen}
-          aria-controls="waiter-panel"
-          onClick={() => setWaiterOpen(!waiterOpen)}
-        >
-          {waiterOpen ? "Close" : "A little guidance"}
-          {waiterOpen ? <Minus size={15} /> : <Plus size={15} />}
-        </button>
-      </div>
-      {waiterOpen && (
-        <section
-          className="waiter-panel"
-          id="waiter-panel"
-          aria-label="The Waiter’s guidance"
-        >
-          <button
-            className="waiter-close"
-            aria-label="Close guidance"
-            onClick={() => {
-              setWaiterOpen(false);
-              waiterRef.current?.focus();
-            }}
-          >
-            <X size={16} />
-          </button>
-          <span className="eyebrow">A THOUGHT FROM THE WAITER</span>
-          <h2>Shall we?</h2>
-          <p>{waiterMessage}</p>
-          <button
-            className="primary-button"
-            onClick={() =>
-              navigate(
-                view === "explore"
-                  ? "table"
-                  : view === "table" && state.plan.venueId
-                    ? "plan"
-                    : "explore",
-              )
-            }
-          >
-            {view === "explore"
-              ? "Refine your tastes"
-              : view === "table" && state.plan.venueId
-                ? "Put the evening together"
-                : "Explore the neighborhood"}
-            <ArrowRight size={15} />
-          </button>
-          <small>
-            Contextual demo guidance. No bookings or messages are sent.
-          </small>
-        </section>
-      )}
+      <Waiter
+        state={state}
+        dispatch={dispatch}
+        view={view}
+        mode={mode}
+        lowPower={lowPower}
+        storageAvailable={storageAvailable}
+        open={waiterOpen}
+        onOpenChange={setWaiterOpen}
+        onNavigate={(next) => (next === "explore" ? openMap() : navigate(next))}
+        onOpenMenu={openMenu}
+        onSelectVenue={(id) => dispatch({ type: "select", venueId: id })}
+      />
       <footer className="site-footer">
         <span>Made for the moments between bites.</span>
         <div>

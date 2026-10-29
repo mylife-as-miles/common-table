@@ -7,12 +7,19 @@ const nav = (page: Page, name: string) =>
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("button", { name: new RegExp(name) });
 const note = (page: Page) => page.getByLabel("A note for the evening");
+async function openMenu(page: Page) {
+  if (!(await page.locator(".menu-book").isVisible())) {
+    await page.getByRole("button", { name: /^Open (the )?menu$/, exact: true }).click();
+  }
+  await expect(page.locator(".menu-book")).toBeVisible();
+}
 async function approveAll(page: Page) {
   for (const approval of await page.getByRole("checkbox").all())
     await approval.check();
 }
 async function choosePlan(page: Page) {
   await page.goto("/");
+  await openMenu(page);
   await page.getByRole("button", { name: "Bring this to the table" }).click();
   await expect(page).toHaveURL(/#table$/);
   await nav(page, "Dinner plan").click();
@@ -25,31 +32,13 @@ test("map, book, table and dinner plan retain the same chosen venue; Back return
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Expand neighborhood map" }).click();
-  await expect(page.locator(".map-expanded")).toBeVisible();
-  await page.getByRole("button", { name: "Expand neighborhood map" }).click();
-  await expect(page.locator(".map-expanded")).toHaveCount(1);
-  for (let i = 0; i < 2; i++) {
-    await expect(
-      page.getByRole("button", { name: "Zoom out", exact: true }),
-    ).toBeDisabled();
-    await page.getByRole("button", { name: "Zoom in", exact: true }).click();
-    await page.getByRole("button", { name: "Zoom in", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Zoom in", exact: true }),
-    ).toBeDisabled();
-    await page.getByRole("button", { name: "Zoom out", exact: true }).click();
-    await page.getByRole("button", { name: "Zoom out", exact: true }).click();
-  }
-  await page
-    .locator(".map-expanded")
-    .getByRole("button", { name: "Explore Olive & Ember" })
-    .click();
-  await expect(page.locator(".map-venue-card")).toContainText("Olive & Ember");
-  await page.getByRole("button", { name: "Open menu", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "Olive & Ember", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".immersive-atlas")).toBeVisible();
+  await page.getByRole("button", { name: /^Places/ }).click();
+  await page.getByRole("complementary", { name: "Restaurants on this map" })
+    .getByRole("button", { name: /Olive & Ember/ }).click();
+  await expect(page.getByRole("article", { name: "Olive & Ember, selected restaurant" })).toBeVisible();
+  await openMenu(page);
+  await expect(page.locator(".book-restaurant-title")).toContainText("Olive & Ember");
   await page.getByRole("button", { name: "Bring this to the table" }).click();
   await expect(page).toHaveURL(/#table$/);
   await expect(page.locator("main")).toContainText("Olive & Ember");
@@ -74,6 +63,7 @@ test("shortlist toggles repeatedly without duplicate contenders", async ({
   page,
 }) => {
   await page.goto("/");
+  await openMenu(page);
   const save = page.getByRole("button", {
     name: "Save Juniper & Rye to shortlist",
     exact: true,
@@ -99,6 +89,7 @@ test("repeated vetoes revise recommendations, reach an honest empty state and ca
   page,
 }) => {
   await page.goto("/");
+  await openMenu(page);
   for (let i = 0; i < 6; i++) {
     await page
       .getByRole("button", { name: "Not this time · find another" })
@@ -118,7 +109,7 @@ test("repeated vetoes revise recommendations, reach an honest empty state and ca
     .getByRole("button", { name: "Reconsider Juniper & Rye", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Juniper & Rye", exact: true }),
+    page.locator(".book-restaurant-title").getByRole("heading", { name: "Juniper & Rye", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Next restaurant" }),
@@ -177,8 +168,9 @@ test("all dietary restrictions and the lowest budget are respected in candidate 
     "1 places fit this table",
   );
   await nav(page, "Explore").click();
+  await openMenu(page);
   await expect(
-    page.getByRole("heading", { name: "Casa Nopal", exact: true }),
+    page.locator(".book-restaurant-title").getByRole("heading", { name: "Casa Nopal", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".book-match-note")).toContainText(
     "Gluten-free + Vegan + Nut-free",
@@ -320,8 +312,8 @@ test("keyboard dialog focus is contained; Escape and Waiter close return focus w
   ).toContainText("Juniper & Rye");
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("region", { name: "The Waiter’s guidance" }),
-  ).toHaveCount(0);
+    page.getByRole("dialog", { name: "The Waiter, at your service" }),
+  ).not.toBeVisible();
   await expect(guidance).toBeFocused();
   await guidance.click();
   await page
@@ -337,12 +329,13 @@ test("mobile pages support keyboard switching, no horizontal overflow and motion
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
+  await openMenu(page);
   await expect(page.getByRole("tab", { name: "The menu" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
   await expect(
-    page.getByRole("heading", { name: "Juniper & Rye", exact: true }),
+    page.locator(".book-restaurant-title").getByRole("heading", { name: "Juniper & Rye", exact: true }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "The menu" }).focus();
   await page.keyboard.press("ArrowLeft");
@@ -384,13 +377,16 @@ test("mobile pages support keyboard switching, no horizontal overflow and motion
 });
 
 for (const mobile of [false, true]) {
-  for (const view of ["explore", "table", "plan"]) {
+  for (const view of ["explore", "menu", "table", "plan"]) {
     test(`WCAG A/AA automated scan: ${mobile ? "mobile" : "desktop"} ${view}`, async ({
       page,
     }) => {
       if (mobile) await page.setViewportSize({ width: 390, height: 844 });
       if (view === "plan") await choosePlan(page);
-      else await page.goto(`/#${view}`);
+      else {
+        await page.goto(`/#${view === "menu" ? "explore" : view}`);
+        if (view === "menu") await openMenu(page);
+      }
       await page.evaluate(() => document.fonts.ready);
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])

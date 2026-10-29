@@ -16,8 +16,24 @@ Local workspace server: http://localhost:4174. Start it with `npm run dev -- --p
 - [Mobile taste collection](06-table-mobile.png)
 - [Mobile agreed plan](07-plan-mobile.png)
 - [Desktop saved receipt](08-plan-desktop.png)
+- [Atlas in evening light](09-map-evening-desktop.png)
+- [The Waiter's service pad](10-waiter-desktop.png)
+- [The Waiter's fit reasoning](11-waiter-reasoning-desktop.png)
+- [Mobile atlas](12-map-mobile.png)
+- [Mobile Waiter](13-waiter-mobile.png)
+- [Actual interaction recording](immersive/interaction-demo.mp4)
 
-Run `npm run screenshots` against the preview to reproduce the journey using actual UI actions.
+Run `npm run screenshots` against the preview to reproduce all thirteen screenshots using actual UI actions. The video records real map dragging, selection, light change, the shared photo/title flight into the menu, service bell interactions, typed local intent, shortlist updates, and arrival at the table.
+
+## Immersive atlas and companion revision
+
+The atlas is now the entry view, with authored river/bridge/park geometry, raised brownstones, photo tokens, paper folds, drag/keyboard camera control, bounded zoom, reset, flat mode, and evening lighting. A restaurant index provides an equivalent list. Token focus brings the place into view without hidden-canvas scrolling. Its geography and the line to the table are explicitly schematic.
+
+The same selected photo and title travel into the menu through a finite shared-object transition. `#explore` and `#menu` distinguish atlas and menu; browser Back restores the previous object/view and heading focus. Reduced motion, low power, and browsers without the View Transition API use immediate transitions.
+
+The Waiter is an original interactive brass service bell with a linen service counter and ring-bound pad. It can explain the actual table fit, cycle through all eligible alternatives, keep contenders, show group constraints, and guide the remaining plan steps. Typed requests use a limited local intent vocabulary with explicit unsupported-action fallbacks. The companion has an inline counter on all viewport sizes and cannot cover controls.
+
+The new review started afresh at approximately 8.5 desktop / 7.8 mobile for the atlas. Iterations addressed contrast, orientation, a distinctive bridge landmark, mobile hierarchy, disclosure, and an independently reproduced bell/bookmark overlap. The final independent judgment was **about 9/10 for the unified interactive demo**, with no P1 design issue. The score remains subjective; it does not claim production integrations are complete. Reference research, access limitations, and Proofline's read-only review are in [DESIGN_REFERENCES.md](../DESIGN_REFERENCES.md).
 
 ## Independent review
 
@@ -33,10 +49,10 @@ Minor polish remains: small desktop tertiary type, schematic map label cropping,
 
 - Production build and TypeScript: pass.
 - Domain tests: **33 pass**.
-- Browser tests: **16 pass**, including six desktop/mobile WCAG A/AA automated scans with no violations or suppressed rules.
+- Browser tests: **30 pass** in the final combined run, including ten desktop/mobile WCAG A/AA automated scans (atlas, menu, table, plan, and Waiter) with no violations or suppressed rules. Machine-readable results: [browser-test-results.json](immersive/browser-test-results.json).
 - Actual pointer clicks, repeated shortlist/veto/undo, exhausted results, guest cancel/Escape/focus, group constraints, local approvals, plan invalidation/reload, clipboard and download, blocked storage, browser Back, low-power and reduced motion are covered.
 - Additional layout checks at 320, 620, 768, 1024, and 1920 pixels found no horizontal overflow in Explore, Table, or Plan.
-- Fonts reduced from about 1.6 MB to 184 KB including licenses; local photographs total about 1.2 MB. Initial production JS is about 89 KB gzip, CSS about 14 KB gzip. No WebGL or perpetual animation loop.
+- Fonts reduced from about 1.6 MB to 184 KB including licenses; local photographs total about 1.2 MB. Initial production JS is about 101 KB gzip, CSS about 21 KB gzip. No WebGL or perpetual animation loop.
 
 Automated accessibility scans do not establish full WCAG conformance; assistive technology and real-device testing remain valuable.
 

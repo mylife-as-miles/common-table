@@ -17,17 +17,18 @@ Open http://localhost:4174. `npm run build` typechecks and creates the productio
 
 ## Working experience
 
-- Explore through the connected map and physical menu. Mobile presents one page at a time with accessible page tabs.
+- Enter through an authored Brooklyn supper atlas: raised brownstones, a riverfront and suspension bridge, park paths, folded paper, physical photo tokens, and a connection to your shared table. Drag, pan with arrow keys, zoom, reset, change the light, or flatten the city. An equivalent restaurant index supports list navigation.
+- Opening a restaurant carries the same photo and title into its physical menu through a finite shared-object transition. Map and book have distinct URLs (`#explore`, `#menu`), so browser Back restores the previous view. Mobile presents one paper page at a time with accessible tabs.
 - Bookmark contenders, veto a venue, see revised candidates, and undo any veto. Exhausted results never silently reintroduce a rejected venue.
 - Start solo or add up to five local demo guests. Edit tastes, moods, budgets, and dietary needs. Every person's budget and all restrictions are hard constraints; taste overlap ranks eligible candidates.
 - Choose a venue, set the date/time/note, collect each participant's **simulated local approval**, and save. People or plan changes clear approvals and require saving again. Browsing other venues preserves the existing plan.
 - Copy/download the suggested plan as text. This does not create a hosted sharing link or send an invitation.
-- The Waiter offers deterministic contextual guidance. It has no model/API connection or permission to book, invite, or share location.
+- The Waiter is a tangible brass service bell and ring-bound service pad. Ring the character for a contextual tip, ask why a place fits, cycle through eligible alternatives, keep a contender, or work through the steps to finish tonight. Typed requests recognize a limited local set of intents and give an honest fallback. It has no model/API connection or permission to book, invite, or share location.
 - Browser-local persistence validates stored data and recovers safely from obsolete or malformed snapshots. Storage failures are disclosed; session-only plans can still be exported.
 
 ## Accessibility and performance
 
-Semantic controls, labeled forms, native modal focus handling, mobile tab arrow-key navigation, focus restoration after guest cancel/remove, live feedback, and visible focus indicators. Honors reduced motion and offers a low-power setting. Depth uses CSS; finite page turns use Web Animations with cancellation. No WebGL, continuous render loop, or third-party requests are required. Fonts and photos are local.
+Semantic controls, labeled forms, native modal focus handling, mobile tab arrow-key navigation, focus restoration after guest cancel/remove, live feedback, and visible focus indicators. Tab-focusing an offscreen map token brings it into view without scrolling the hidden canvas. The service counter stays in document flow and never covers map controls. Honors reduced motion and offers a low-power setting. Depth uses SVG/CSS; finite page turns use Web Animations with cancellation, and shared photo/title motion uses the View Transition API with an immediate fallback. No WebGL, continuous render loop, or third-party requests are required. Fonts and photos are local.
 
 ## Verify
 
@@ -39,12 +40,12 @@ npm run screenshots
 
 Browser tests use system Chromium (`/usr/bin/chromium`); set `CHROMIUM_PATH` for another path. Tests cover actual pointer actions, connected selection, repeated shortlist/veto/undo, exhausted results, guest cancel/Escape/focus, approvals and invalidation, persistence, copy/download, Back navigation, mobile overflow, motion fallbacks, and automated WCAG A/AA scans. Automated checks supplement manual review and do not establish full accessibility conformance.
 
-Screenshots are in `artifacts/`. Capture requires the dev server on port 4174 (or set `PREVIEW_URL`).
+Thirteen final screenshots are in `artifacts/`, including the atlas on desktop/mobile, evening light, the Waiter's pad, and the connected book/table/plan. Capture requires the dev server on port 4174 (or set `PREVIEW_URL`). An actual recorded interaction is in `artifacts/immersive/interaction-demo.mp4`; `scripts/record-demo.mjs` reproduces a WebM recording after `npx playwright install ffmpeg`.
 
 ## Structure
 
 - `src/domain/`: typed demo data, reducer, ranking, validation, persistence, and future recommendation provider interface.
-- `src/components/`: menu book, schematic map, shared table, and plan receipt.
+- `src/components/`: physical atlas, menu book, shared table, plan receipt, and embodied Waiter.
 - `src/App.tsx`: connected navigation, The Waiter, and demo disclosure.
 - `tests/`: domain and browser tests; `scripts/capture.mjs`: reproducible screenshot journey.
 
@@ -59,3 +60,5 @@ Screenshots are in `artifacts/`. Capture requires the dev server on port 4174 (o
 ## Assets
 
 Cormorant Garamond and DM Sans from Google Fonts, subset and served locally (SIL Open Font License; `public/fonts/OFL-*.txt`). Illustrative photography from Unsplash; URLs in `public/images/SOURCES.txt`. The original schematic map is not a navigation service.
+
+Reference research and the limits of accessible sources are documented in [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md). Bump informed spatial presence; Proofline informed physical origin and return. The atlas, character, UI, geometry, and behavior are original implementations.
