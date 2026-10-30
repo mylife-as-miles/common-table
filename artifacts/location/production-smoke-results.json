@@ -1,9 +1,9 @@
 {
-  "staticStatus": 200,
-  "weatherConfigured": false,
-  "searchSource": "photon",
-  "resultCount": 5,
-  "chosenArea": "Paris, Île-de-France, France",
-  "weatherStatus": 503,
-  "weatherCode": "not_configured"
+  "applicationStatus": 200,
+  "geocodeStatus": 200,
+  "source": "photon",
+  "selectedArea": "Paris, Île-de-France, France",
+  "retiredWeatherStatus": 404,
+  "retiredConfigStatus": 404,
+  "apiKeyRequired": false
 }

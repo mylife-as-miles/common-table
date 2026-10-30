@@ -19,10 +19,22 @@ import type {
 import type { Map as RasterMap, Marker as RasterMarker } from "leaflet";
 import "./geographic-map.css";
 
+export interface MapPoint {
+  id: string;
+  name: string;
+  category: "food" | "coffee" | "outdoors" | "other";
+  latitude: number;
+  longitude: number;
+}
+
 export interface GeographicMapProps {
   location: { latitude: number; longitude: number; label: string };
   lowPower: boolean;
-  weather: { condition: string; isDay: boolean } | null;
+  atmosphere?: "day" | "supper";
+  lens?: "all" | "food" | "coffee" | "outdoors";
+  selectedPoint?: MapPoint | null;
+  onPointSelect?: (point: MapPoint) => void;
+  onPointsChange?: (points: MapPoint[]) => void;
   showAreaLabel?: boolean;
   onCameraChange?: (coords: { latitude: number; longitude: number }) => void;
 }
@@ -33,6 +45,7 @@ type Engine =
 type Status = "loading" | "ready" | "error";
 const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const AREA_ZOOM = 14.8;
+const overviewZoom = (width: number) => (width < 650 ? 14.1 : AREA_ZOOM);
 const MARKER_HTML =
   '<span class="geo-marker-head"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 21s7-6 7-12A7 7 0 0 0 5 9c0 6 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg></span><span class="geo-marker-caption">Selected area</span>';
 const validLocation = (location: GeographicMapProps["location"]) =>
@@ -99,6 +112,12 @@ function tableStyle(
         "text-color": colors.text,
         "text-halo-color": night ? "#cbd0bc" : "#f8f1df",
       };
+    if (layer.type === "symbol" && /^poi_r/.test(layer.id)) {
+      layer.minzoom = Math.min(layer.minzoom ?? 15, 14);
+      layer.layout = { ...layer.layout, visibility: "none" };
+      // The independent POI layer below supplies geometry; bounded DOM objects
+      // replace these provider labels without depending on their rank filters.
+    }
     if (layer.type === "symbol" && layer.id === "poi_transit") {
       // Keep major transport anchors; repeated neighborhood bus stops obscure
       // the streets and buildings at our neighborhood overview scale.
@@ -122,6 +141,36 @@ function tableStyle(
         "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
       };
   }
+  // Query actual point geometry through a presentation-independent layer.
+  // No glyphs, sprites, ranks or provider label filters control the place index.
+  // The app supplies the bounded, accessible names and collision management.
+  const poiLayer = style.layers.find(
+    (layer) =>
+      "source" in layer &&
+      (("source-layer" in layer && layer["source-layer"] === "poi") ||
+        (layer.type === "symbol" && /^poi_r/.test(layer.id))),
+  );
+  const poiSource = poiLayer && "source" in poiLayer ? poiLayer.source : null;
+  const poiSourceType =
+    typeof poiSource === "string" ? style.sources[poiSource]?.type : null;
+  if (
+    typeof poiSource === "string" &&
+    (poiSourceType === "vector" || poiSourceType === "geojson") &&
+    !style.layers.some((layer) => layer.id === "poi_common_table")
+  ) {
+    style.layers.push({
+      id: "poi_common_table",
+      type: "circle",
+      source: poiSource,
+      ...(poiSourceType === "vector" ? { "source-layer": "poi" } : {}),
+      minzoom: 14,
+      paint: {
+        "circle-radius": 1,
+        "circle-color": colors.text,
+        "circle-opacity": 0.001,
+      },
+    });
+  }
   style.light = {
     anchor: "viewport",
     color: night ? "#dfd7b4" : "#fff6dd",
@@ -143,15 +192,113 @@ function webGLAvailable() {
   }
 }
 
+const POINT_ICONS: Record<MapPoint["category"], string> = {
+  food: '<svg viewBox="0 0 28 28" width="26" height="26" fill="none" aria-hidden="true"><ellipse cx="14" cy="21" rx="10" ry="3" fill="currentColor" opacity=".14"/><circle cx="14" cy="13" r="8" stroke="currentColor" stroke-width="1.5"/><circle cx="14" cy="13" r="5" stroke="currentColor" stroke-width=".8"/><path d="M3 5v8m-2-8v5q2 3 4 0V5M25 5v15m0-15q-4 3-3 8h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  coffee:
+    '<svg viewBox="0 0 28 28" width="26" height="26" fill="none" aria-hidden="true"><ellipse cx="13" cy="22" rx="10" ry="2.5" fill="currentColor" opacity=".14"/><path d="M5 10h14v7q0 5-7 5t-7-5Zm14 1h3q5 5-3 7" fill="currentColor" fill-opacity=".08" stroke="currentColor" stroke-width="1.4"/><path d="M10 3q-3 2 0 4m5-5q-3 2 0 4M3 23h20" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>',
+  outdoors:
+    '<svg viewBox="0 0 28 28" width="26" height="26" fill="none" aria-hidden="true"><ellipse cx="14" cy="24" rx="10" ry="2" fill="currentColor" opacity=".14"/><path d="M14 24V12m0 5q-10 0-9-9 9-1 9 9Zm0-4Q13 3 23 3q1 10-9 10Z" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  other:
+    '<svg viewBox="0 0 28 28" width="26" height="26" fill="none" aria-hidden="true"><ellipse cx="14" cy="24" rx="8" ry="2" fill="currentColor" opacity=".14"/><path d="M14 3 17 10 24 13 17 16 14 23 11 16 4 13 11 10Z" fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+};
+
+function pointFromFeature(feature: {
+  id?: string | number;
+  source?: string;
+  sourceLayer?: string;
+  properties: Record<string, unknown> | null;
+  geometry: GeoJSON.Geometry;
+}): MapPoint | null {
+  const properties = feature.properties;
+  if (
+    !properties ||
+    (feature.geometry.type !== "Point" &&
+      feature.geometry.type !== "MultiPoint")
+  )
+    return null;
+  const rawName = [
+    properties["name:en"],
+    properties.name_en,
+    properties["name:latin"],
+    properties.name,
+  ].find((value) => typeof value === "string" && value.trim().length > 0);
+  if (typeof rawName !== "string" || !rawName.trim()) return null;
+  const name = rawName.trim().slice(0, 120);
+  const coordinate =
+    feature.geometry.type === "Point"
+      ? feature.geometry.coordinates
+      : feature.geometry.coordinates[0];
+  if (
+    !coordinate ||
+    !Number.isFinite(coordinate[0]) ||
+    !Number.isFinite(coordinate[1])
+  )
+    return null;
+  const [longitude, latitude] = coordinate;
+  if (Math.abs(latitude) > 85.051129 || Math.abs(longitude) > 180) return null;
+  const kinds = `${properties.class ?? ""} ${properties.subclass ?? ""}`
+    .toLowerCase()
+    .split(/[\s;,]+/);
+  const hasKind = (values: string[]) =>
+    kinds.some((kind) => values.includes(kind));
+  const category: MapPoint["category"] = hasKind([
+    "cafe",
+    "coffee",
+    "coffee_shop",
+    "tea_house",
+    "tea_room",
+  ])
+    ? "coffee"
+    : hasKind([
+          "food",
+          "restaurant",
+          "fast_food",
+          "food_court",
+          "bakery",
+          "biergarten",
+          "bar",
+          "pub",
+          "ice_cream",
+          "deli",
+        ])
+      ? "food"
+      : hasKind([
+            "park",
+            "garden",
+            "wood",
+            "forest",
+            "nature_reserve",
+            "beach",
+            "viewpoint",
+            "picnic_site",
+            "playground",
+          ])
+        ? "outdoors"
+        : "other";
+  const sourceKey = `${feature.source ?? "osm"}:${feature.sourceLayer ?? "poi"}`;
+  const providerId = feature.id ?? properties.osm_id;
+  const id =
+    providerId !== undefined && providerId !== null
+      ? `${sourceKey}:${String(providerId)}`
+      : `${sourceKey}:${name.toLocaleLowerCase()}:${longitude.toFixed(4)}:${latitude.toFixed(4)}`;
+  return { id, name, category, latitude, longitude };
+}
+
 export default function GeographicMap({
   location,
   lowPower,
-  weather,
+  atmosphere = "day",
+  lens = "all",
+  selectedPoint = null,
+  onPointSelect,
+  onPointsChange,
   onCameraChange,
   showAreaLabel = true,
 }: GeographicMapProps) {
   const container = useRef<HTMLDivElement>(null);
   const engine = useRef<Engine | null>(null);
+  const rasterLibrary = useRef<typeof import("leaflet") | null>(null);
+  const rememberedMarker = useRef<RasterMarker | null>(null);
   const latestLocation = useRef(location);
   const onCameraChangeRef = useRef(onCameraChange);
   latestLocation.current = location;
@@ -170,10 +317,79 @@ export default function GeographicMap({
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const motionOff = lowPower || reducedMotion;
-  const night = weather?.isDay === false;
+  const night = atmosphere === "supper";
   const coordinateValid = validLocation(location);
-  const weatherRef = useRef(night);
-  weatherRef.current = night;
+  const atmosphereRef = useRef(night);
+  atmosphereRef.current = night;
+  const lensRef = useRef(lens);
+  const selectedPointRef = useRef(selectedPoint);
+  const onPointSelectRef = useRef(onPointSelect);
+  const onPointsChangeRef = useRef(onPointsChange);
+  lensRef.current = lens;
+  selectedPointRef.current = selectedPoint;
+  onPointSelectRef.current = onPointSelect;
+  onPointsChangeRef.current = onPointsChange;
+  const pointMarkers = useRef(
+    new Map<
+      string,
+      { marker: GLMarker; element: HTMLButtonElement; point: MapPoint }
+    >(),
+  );
+  const refreshPoints = useRef<() => void>(() => {});
+  const lastPointsSignature = useRef("");
+  const lastFocusedPoint = useRef<string | null>(null);
+  const [pointCount, setPointCount] = useState(0);
+  const publishPoints = (points: MapPoint[]) => {
+    const signature = JSON.stringify(points);
+    if (signature === lastPointsSignature.current) return;
+    lastPointsSignature.current = signature;
+    setPointCount(points.length);
+    onPointsChangeRef.current?.(points);
+  };
+  const focusPoint = (point: MapPoint) => {
+    const active = engine.current;
+    if (!active) return;
+    if (active.kind === "leaflet") {
+      const L = rasterLibrary.current;
+      if (!L) return;
+      active.map.stop();
+      active.map.setView([point.latitude, point.longitude], 15, {
+        animate: false,
+      });
+      rememberedMarker.current?.remove();
+      const element = document.createElement("div");
+      element.className = `geo-remembered-object geo-poi-${point.category}`;
+      const object = document.createElement("span");
+      object.className = "geo-place-object";
+      const icon = document.createElement("span");
+      icon.className = "geo-place-icon";
+      icon.innerHTML = POINT_ICONS[point.category];
+      const name = document.createElement("span");
+      name.className = "geo-place-name";
+      name.textContent = point.name;
+      object.append(icon, name);
+      element.append(object);
+      rememberedMarker.current = L.marker([point.latitude, point.longitude], {
+        icon: L.divIcon({
+          className: "geo-remembered-marker",
+          html: element,
+          iconSize: [170, 60],
+          iconAnchor: [85, 60],
+        }),
+        keyboard: false,
+        title: `Selected place: ${point.name}`,
+      }).addTo(active.map);
+      return;
+    }
+    lastFocusedPoint.current = point.id;
+    active.map.stop();
+    active.map.flyTo({
+      center: [point.longitude, point.latitude],
+      zoom: Math.max(15.6, active.map.getZoom()),
+      duration: motionOff ? 0 : 850,
+      essential: false,
+    });
+  };
 
   useEffect(() => {
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -191,6 +407,9 @@ export default function GeographicMap({
     let watchdog: ReturnType<typeof setTimeout>;
     const abort = new AbortController();
     const cleanups: (() => void)[] = [];
+    publishPoints([]);
+    lastFocusedPoint.current = null;
+    refreshPoints.current = () => {};
     setStatus("loading");
     setRenderer("loading");
     setMessage("");
@@ -198,6 +417,9 @@ export default function GeographicMap({
     const fail = (text: string) => {
       if (!disposed) {
         clearTimeout(watchdog);
+        publishPoints([]);
+        pointMarkers.current.forEach(({ marker }) => marker.remove());
+        pointMarkers.current.clear();
         setStatus("error");
         if (!localEngine) setRenderer("error");
         setMessage(text);
@@ -230,6 +452,8 @@ export default function GeographicMap({
     };
     const loadRaster = async (reason: string) => {
       if (disposed) return;
+      publishPoints([]);
+      refreshPoints.current = () => {};
       setNotice(reason);
       const [L] = await Promise.all([
         import("leaflet"),
@@ -237,6 +461,7 @@ export default function GeographicMap({
       ]);
       if (disposed) return;
       host.replaceChildren();
+      rasterLibrary.current = L;
       const target = latestLocation.current;
       const map = L.map(host, {
         attributionControl: false,
@@ -267,6 +492,7 @@ export default function GeographicMap({
       setRenderer("leaflet");
       setZoom(15);
       setDimensional(false);
+      if (selectedPointRef.current) focusPoint(selectedPointRef.current);
       const tiles = L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
@@ -307,7 +533,7 @@ export default function GeographicMap({
       const response = await fetch(STYLE_URL, { signal: abort.signal });
       if (!response.ok)
         throw new Error("The vector style could not be loaded.");
-      const startedNight = weatherRef.current;
+      const startedNight = atmosphereRef.current;
       const style = tableStyle(
         (await response.json()) as StyleSpecification,
         startedNight,
@@ -318,7 +544,7 @@ export default function GeographicMap({
         container: host,
         style,
         center: [target.longitude, target.latitude],
-        zoom: AREA_ZOOM,
+        zoom: overviewZoom(host.clientWidth),
         pitch: motionOff ? 0 : 45,
         bearing: motionOff ? 0 : -17,
         maxPitch: 65,
@@ -343,9 +569,183 @@ export default function GeographicMap({
         .addTo(map);
       localEngine = { kind: "maplibre", map, marker };
       engine.current = localEngine;
+      const collectPoints = () => {
+        if (disposed || !loaded || map.isMoving()) return;
+        const poiLayers = map
+          .getStyle()
+          .layers.filter(
+            (layer) =>
+              (layer.type === "symbol" || layer.id === "poi_common_table") &&
+              layer.id.startsWith("poi_") &&
+              layer.id !== "poi_transit",
+          )
+          .map((layer) => layer.id);
+        if (!poiLayers.length) {
+          pointMarkers.current.forEach(({ marker }) => marker.remove());
+          pointMarkers.current.clear();
+          publishPoints([]);
+          return;
+        }
+        const center = map.getCenter();
+        const width = host.clientWidth,
+          height = host.clientHeight;
+        const mobile = width < 650;
+        const inFrame = (screen: { x: number; y: number }) => {
+          const side = mobile ? 35 : 95;
+          const top = mobile ? 138 : 160;
+          const bottom = mobile && selectedPointRef.current ? 165 : 95;
+          return (
+            screen.x >= side &&
+            screen.x <= width - side &&
+            screen.y >= top &&
+            screen.y <= height - bottom &&
+            !(
+              screen.y < (mobile ? 320 : 340) &&
+              screen.x > width - (mobile ? 98 : 160)
+            )
+          );
+        };
+        const unique = new Map<string, MapPoint>();
+        const geographicKeys = new Set<string>();
+        for (const feature of map.queryRenderedFeatures({
+          layers: poiLayers,
+        })) {
+          const point = pointFromFeature(feature);
+          if (
+            !point ||
+            (lensRef.current !== "all" && point.category !== lensRef.current)
+          )
+            continue;
+          const screen = map.project([point.longitude, point.latitude]);
+          if (!inFrame(screen)) continue;
+          const key = `${point.name.toLocaleLowerCase()}:${point.longitude.toFixed(4)}:${point.latitude.toFixed(4)}`;
+          if (!unique.has(point.id) && !geographicKeys.has(key)) {
+            unique.set(point.id, point);
+            geographicKeys.add(key);
+          }
+        }
+        const preferred = selectedPointRef.current;
+        if (
+          preferred &&
+          (lensRef.current === "all" || preferred.category === lensRef.current)
+        ) {
+          const screen = map.project([preferred.longitude, preferred.latitude]);
+          if (inFrame(screen)) {
+            unique.set(preferred.id, preferred);
+          }
+        }
+        const categoryOrder = { food: 0, coffee: 1, outdoors: 2, other: 3 };
+        const ordered = [...unique.values()].sort((a, b) => {
+          if (a.id === preferred?.id) return -1;
+          if (b.id === preferred?.id) return 1;
+          const category =
+            categoryOrder[a.category] - categoryOrder[b.category];
+          const distance =
+            (a.latitude - center.lat) ** 2 +
+            (a.longitude - center.lng) ** 2 -
+            ((b.latitude - center.lat) ** 2 + (b.longitude - center.lng) ** 2);
+          return (
+            category ||
+            distance ||
+            a.name.localeCompare(b.name) ||
+            a.id.localeCompare(b.id)
+          );
+        });
+        const visible: MapPoint[] = [];
+        const positions: { x: number; y: number }[] = [];
+        for (const point of ordered) {
+          const screen = map.project([point.longitude, point.latitude]);
+          if (
+            positions.some(
+              (position) =>
+                Math.abs(position.x - screen.x) < (mobile ? 70 : 190) &&
+                Math.abs(position.y - screen.y) < (mobile ? 68 : 85),
+            )
+          )
+            continue;
+          visible.push(point);
+          positions.push(screen);
+          if (visible.length === (mobile ? 4 : 12)) break;
+        }
+        const ids = new Set(visible.map((point) => point.id));
+        for (const [id, entry] of pointMarkers.current) {
+          if (!ids.has(id)) {
+            if (document.activeElement === entry.element)
+              map.getCanvas().focus({ preventScroll: true });
+            entry.marker.remove();
+            pointMarkers.current.delete(id);
+          }
+        }
+        for (const point of visible) {
+          let entry = pointMarkers.current.get(point.id);
+          if (!entry) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `geo-poi-marker geo-poi-${point.category}`;
+            button.dataset.pointId = point.id;
+            button.setAttribute("aria-label", `Explore ${point.name}`);
+            const object = document.createElement("span");
+            object.className = "geo-place-object";
+            const icon = document.createElement("span");
+            icon.className = "geo-place-icon";
+            icon.innerHTML = POINT_ICONS[point.category];
+            const name = document.createElement("span");
+            name.className = "geo-place-name";
+            name.textContent = point.name;
+            object.append(icon, name);
+            button.append(object);
+            button.addEventListener("click", (event) => {
+              event.stopPropagation();
+              focusPoint(point);
+              onPointSelectRef.current?.(point);
+            });
+            const pointMarker = new gl.Marker({
+              element: button,
+              anchor: "bottom",
+              pitchAlignment: "viewport",
+              rotationAlignment: "viewport",
+            })
+              .setLngLat([point.longitude, point.latitude])
+              .addTo(map);
+            entry = { marker: pointMarker, element: button, point };
+            pointMarkers.current.set(point.id, entry);
+          }
+          const screen = map.project([point.longitude, point.latitude]);
+          entry.element.classList.toggle("geo-poi-edge-left", screen.x < 90);
+          entry.element.classList.toggle(
+            "geo-poi-edge-right",
+            screen.x > width - 90,
+          );
+          entry.element.setAttribute(
+            "aria-pressed",
+            String(point.id === selectedPointRef.current?.id),
+          );
+          entry.element.classList.toggle(
+            "geo-poi-selected",
+            point.id === selectedPointRef.current?.id,
+          );
+        }
+        publishPoints(visible);
+      };
+      let collectionFrame: number | null = null;
+      const scheduleCollection = () => {
+        if (disposed || collectionFrame !== null) return;
+        collectionFrame = requestAnimationFrame(() => {
+          collectionFrame = null;
+          collectPoints();
+        });
+      };
+      refreshPoints.current = scheduleCollection;
+      map.on("idle", collectPoints);
+      map.on("moveend", scheduleCollection);
+      map.on("sourcedata", scheduleCollection);
+      map.on("resize", scheduleCollection);
+      cleanups.push(() => {
+        if (collectionFrame !== null) cancelAnimationFrame(collectionFrame);
+      });
       setRenderer("maplibre");
       setDimensional(!motionOff);
-      setZoom(AREA_ZOOM);
+      setZoom(overviewZoom(host.clientWidth));
       const canvas = map.getCanvas();
       canvas.setAttribute(
         "aria-label",
@@ -375,12 +775,14 @@ export default function GeographicMap({
         }
         if (initialDataError)
           setNotice("Some map details could not load. You can retry the map.");
-        if (weatherRef.current !== startedNight)
+        if (atmosphereRef.current !== startedNight)
           map.setStyle(
-            tableStyle(structuredClone(map.getStyle()), weatherRef.current),
+            tableStyle(structuredClone(map.getStyle()), atmosphereRef.current),
             { diff: true },
           );
         ready();
+        if (selectedPointRef.current) focusPoint(selectedPointRef.current);
+        else scheduleCollection();
       });
       map.on("moveend", reportCamera);
       map.on("pitchend", () => {
@@ -392,8 +794,15 @@ export default function GeographicMap({
         if (loaded)
           setNotice("Some map details could not load. You can retry the map.");
       });
+      let wasMobile = host.clientWidth < 650;
       const observer = new ResizeObserver(() => {
-        if (!disposed) map.resize();
+        if (disposed) return;
+        map.resize();
+        const mobile = host.clientWidth < 650;
+        if (mobile !== wasMobile && !selectedPointRef.current)
+          map.jumpTo({ zoom: overviewZoom(host.clientWidth) });
+        wasMobile = mobile;
+        scheduleCollection();
       });
       observer.observe(host);
       cleanups.push(() => observer.disconnect());
@@ -447,14 +856,22 @@ export default function GeographicMap({
       abort.abort();
       clearTimeout(watchdog);
       cleanups.forEach((cleanup) => cleanup());
+      pointMarkers.current.forEach(({ marker }) => marker.remove());
+      pointMarkers.current.clear();
+      rememberedMarker.current?.remove();
+      rememberedMarker.current = null;
+      refreshPoints.current = () => {};
       localEngine?.map.remove();
       if (engine.current === localEngine) engine.current = null;
       host.replaceChildren();
     };
-    // Rebuild only when the renderer changes, never when the user pans or updates weather.
+    // Rebuild only when the renderer changes, never when the user pans or updates atmosphere.
   }, [motionOff, preferRaster, retry, coordinateValid]);
 
   useEffect(() => {
+    publishPoints([]);
+    pointMarkers.current.forEach(({ marker }) => marker.remove());
+    pointMarkers.current.clear();
     const active = engine.current;
     if (!active || !validLocation(location)) return;
     if (active.kind === "maplibre") {
@@ -462,7 +879,7 @@ export default function GeographicMap({
       active.map.stop();
       active.map.flyTo({
         center: [location.longitude, location.latitude],
-        zoom: AREA_ZOOM,
+        zoom: overviewZoom(container.current?.clientWidth ?? 900),
         duration: motionOff ? 0 : 1100,
         essential: false,
       });
@@ -497,6 +914,29 @@ export default function GeographicMap({
     if (active.map.isStyleLoaded()) apply();
   }, [night, renderer, motionOff]);
 
+  useEffect(() => {
+    refreshPoints.current();
+  }, [lens]);
+
+  useEffect(() => {
+    for (const [id, entry] of pointMarkers.current) {
+      entry.element.setAttribute(
+        "aria-pressed",
+        String(id === selectedPoint?.id),
+      );
+      entry.element.classList.toggle(
+        "geo-poi-selected",
+        id === selectedPoint?.id,
+      );
+    }
+    if (selectedPoint) focusPoint(selectedPoint);
+    else {
+      rememberedMarker.current?.remove();
+      rememberedMarker.current = null;
+      refreshPoints.current();
+    }
+  }, [selectedPoint]);
+
   const changeZoom = (delta: number) => {
     const active = engine.current;
     if (!active) return;
@@ -517,7 +957,7 @@ export default function GeographicMap({
     if (active.kind === "maplibre")
       active.map.flyTo({
         center: [location.longitude, location.latitude],
-        zoom: AREA_ZOOM,
+        zoom: overviewZoom(container.current?.clientWidth ?? 900),
         bearing: dimensional ? -17 : 0,
         pitch: dimensional ? 45 : 0,
         duration: motionOff ? 0 : 800,
@@ -546,6 +986,9 @@ export default function GeographicMap({
       data-map-status={status}
       data-latitude={location.latitude}
       data-longitude={location.longitude}
+      data-atmosphere={atmosphere}
+      data-lens={lens}
+      data-poi-count={pointCount}
     >
       <div ref={container} className="geographic-map-canvas" />
       <div className="geo-map-material" aria-hidden="true" />
@@ -668,7 +1111,7 @@ export default function GeographicMap({
         </div>
       )}
       <footer className="geo-map-footer">
-        <span>Real geography · area marker only · no live tracking</span>
+        <span>Real geography · mapped places · no live tracking</span>
         <span className="geo-provider-attribution">
           {renderer !== "leaflet" && (
             <>

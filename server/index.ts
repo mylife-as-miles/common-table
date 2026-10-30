@@ -110,7 +110,7 @@ export function createAppServer(
     try {
       if (!(await api(req, res))) await serveStatic(req, res, directory);
     } catch {
-      // Request/credential-bearing errors are never printed or forwarded.
+      // Internal request errors are never printed or forwarded.
       if (!res.headersSent)
         res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
       res.end("The request could not be completed.");

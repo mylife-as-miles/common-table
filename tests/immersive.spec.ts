@@ -12,13 +12,6 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://tiles.openfreemap.org/**", (route) =>
     route.abort(),
   );
-  await page.route("**/api/weather?**", (route) =>
-    route.fulfill({
-      status: 503,
-      contentType: "application/json",
-      body: JSON.stringify({ status: "unavailable", code: "not_configured" }),
-    }),
-  );
 });
 const nav = (page: Page, name: string) =>
   page

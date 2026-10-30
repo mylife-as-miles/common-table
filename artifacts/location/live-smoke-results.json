@@ -1,7 +1,42 @@
 {
   "renderer": "maplibre",
   "selectedArea": "Paris, Île-de-France, France",
-  "weatherState": "Weather not connected",
+  "mappedPlaces": 12,
+  "keptPlaces": "Kept\n1",
+  "screenshots": [
+    {
+      "name": "01-real-map-desktop",
+      "fieldNotes": "The evening starts\nsomewhere."
+    },
+    {
+      "name": "02-real-map-mobile",
+      "fieldNotes": "The evening startssomewhere."
+    },
+    {
+      "name": "04-real-place-field-notes",
+      "fieldNotes": "Luv n Oven Pizza"
+    },
+    {
+      "name": "05-supper-map",
+      "fieldNotes": "Luv n Oven Pizza"
+    },
+    {
+      "name": "06-real-place-mobile",
+      "fieldNotes": "Luv n Oven Pizza"
+    },
+    {
+      "name": "10-waiter-real-place",
+      "fieldNotes": "Luv n Oven Pizza"
+    },
+    {
+      "name": "11-waiter-real-place-mobile",
+      "fieldNotes": "Luv n Oven Pizza"
+    },
+    {
+      "name": "03-searched-paris",
+      "fieldNotes": "The evening starts\nsomewhere."
+    }
+  ],
   "errors": [],
   "openFreeMapResponses": [
     {
@@ -19,6 +54,26 @@
     {
       "status": 200,
       "kind": "map-resource"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
+    },
+    {
+      "status": 200,
+      "kind": "vector-data"
     },
     {
       "status": 200,

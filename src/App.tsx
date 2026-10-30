@@ -508,6 +508,17 @@ export default function App() {
         realLocation={
           mode === "real" ? locationContext.location.label : undefined
         }
+        realPoint={mode === "real" ? locationContext.selectedPoint : null}
+        realPointKept={Boolean(
+          locationContext.selectedPoint &&
+            locationContext.savedPoints.some(
+              (point) => point.id === locationContext.selectedPoint?.id,
+            ),
+        )}
+        onKeepRealPoint={() => {
+          if (locationContext.selectedPoint)
+            locationContext.toggleSavedPoint(locationContext.selectedPoint);
+        }}
         lowPower={lowPower}
         storageAvailable={storageAvailable}
         open={waiterOpen}
@@ -571,7 +582,7 @@ export default function App() {
         </h2>
         <p>
           The real map uses OpenStreetMap-based geography. Device location is
-          requested only after you choose Use my location; map and weather
+          requested only after you choose Use my location; map and place-search
           providers receive the chosen area. Dining features remain an
           interactive demo with fictional Brooklyn restaurants, illustrative
           menus, prices, dietary options, ratings, walking times, and

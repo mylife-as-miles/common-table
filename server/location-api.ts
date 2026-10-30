@@ -1,20 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 type JsonObject = Record<string, unknown>;
-export interface WeatherResult {
-  source: "openweather";
-  status: "ready";
-  latitude: number;
-  longitude: number;
-  placeName: string;
-  temperatureC: number;
-  feelsLikeC: number;
-  description: string;
-  condition: "clear" | "clouds" | "rain" | "snow" | "storm" | "fog";
-  isDay: boolean;
-  observedAt: string;
-  windMps: number;
-}
 export interface PlaceResult {
   id: string;
   label: string;
@@ -23,17 +9,15 @@ export interface PlaceResult {
 }
 interface GeocodeResult {
   results: PlaceResult[];
-  source: "photon" | "openweather";
+  source: "photon";
 }
 export interface ApiOptions {
-  apiKey?: string;
   fetch?: typeof globalThis.fetch;
   now?: () => number;
   timeoutMs?: number;
   geocodeIntervalMs?: number;
 }
 
-const TEN_MINUTES = 10 * 60 * 1000;
 const FIFTEEN_MINUTES = 15 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 250;
 const CLIENT_ID =
@@ -58,102 +42,6 @@ const labels = (values: unknown[]) =>
   [...new Set(values.map((value) => text(value)).filter(Boolean))]
     .join(", ")
     .slice(0, 220);
-
-function coordinates(
-  params: URLSearchParams,
-): { latitude: number; longitude: number } | null {
-  const lat = params.get("lat");
-  const lon = params.get("lon");
-  // Number('') and Number(null) are zero; reject missing/empty values first.
-  if (
-    !lat?.trim() ||
-    !lon?.trim() ||
-    params.getAll("lat").length !== 1 ||
-    params.getAll("lon").length !== 1
-  )
-    return null;
-  const latitude = Number(lat);
-  const longitude = Number(lon);
-  return finite(latitude, -90, 90) && finite(longitude, -180, 180)
-    ? { latitude, longitude }
-    : null;
-}
-
-function conditionFor(id: number): WeatherResult["condition"] {
-  if (id >= 200 && id < 300) return "storm";
-  if ((id >= 300 && id < 400) || (id >= 500 && id < 600)) return "rain";
-  if (id >= 600 && id < 700) return "snow";
-  if (id >= 700 && id < 800) return "fog";
-  return id === 800 ? "clear" : "clouds";
-}
-
-function parseWeather(
-  value: unknown,
-  latitude: number,
-  longitude: number,
-): WeatherResult | null {
-  const payload = object(value);
-  const main = object(payload.main);
-  const wind = object(payload.wind);
-  const weather = Array.isArray(payload.weather)
-    ? object(payload.weather[0])
-    : {};
-  const sys = object(payload.sys);
-  if (
-    !finite(main.temp, -120, 100) ||
-    !finite(main.feels_like, -150, 150) ||
-    !finite(wind.speed, 0, 200) ||
-    !finite(weather.id, 200, 804) ||
-    !Number.isInteger(weather.id) ||
-    !finite(payload.dt, 1, 100_000_000_000)
-  )
-    return null;
-  const observedAt = new Date(payload.dt * 1000);
-  if (Number.isNaN(observedAt.getTime())) return null;
-  const icon = text(weather.icon, 3);
-  const isDay = /^\d{2}[dn]$/.test(icon)
-    ? icon.endsWith("d")
-    : finite(sys.sunrise, 1, 100_000_000_000) &&
-        finite(sys.sunset, 1, 100_000_000_000)
-      ? payload.dt >= sys.sunrise && payload.dt < sys.sunset
-      : true;
-  const condition = conditionFor(weather.id);
-  return {
-    source: "openweather",
-    status: "ready",
-    latitude,
-    longitude,
-    placeName: text(payload.name) || "Selected area",
-    temperatureC: main.temp,
-    feelsLikeC: main.feels_like,
-    description: text(weather.description, 120) || condition,
-    condition,
-    isDay,
-    observedAt: observedAt.toISOString(),
-    windMps: wind.speed,
-  };
-}
-
-function parseOpenWeatherPlaces(value: unknown): PlaceResult[] | null {
-  if (!Array.isArray(value)) return null;
-  const places: PlaceResult[] = [];
-  for (const item of value.slice(0, 5)) {
-    const place = object(item);
-    if (
-      !finite(place.lat, -90, 90) ||
-      !finite(place.lon, -180, 180) ||
-      !text(place.name)
-    )
-      continue;
-    places.push({
-      id: `ow-${place.lat}-${place.lon}`,
-      label: labels([place.name, place.state, place.country]),
-      latitude: place.lat,
-      longitude: place.lon,
-    });
-  }
-  return places;
-}
 
 function parsePhotonPlaces(value: unknown): PlaceResult[] | null {
   const payload = object(value);
@@ -208,24 +96,14 @@ function sendJson(
 
 /** Node middleware. Returns false for non-API requests, and calls next if supplied. */
 export function createApiHandler(options: ApiOptions = {}) {
-  const apiKey = (
-    options.apiKey ??
-    process.env.OPENWEATHER_API_KEY ??
-    ""
-  ).trim();
   const fetcher = options.fetch ?? globalThis.fetch;
   const now = options.now ?? Date.now;
   const timeoutMs = options.timeoutMs ?? 8000;
   const geocodeIntervalMs = options.geocodeIntervalMs ?? 1000;
-  const weatherCache = new Map<
-    string,
-    { expires: number; data: WeatherResult }
-  >();
   const geocodeCache = new Map<
     string,
     { expires: number; data: GeocodeResult }
   >();
-  const weatherInflight = new Map<string, Promise<WeatherResult | null>>();
   const geocodeInflight = new Map<string, Promise<GeocodeResult | null>>();
   let lastGeocodeStarted = -Infinity;
 
@@ -260,7 +138,7 @@ export function createApiHandler(options: ApiOptions = {}) {
         headers: { Accept: "application/json", "User-Agent": CLIENT_ID },
       });
       if (!response.ok) return null;
-      // Never forward provider errors, request URLs, or their credential-bearing query strings.
+      // Never forward provider errors or internal request details.
       return await response.json();
     } catch {
       return null;
@@ -268,30 +146,7 @@ export function createApiHandler(options: ApiOptions = {}) {
       clearTimeout(timeout);
     }
   }
-  async function fetchWeather(
-    latitude: number,
-    longitude: number,
-  ): Promise<WeatherResult | null> {
-    const url = new URL("https://api.openweathermap.org/data/2.5/weather");
-    url.search = new URLSearchParams({
-      lat: String(latitude),
-      lon: String(longitude),
-      units: "metric",
-      appid: apiKey,
-    }).toString();
-    return parseWeather(await requestJson(url), latitude, longitude);
-  }
   async function fetchGeocode(query: string): Promise<GeocodeResult | null> {
-    if (apiKey) {
-      const url = new URL("https://api.openweathermap.org/geo/1.0/direct");
-      url.search = new URLSearchParams({
-        q: query,
-        limit: "5",
-        appid: apiKey,
-      }).toString();
-      const results = parseOpenWeatherPlaces(await requestJson(url));
-      if (results) return { results, source: "openweather" };
-    }
     // Photon permits reasonable public-demo usage. Only explicit searches reach
     // this endpoint; requests coalesce, cache for 15m and are limited to 1/s.
     // Primary usage policy: https://github.com/komoot/photon#demo-server
@@ -330,70 +185,13 @@ export function createApiHandler(options: ApiOptions = {}) {
       });
       return true;
     }
-    if (url.pathname === "/api/location-config") {
-      sendJson(req, res, 200, { weatherConfigured: Boolean(apiKey) });
-      return true;
-    }
-    if (url.pathname === "/api/weather") {
-      const position = coordinates(url.searchParams);
-      if (!position) {
-        sendJson(req, res, 400, {
-          status: "error",
-          code: "invalid_coordinates",
-          message:
-            "Provide latitude from -90 to 90 and longitude from -180 to 180.",
-        });
-        return true;
-      }
-      if (!apiKey) {
-        sendJson(req, res, 503, {
-          status: "unavailable",
-          code: "not_configured",
-          message:
-            "Live weather is not configured. Add a server-side OpenWeather API key to enable it.",
-        });
-        return true;
-      }
-      const latitude = Number(position.latitude.toFixed(2));
-      const longitude = Number(position.longitude.toFixed(2));
-      const key = `${latitude},${longitude}`;
-      let data = cached(weatherCache, key);
-      if (!data) {
-        let pending = weatherInflight.get(key);
-        if (!pending) {
-          pending = fetchWeather(latitude, longitude);
-          weatherInflight.set(key, pending);
-        }
-        try {
-          const result = await pending;
-          if (result) {
-            data = result;
-            cacheSet(weatherCache, key, result, TEN_MINUTES);
-          }
-        } finally {
-          if (weatherInflight.get(key) === pending) weatherInflight.delete(key);
-        }
-      }
-      sendJson(
-        req,
-        res,
-        data ? 200 : 503,
-        data ?? {
-          status: "unavailable",
-          code: "upstream_unavailable",
-          message:
-            "Live weather is temporarily unavailable. The map still works; try again later.",
-        },
-      );
-      return true;
-    }
     if (url.pathname === "/api/geocode") {
-      const query =
-        url.searchParams.get("q")?.trim().replace(/\s+/g, " ") ?? "";
+      const rawQuery = url.searchParams.get("q") ?? "";
+      const query = rawQuery.trim().replace(/\s+/g, " ");
       if (
         query.length < 2 ||
         query.length > 120 ||
-        /[\u0000-\u001f\u007f]/.test(query) ||
+        /[\u0000-\u001f\u007f]/.test(rawQuery) ||
         url.searchParams.getAll("q").length !== 1
       ) {
         sendJson(req, res, 400, {

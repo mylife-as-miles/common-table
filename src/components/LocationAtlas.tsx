@@ -1,20 +1,22 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowUpRight,
-  Cloud,
-  CloudDrizzle,
-  CloudLightning,
-  CloudSnow,
+  Bookmark,
+  Check,
+  Coffee,
   Compass,
+  Expand,
+  Leaf,
   LocateFixed,
   MapPin,
-  RefreshCw,
+  Minimize2,
+  Moon,
   Search,
   Sun,
-  Wind,
+  Utensils,
   X,
 } from "lucide-react";
-import { GeographicMap } from "./GeographicMap";
+import { GeographicMap, type MapPoint } from "./GeographicMap";
 import type { LocationContext } from "../location/useLocationContext";
 import "./location-atlas.css";
 
@@ -24,25 +26,84 @@ interface Props {
   onDemo: () => void;
   onWaiter: () => void;
 }
+const lenses = [
+  { id: "all", label: "Everything", icon: Compass },
+  { id: "food", label: "Food", icon: Utensils },
+  { id: "coffee", label: "Coffee", icon: Coffee },
+  { id: "outdoors", label: "Outdoors", icon: Leaf },
+] as const;
+const categories = {
+  food: "A place to eat",
+  coffee: "A coffee stop",
+  outdoors: "A little fresh air",
+  other: "A mapped place",
+};
+function PointIcon({ point, size = 16 }: { point: MapPoint; size?: number }) {
+  const Icon =
+    point.category === "food"
+      ? Utensils
+      : point.category === "coffee"
+        ? Coffee
+        : point.category === "outdoors"
+          ? Leaf
+          : MapPin;
+  return <Icon size={size} strokeWidth={1.4} />;
+}
 export function LocationAtlas({
   context: c,
   lowPower,
   onDemo,
   onWaiter,
 }: Props) {
-  const input = useRef<HTMLInputElement>(null);
-  const WeatherIcon =
-    c.weather?.condition === "rain"
-      ? CloudDrizzle
-      : c.weather?.condition === "snow"
-        ? CloudSnow
-        : c.weather?.condition === "storm"
-          ? CloudLightning
-          : c.weather?.condition === "clear"
-            ? Sun
-            : Cloud;
+  const input = useRef<HTMLInputElement>(null),
+    root = useRef<HTMLElement>(null),
+    unfoldButton = useRef<HTMLButtonElement>(null);
+  const notes = useRef<HTMLElement>(null),
+    noteHeading = useRef<HTMLHeadingElement>(null),
+    peek = useRef<HTMLButtonElement>(null);
+  const collectionButton = useRef<HTMLButtonElement>(null);
+  const [lens, setLens] = useState<(typeof lenses)[number]["id"]>("all");
+  const [atmosphere, setAtmosphere] = useState<"day" | "supper">("day");
+  const [points, setPoints] = useState<MapPoint[]>([]);
+  const [collection, setCollection] = useState<"view" | "kept">("view");
+  const [unfolded, setUnfolded] = useState(false);
+  const selected = c.selectedPoint,
+    kept = selected && c.savedPoints.some((p) => p.id === selected.id);
+  const list = collection === "kept" ? c.savedPoints : points;
+  function inspect(point: MapPoint, revisit = false) {
+    if (lens !== "all" && point.category !== lens) setLens("all");
+    if (revisit) c.revisitPoint(point);
+    else c.selectMappedPoint(point);
+    if (window.matchMedia("(max-width: 760px)").matches)
+      requestAnimationFrame(() => {
+        peek.current?.scrollIntoView({
+          behavior:
+            lowPower ||
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+              ? "instant"
+              : "smooth",
+          block: "nearest",
+        });
+      });
+  }
+  function fold() {
+    setUnfolded(false);
+    requestAnimationFrame(() =>
+      unfoldButton.current?.focus({ preventScroll: true }),
+    );
+  }
   return (
-    <section className="location-atlas" aria-labelledby="location-atlas-title">
+    <section
+      ref={root}
+      className={`location-atlas${unfolded ? " is-unfolded" : ""}`}
+      aria-labelledby="location-atlas-title"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && unfolded && !event.defaultPrevented) {
+          event.preventDefault();
+          fold();
+        }
+      }}
+    >
       <header className="location-atlas-head">
         <div>
           <span className="eyebrow">THE WORLD, A LITTLE CLOSER</span>
@@ -51,7 +112,7 @@ export function LocationAtlas({
           </h2>
         </div>
         <span className="real-geography-label">
-          <span className="status-dot" /> Real geography
+          <span className="status-dot" /> OpenStreetMap
         </span>
       </header>
       <div className="location-inputs">
@@ -64,6 +125,7 @@ export function LocationAtlas({
           }}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
+              event.preventDefault();
               c.cancelSearch();
               input.current?.focus();
             }
@@ -127,138 +189,331 @@ export function LocationAtlas({
         {c.locationMessage && <p role="status">{c.locationMessage}</p>}
       </div>
       {c.results.length > 0 && (
-        <ul className="place-results" aria-label="Place search results">
-          {c.results.map((place) => (
-            <li key={place.id}>
-              <button onClick={() => c.selectPlace(place)}>
-                <MapPin size={17} />
-                <span>{place.label}</span>
-                <ArrowUpRight size={15} />
-              </button>
-            </li>
+        <>
+          <ul className="place-results" aria-label="Place search results">
+            {c.results.map((place) => (
+              <li key={place.id}>
+                <button onClick={() => c.selectPlace(place)}>
+                  <MapPin size={17} />
+                  <span>{place.label}</span>
+                  <ArrowUpRight size={15} />
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="geocode-credit">
+            Place search by{" "}
+            <a
+              href="https://github.com/komoot/photon"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Photon / OpenStreetMap
+            </a>
+            .
+          </p>
+        </>
+      )}
+      <div className="atlas-exploration-tools">
+        <div
+          className="atlas-lenses"
+          role="group"
+          aria-label="Explore mapped place categories"
+        >
+          {lenses.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              aria-pressed={lens === id}
+              onClick={() => {
+                setLens(id);
+                setCollection("view");
+                if (id !== "all" && selected && selected.category !== id)
+                  c.clearPoint();
+              }}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
           ))}
-        </ul>
-      )}
-      {c.results.length > 0 && (
-        <p className="geocode-credit">
-          Place search uses{" "}
-          <a
-            href="https://github.com/komoot/photon"
-            target="_blank"
-            rel="noreferrer"
+        </div>
+        <div className="atlas-stage-actions">
+          <button
+            className="atlas-light-switch"
+            aria-label={
+              atmosphere === "day"
+                ? "Daylight · Set supper light"
+                : "Supper light · Set daylight"
+            }
+            aria-pressed={atmosphere === "supper"}
+            onClick={() =>
+              setAtmosphere((a) => (a === "day" ? "supper" : "day"))
+            }
           >
-            Photon / OpenStreetMap
-          </a>
-          , with OpenWeather geocoding when connected.
-        </p>
-      )}
-      <div className="real-map-scene">
-        <GeographicMap
-          showAreaLabel={false}
-          location={c.location}
-          lowPower={lowPower}
-          weather={
-            c.weather
-              ? { condition: c.weather.condition, isDay: c.weather.isDay }
-              : null
-          }
-        />
-        <div className="chosen-area-paper">
-          <Compass size={18} strokeWidth={1.3} />
-          <div>
-            <span>
-              {c.location.source === "starting"
-                ? "STARTING VIEW"
-                : c.location.source === "device"
-                  ? "DEVICE AREA · THIS SESSION"
-                  : "YOUR CHOSEN AREA"}
-            </span>
-            <h3>{c.location.label}</h3>
-          </div>
+            {atmosphere === "day" ? <Sun size={15} /> : <Moon size={15} />}
+            <span>{atmosphere === "day" ? "Daylight" : "Supper light"}</span>
+          </button>
+          <button
+            ref={unfoldButton}
+            aria-pressed={unfolded}
+            onClick={() => {
+              if (unfolded) fold();
+              else {
+                setUnfolded(true);
+                requestAnimationFrame(() =>
+                  root.current?.scrollIntoView({
+                    behavior: "instant",
+                    block: "start",
+                  }),
+                );
+              }
+            }}
+          >
+            {unfolded ? <Minimize2 size={15} /> : <Expand size={15} />}
+            <span>{unfolded ? "Fold map" : "Unfold map"}</span>
+          </button>
         </div>
       </div>
-      <div className="location-bottom">
-        <section className="local-weather" aria-label="Local weather">
-          <WeatherIcon size={29} strokeWidth={1.2} />
-          <div>
-            <span className="eyebrow">
-              {c.weatherStatus === "ready"
-                ? "OPENWEATHER · CURRENT CONDITIONS"
-                : "A NOTE FROM THE SKY"}
-            </span>
-            {c.weatherStatus === "ready" && c.weather ? (
+      <p className="sr-only" role="status">
+        {selected
+          ? `Selected ${selected.name}. Place notes are available.`
+          : "Select a mapped place to read its notes."}
+      </p>
+      <div className="real-map-scene">
+        <div className="location-world">
+          <GeographicMap
+            showAreaLabel={false}
+            location={c.location}
+            lowPower={lowPower}
+            atmosphere={atmosphere}
+            lens={lens}
+            selectedPoint={selected}
+            onPointSelect={inspect}
+            onPointsChange={setPoints}
+          />
+          <div className="chosen-area-paper">
+            <Compass size={18} strokeWidth={1.3} />
+            <div>
+              <span>
+                {c.location.source === "starting"
+                  ? "STARTING VIEW"
+                  : c.location.source === "device"
+                    ? "DEVICE AREA · THIS SESSION"
+                    : c.location.source === "saved"
+                      ? "FROM YOUR KEPT PLACES"
+                      : "YOUR CHOSEN AREA"}
+              </span>
+              <h3>{c.location.label}</h3>
+            </div>
+          </div>
+          {selected && (
+            <button
+              ref={peek}
+              className="mobile-place-peek"
+              onClick={() => {
+                notes.current?.scrollIntoView({
+                  behavior: "instant",
+                  block: "nearest",
+                });
+                noteHeading.current?.focus({ preventScroll: true });
+              }}
+            >
+              <PointIcon point={selected} />
+              <span>
+                <small>A REAL MAPPED PLACE</small>
+                <strong>{selected.name}</strong>
+              </span>
+              <span className="peek-action">
+                Read notes <ArrowUpRight size={13} />
+              </span>
+            </button>
+          )}
+        </div>
+        <aside
+          ref={notes}
+          className="map-field-notes"
+          aria-label="Map field notes"
+        >
+          <div className="field-notes-binding" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
+          <div className="field-note-heading">
+            <span className="eyebrow">A COMMON TABLE FIELD GUIDE</span>
+            <span className="field-note-number">No. 01</span>
+          </div>
+          <div className="field-note-detail" key={selected?.id ?? "unselected"}>
+            {selected ? (
               <>
-                <h3>
-                  {Math.round(c.weather.temperatureC)}°C{" "}
-                  <span>{c.weather.description}</span>
+                <div
+                  className={`field-note-illustration category-${selected.category}`}
+                  aria-hidden="true"
+                >
+                  <PointIcon point={selected} size={35} />
+                  <span />
+                </div>
+                <span className="field-note-category">
+                  {categories[selected.category]}
+                </span>
+                <h3 ref={noteHeading} tabIndex={-1}>
+                  {selected.name}
                 </h3>
-                <p>
-                  For {c.location.label}. Feels like{" "}
-                  {Math.round(c.weather.feelsLikeC)}° · <Wind size={11} />{" "}
-                  {Math.round(c.weather.windMps * 3.6)} km/h · Reported{" "}
-                  <time dateTime={c.weather.observedAt}>
-                    {new Intl.DateTimeFormat(undefined, {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    }).format(new Date(c.weather.observedAt))}
-                  </time>{" "}
-                  ·{" "}
+                <p className="field-note-source">
+                  A real place on OpenStreetMap.
+                </p>
+                <p className="field-note-caveat">
+                  {selected.category === "food" ||
+                  selected.category === "coffee"
+                    ? "Menus, prices, opening hours and dietary suitability haven’t been checked."
+                    : "Opening hours, access and other place details haven’t been checked."}
+                </p>
+                <div className="field-note-actions">
+                  <button
+                    className="keep-map-place"
+                    aria-pressed={Boolean(kept)}
+                    onClick={() => c.toggleSavedPoint(selected)}
+                  >
+                    {kept ? <Check size={14} /> : <Bookmark size={14} />}
+                    {kept ? "Kept for this session" : "Keep this place"}
+                  </button>
                   <a
-                    href="https://openweathermap.org/"
+                    href={`https://www.openstreetmap.org/?mlat=${selected.latitude}&mlon=${selected.longitude}#map=18/${selected.latitude}/${selected.longitude}`}
                     target="_blank"
                     rel="noreferrer"
+                    aria-label={`View on OSM, ${selected.name}`}
                   >
-                    OpenWeather
+                    View on OSM <ArrowUpRight size={13} />
                   </a>
-                </p>
+                  <button
+                    className="field-note-waiter"
+                    onClick={onWaiter}
+                    aria-label={`Ask The Waiter about ${selected.name}`}
+                  >
+                    Ask The Waiter <ArrowUpRight size={13} />
+                  </button>
+                </div>
+                <button
+                  className="clear-map-point"
+                  onClick={() => {
+                    c.clearPoint();
+                    setCollection("view");
+                    requestAnimationFrame(() =>
+                      collectionButton.current?.focus({ preventScroll: true }),
+                    );
+                  }}
+                >
+                  Close place notes <X size={12} />
+                </button>
               </>
             ) : (
               <>
+                <div className="field-note-illustration" aria-hidden="true">
+                  <Compass size={40} strokeWidth={0.8} />
+                  <span />
+                </div>
+                <span className="field-note-category">
+                  A little curiosity goes a long way.
+                </span>
                 <h3>
-                  {c.weatherStatus === "loading"
-                    ? "Checking the weather…"
-                    : c.weatherStatus === "not_configured"
-                      ? "Weather not connected"
-                      : "Weather unavailable"}
+                  The evening starts
+                  <br />
+                  <em>somewhere.</em>
                 </h3>
-                <p>
-                  {c.weatherStatus === "not_configured"
-                    ? "OpenWeather needs to be connected. Your map is ready to explore."
-                    : c.weatherStatus === "loading"
-                      ? `Looking up current conditions for ${c.location.label}.`
-                      : "We couldn’t get current conditions. Your map still works."}
+                <p className="field-note-source">
+                  Tap a place on the map. Keep a corner that catches your eye.
                 </p>
               </>
             )}
           </div>
-          <button
-            className="weather-refresh"
-            onClick={c.refreshWeather}
-            aria-label="Refresh local weather"
-            disabled={c.weatherStatus === "loading"}
+          <div
+            className="map-collection-tabs"
+            role="group"
+            aria-label="Map place collection"
           >
-            <RefreshCw size={16} />
-          </button>
-        </section>
+            <button
+              ref={collectionButton}
+              aria-pressed={collection === "view"}
+              onClick={() => setCollection("view")}
+            >
+              In this view <span>{points.length}</span>
+            </button>
+            <button
+              aria-pressed={collection === "kept"}
+              onClick={() => setCollection("kept")}
+            >
+              Kept <span>{c.savedPoints.length}</span>
+            </button>
+          </div>
+          <p className="map-collection-caption">
+            {collection === "kept"
+              ? "Your pocket collection · this session only"
+              : "Places supplied by the map · not ranked recommendations"}
+          </p>
+          {list.length ? (
+            <ol
+              className="mapped-place-index"
+              aria-label={
+                collection === "kept"
+                  ? "Kept mapped places"
+                  : "Mapped places in view"
+              }
+            >
+              {list.map((point, i) => (
+                <li key={point.id}>
+                  <button
+                    aria-pressed={selected?.id === point.id}
+                    onClick={() => inspect(point, collection === "kept")}
+                  >
+                    <span className="map-index-number">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <PointIcon point={point} />
+                    <span className="map-index-name">{point.name}</span>
+                    <ArrowUpRight size={13} />
+                  </button>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="map-index-empty">
+              {collection === "kept"
+                ? "Nothing tucked away yet. Select a mapped place to keep it here."
+                : "Pan or zoom to reveal mapped places. The standard 2D map shows geography without this place index."}
+            </p>
+          )}
+          <span className="field-guide-signature" aria-hidden="true">
+            Follow your appetite.
+          </span>
+        </aside>
+      </div>
+      <div className="location-bottom">
+        <p className="map-exploration-note">
+          <Compass size={17} strokeWidth={1.2} />
+          <span>
+            Drag to wander. Zoom to get closer.{" "}
+            <strong>Find a place, then make an evening of it.</strong>
+          </span>
+        </p>
         <div className="demo-journey-invite">
           <span className="eyebrow">
-            FROM A REAL PLACE TO A LITTLE POSSIBILITY
+            CONTINUE INTO OUR FICTIONAL NEIGHBORHOOD
           </span>
-          <p>Try the dining journey.</p>
+          <p>From a pin to a shared table.</p>
           <button onClick={onDemo}>
             Open demo atlas <ArrowUpRight size={15} />
           </button>
           <small>
-            Six fictional Brooklyn restaurants. Real nearby recommendations are
-            not connected yet.
+            Six fictional Brooklyn restaurants. Real menus and personalized
+            recommendations are not connected yet.
           </small>
         </div>
       </div>
       <footer className="location-privacy">
         <p>
           <LocateFixed size={13} /> Device location is requested only when you
-          choose it. It stays out of your guest invitations and plans. Map and
-          weather services receive the chosen area to load local data.
+          choose it. Map and place-search services receive the chosen area. Kept
+          places stay in this session; no location is shared with guests or
+          dinner plans.
         </p>
         <button onClick={onWaiter}>
           A word with The Waiter <ArrowUpRight size={12} />

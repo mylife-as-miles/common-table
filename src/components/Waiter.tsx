@@ -37,6 +37,13 @@ interface WaiterProps {
   view: View;
   mode: "map" | "book" | "real";
   realLocation?: string;
+  realPoint?: {
+    name: string;
+    category: "food" | "coffee" | "outdoors" | "other";
+    id: string;
+  } | null;
+  onKeepRealPoint?: () => void;
+  realPointKept?: boolean;
   lowPower: boolean;
   storageAvailable: boolean;
   open: boolean;
@@ -230,6 +237,9 @@ export function Waiter({
   view,
   mode,
   realLocation,
+  realPoint,
+  onKeepRealPoint,
+  realPointKept = false,
   lowPower,
   storageAvailable,
   open,
@@ -266,6 +276,22 @@ export function Waiter({
   const allAgreed = state.participants.every((person) =>
     state.plan.approvals.includes(person.id),
   );
+  const realCategory = realPoint
+    ? {
+        food: "Food & drink",
+        coffee: "Coffee",
+        outdoors: "Outdoors",
+        other: "Mapped place",
+      }[realPoint.category]
+    : "Area guide";
+  const realName = realPoint?.name || realLocation || "Your chosen area";
+
+  // A previously displayed response must not describe the place the user left.
+  useEffect(() => {
+    setResponse("");
+    setWhy(false);
+    ringTip.current = 0;
+  }, [mode, realPoint?.id, realLocation]);
 
   useEffect(() => {
     if (open && dialog.current && !dialog.current.open) {
@@ -313,7 +339,9 @@ export function Waiter({
     setRing((value) => value + 1);
     if (mode === "real" && course === "place") {
       setResponse(
-        `You’re exploring ${realLocation || "your chosen area"}. This is real geography; nearby dining recommendations are not connected yet. Your demo dinner plan stays as it was.`,
+        realPoint
+          ? `${realPoint.name} is a real mapped ${realCategory.toLowerCase()} place from OpenStreetMap${realLocation ? ` in ${realLocation}` : ""}. I can help keep this point; prices, menus, dietary fit, and bookings are not connected. Your demo dinner plan stays as it was.`
+          : `You’re exploring ${realLocation || "your chosen area"} on OpenStreetMap. Pick a named mapped place for a closer look. Your fictional demo table and dinner plan stay as they were.`,
       );
       return;
     }
@@ -341,12 +369,15 @@ export function Waiter({
                 : "This is the only current fit. A budget or preference change can open up a few more doors.",
               "I use local demo tastes and venue notes. Qloo is not connected, and dietary details need confirmation with a restaurant.",
             ];
-    setResponse(tips[ringTip.current++ % tips.length]);
+    setResponse(
+      `${mode === "real" ? "For your separate fictional demo journey: " : ""}${tips[ringTip.current++ % tips.length]}`,
+    );
   }
   function nextPossibility() {
     if (mode === "real") {
+      setCourse("place");
       setResponse(
-        "Real nearby restaurant recommendations are not connected yet. You can try the clearly labeled fictional dining journey, or refine your table’s tastes.",
+        `Choose another named place on the OpenStreetMap map to explore a different possibility${realPoint ? ` from ${realPoint.name}` : ""}. Real mapped places aren’t ranked against the table’s budgets or dietary needs. The fictional demo plan stays unchanged.`,
       );
       return;
     }
@@ -380,6 +411,13 @@ export function Waiter({
         : `${selected.name} is kept with your contenders at the shared table.`,
     );
   }
+  function keepMappedPlace() {
+    if (!realPoint || !onKeepRealPoint) return;
+    onKeepRealPoint();
+    setResponse(
+      `${realPoint.name}’s mapped-place keep was updated. No dinner plan, invitation, or reservation was created.`,
+    );
+  }
   function bringToTable(destination: View = "table") {
     if (!selectedMatch) {
       setResponse(
@@ -395,6 +433,52 @@ export function Waiter({
     const text = request.trim().toLowerCase();
     if (!text) {
       requestInput.current?.focus();
+      return;
+    }
+    if (mode === "real") {
+      setCourse("place");
+      if (
+        /reserv|booking|book a|invite|send|location shar|where am i/.test(text)
+      ) {
+        setResponse(
+          `${realName} has no connected reservation, invitation, or location-sharing service here. Nothing is sent or booked. Your fictional demo plan remains separate.`,
+        );
+      } else if (
+        /another|different|surprise|something else|new place/.test(text)
+      ) {
+        nextPossibility();
+      } else if (/keep|bookmark|remember/.test(text)) {
+        if (realPoint && realPointKept)
+          setResponse(
+            `${realPoint.name} is already kept as a mapped possibility. Your fictional demo shortlist and dinner plan stay separate.`,
+          );
+        else if (realPoint && onKeepRealPoint) keepMappedPlace();
+        else
+          setResponse(
+            "Pick a named place on the real map first. Its mapped-place keep is separate from the fictional demo shortlist and dinner plan.",
+          );
+      } else if (
+        /why|fit|match|diet|allerg|vegan|vegetarian|gluten|nut|budget|cheap|cost|price|spend|menu|hours|open/.test(
+          text,
+        )
+      ) {
+        setResponse(
+          `${realName} is ${realPoint ? `an OpenStreetMap ${realCategory.toLowerCase()} point` : "an area on OpenStreetMap"}. That tells us its mapped name, category, and geography. I don’t have verified menus, prices, hours, allergy safety, or a taste or dietary fit for real places. Qloo is not connected.`,
+        );
+      } else if (
+        /save|plan|tonight|dinner|finish|time|date|friend|guest|table|taste|together|group/.test(
+          text,
+        )
+      ) {
+        setResponse(
+          `${realPoint ? `You can keep ${realPoint.name} as a mapped possibility. ` : "Choose a named mapped place to keep a possibility. "}Real places aren’t connected to dinner planning yet. The Our table and Tonight pages describe your separate fictional demo journey.`,
+        );
+      } else {
+        setResponse(
+          `I’m following ${realName} on the real map. Try “keep this place”, “another place”, or ask what’s known about it. Real menus, prices, ranking, and bookings aren’t connected.`,
+        );
+      }
+      setRequest("");
       return;
     }
     if (/reserv|booking|book a|invite|send|location|where am i/.test(text)) {
@@ -563,33 +647,72 @@ export function Waiter({
                 </button>
               ))}
             </div>
+            {mode === "real" && course !== "place" && (
+              <p className="cw-real-context">
+                This page describes your fictional demo{" "}
+                {course === "table" ? "table" : "dinner plan"}.{" "}
+                {realPoint
+                  ? `${realPoint.name} stays a separate mapped possibility.`
+                  : "Real mapped places stay separate."}
+              </p>
+            )}
             {course === "place" && mode === "real" ? (
               <div className="cw-course-content">
                 <span className="cw-order-kicker">
-                  A REAL CORNER OF THE WORLD
+                  OPENSTREETMAP · REAL GEOGRAPHY
                 </span>
-                <h3>{realLocation || "Your chosen area"}</h3>
+                <h3>{realName}</h3>
+                <div className="cw-geography-card">
+                  <Compass size={23} />
+                  <div>
+                    <strong>{realCategory}</strong>
+                    <span>{realLocation || "OpenStreetMap location"}</span>
+                  </div>
+                  <span className="cw-osm-stamp">OSM</span>
+                </div>
                 <p className="cw-guidance">
-                  “The map follows your chosen area. Nearby dining
-                  recommendations are still to come; I won’t place our fictional
-                  restaurants here.”
+                  {realPoint
+                    ? `“${realPoint.name} is on the real map. A possibility to keep and investigate, before we call it a dinner plan.”`
+                    : "“Pick a named place on the real map. I’ll follow that place on my pad, without placing our fictional restaurants here.”"}
                 </p>
                 <p className="cw-small-note">
-                  Real geography and local weather are separate from the six
-                  fictional Brooklyn restaurants in our demo dining journey.
-                  Your existing table and plan stay unchanged.
+                  {realPoint
+                    ? "Name, category, and geography come from OpenStreetMap. "
+                    : "This is an area guide to OpenStreetMap geography. "}
+                  Menus, prices, dietary safety, opening hours, availability,
+                  and taste ranking are not verified or connected. Your
+                  fictional demo table and dinner plan stay unchanged.
                 </p>
                 <div className="cw-pad-actions">
-                  <button
-                    className="cw-secondary"
-                    onClick={() => navigate("table")}
-                  >
-                    Refine our tastes <Users size={14} />
+                  <button className="cw-secondary" onClick={close}>
+                    Back to the map <Compass size={14} />
                   </button>
-                  <button className="cw-primary" onClick={openMenu}>
-                    Open demo menu <BookOpen size={15} />
-                  </button>
+                  {realPoint ? (
+                    <button
+                      className="cw-primary"
+                      onClick={keepMappedPlace}
+                      aria-pressed={realPointKept}
+                      disabled={!onKeepRealPoint}
+                    >
+                      <Bookmark
+                        size={14}
+                        fill={realPointKept ? "currentColor" : "none"}
+                      />
+                      {realPointKept
+                        ? "Mapped place kept"
+                        : "Keep mapped place"}
+                    </button>
+                  ) : (
+                    <button className="cw-primary" onClick={openMenu}>
+                      Open demo menu <BookOpen size={15} />
+                    </button>
+                  )}
                 </div>
+                {realPoint && (
+                  <button className="cw-demo-link" onClick={openMenu}>
+                    Try the fictional demo menu <ArrowRight size={12} />
+                  </button>
+                )}
               </div>
             ) : course === "place" ? (
               <div className="cw-course-content">
@@ -708,9 +831,11 @@ export function Waiter({
                   ))}
                 </div>
                 <p className="cw-guidance">
-                  {state.participants.length === 1
-                    ? "“A table just for you is a very good table. Start with what you love; make room for company if you feel like it.”"
-                    : "“Different tastes can make a better evening. I’ll only show places within every seat’s budget and listed dietary needs.”"}
+                  {mode === "real"
+                    ? "“These are the tastes in your separate fictional demo table. Real mapped places haven’t been checked against these budgets or dietary needs.”"
+                    : state.participants.length === 1
+                      ? "“A table just for you is a very good table. Start with what you love; make room for company if you feel like it.”"
+                      : "“Different tastes can make a better evening. I’ll only show places within every seat’s budget and listed dietary needs.”"}
                 </p>
                 <dl className="cw-table-notes">
                   <div>
@@ -900,10 +1025,13 @@ export function Waiter({
               </div>
             </form>
             <p className="cw-disclosure">
-              DEMO SERVICE · LOCAL GUIDANCE
+              {mode === "real"
+                ? "REAL MAP · LOCAL GUIDANCE"
+                : "DEMO SERVICE · LOCAL GUIDANCE"}
               <span>
-                Places, tastes & plans. No bookings, messages, or location
-                sharing.
+                {mode === "real"
+                  ? "OpenStreetMap geography. No verified menus, fit ranking, or bookings."
+                  : "Places, tastes & plans. No bookings, messages, or location sharing."}
               </span>
             </p>
           </div>

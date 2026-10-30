@@ -1,24 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import type { MapPoint } from "../components/GeographicMap";
 
 export interface MapLocation {
   latitude: number;
   longitude: number;
   label: string;
-  source: "starting" | "search" | "device";
-}
-export interface WeatherData {
-  source: "openweather";
-  status: "ready";
-  latitude: number;
-  longitude: number;
-  placeName: string;
-  temperatureC: number;
-  feelsLikeC: number;
-  description: string;
-  condition: "clear" | "clouds" | "rain" | "snow" | "storm" | "fog";
-  isDay: boolean;
-  observedAt: string;
-  windMps: number;
+  source: "starting" | "search" | "device" | "saved";
 }
 export interface PlaceResult {
   id: string;
@@ -48,17 +35,11 @@ export function useLocationContext(active: boolean) {
   const [searchMessage, setSearchMessage] = useState("");
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherStatus, setWeatherStatus] = useState<
-    "loading" | "ready" | "unavailable" | "not_configured"
-  >("loading");
-  const [refresh, setRefresh] = useState(0);
+  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
+  const [savedPoints, setSavedPoints] = useState<MapPoint[]>([]);
   const searchRequest = useRef<AbortController | null>(null);
   const searchSequence = useRef(0);
   const geoSequence = useRef(0);
-  const cache = useRef(
-    new Map<string, { data: WeatherData; fetched: number }>(),
-  );
 
   function cancelSearch(clearQuery = false) {
     searchSequence.current++;
@@ -134,6 +115,7 @@ export function useLocationContext(active: boolean) {
     cancelLocation(true);
     cancelSearch(true);
     setLocationMessage("");
+    setSelectedPoint(null);
     setLocation({ ...place, source: "search" });
   }
   function useDeviceLocation() {
@@ -166,6 +148,7 @@ export function useLocationContext(active: boolean) {
           );
           return;
         }
+        setSelectedPoint(null);
         setLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -190,65 +173,35 @@ export function useLocationContext(active: boolean) {
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
     );
   }
+  function selectMappedPoint(point: MapPoint) {
+    cancelLocation(true);
+    cancelSearch();
+    setLocationMessage("");
+    setSelectedPoint({ ...point });
+  }
+  function revisitPoint(point: MapPoint) {
+    cancelSearch(true);
+    cancelLocation(true);
+    setLocationMessage("");
+    setSelectedPoint({ ...point });
+    setLocation({ ...point, label: point.name, source: "saved" });
+  }
+  function toggleSavedPoint(point: MapPoint) {
+    setSavedPoints((current) =>
+      current.some((p) => p.id === point.id)
+        ? current.filter((p) => p.id !== point.id)
+        : [...current, point],
+    );
+  }
   useEffect(() => {
-    if (!active) return;
-    const latitude = Number(location.latitude.toFixed(3)),
-      longitude = Number(location.longitude.toFixed(3));
-    const key = `${latitude},${longitude}`;
-    const cached = cache.current.get(key);
-    if (cached && Date.now() - cached.fetched < 600000 && refresh === 0) {
-      setWeather(cached.data);
-      setWeatherStatus("ready");
-      return;
+    if (!active) {
+      searchSequence.current++;
+      searchRequest.current?.abort();
+      geoSequence.current++;
+      setSearching(false);
+      setLocating(false);
     }
-    const controller = new AbortController();
-    let current = true;
-    const timer = setTimeout(() => controller.abort(), 12000);
-    setWeather(null);
-    setWeatherStatus("loading");
-    fetch(`/api/weather?lat=${latitude}&lon=${longitude}`, {
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const body = await response.json();
-        if (!current) return;
-        if (!response.ok) {
-          setWeatherStatus(
-            body.code === "not_configured" ? "not_configured" : "unavailable",
-          );
-          return;
-        }
-        if (
-          body.source !== "openweather" ||
-          body.status !== "ready" ||
-          !validCoordinate(body.latitude, body.longitude) ||
-          Math.abs(body.latitude - latitude) > 0.02 ||
-          Math.abs(body.longitude - longitude) > 0.02 ||
-          !Number.isFinite(body.temperatureC) ||
-          !Number.isFinite(body.feelsLikeC) ||
-          !Number.isFinite(body.windMps) ||
-          typeof body.description !== "string" ||
-          !["clear", "clouds", "rain", "snow", "storm", "fog"].includes(
-            body.condition,
-          ) ||
-          typeof body.isDay !== "boolean" ||
-          !Number.isFinite(Date.parse(body.observedAt))
-        )
-          throw new Error("invalid_weather");
-        cache.current.set(key, { data: body, fetched: Date.now() });
-        setWeather(body);
-        setWeatherStatus("ready");
-      })
-      .catch(() => {
-        if (current) setWeatherStatus("unavailable");
-      })
-      .finally(() => clearTimeout(timer));
-    return () => {
-      current = false;
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [active, location.latitude, location.longitude, refresh]);
+  }, [active]);
   useEffect(
     () => () => {
       searchRequest.current?.abort();
@@ -265,15 +218,18 @@ export function useLocationContext(active: boolean) {
     searchMessage,
     locating,
     locationMessage,
-    weather,
-    weatherStatus,
+    selectedPoint,
+    savedPoints,
+    selectMappedPoint,
+    revisitPoint,
+    toggleSavedPoint,
+    clearPoint: () => setSelectedPoint(null),
     changeQuery,
     searchPlaces,
     selectPlace,
     cancelSearch,
     useDeviceLocation,
     cancelLocation,
-    refreshWeather: () => setRefresh((x) => x + 1),
   };
 }
 export type LocationContext = ReturnType<typeof useLocationContext>;

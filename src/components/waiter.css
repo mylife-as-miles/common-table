@@ -1214,3 +1214,73 @@ button.cw-character {
     display: block;
   }
 }
+.cw-geography-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px;
+  border: 1px solid #c9ceb4;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 20px, #b7c3a217 20px 21px),
+    #e9ecda;
+  box-shadow: 1px 3px 4px #3d4c2012;
+  color: #53683d;
+}
+.cw-geography-card > svg {
+  flex-shrink: 0;
+}
+.cw-geography-card > div {
+  min-width: 0;
+  flex: 1;
+}
+.cw-geography-card strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.cw-geography-card > div > span {
+  display: block;
+  font-size: 10px;
+  color: #61744d;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.cw-osm-stamp {
+  border: 1px solid #9baa85;
+  border-radius: 2px;
+  font-size: 8px;
+  letter-spacing: 1px;
+  padding: 4px 5px;
+  transform: rotate(-5deg);
+  flex-shrink: 0;
+}
+.cw-course-content > h3 {
+  overflow-wrap: anywhere;
+}
+.cw-real-context {
+  border-left: 2px solid #98aa7e;
+  background: #e5ead5;
+  padding: 10px 12px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #4c6237;
+  margin: 18px 0 0;
+}
+.cw-demo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  padding: 11px 3px;
+  min-height: 40px;
+  color: #586f3f;
+  font-size: 10px;
+  margin: 5px auto 0;
+}
+.cw-demo-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
