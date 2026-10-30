@@ -4,6 +4,8 @@ import {
   useState,
   type Dispatch,
   type FormEvent,
+  type PointerEvent,
+  type CSSProperties,
 } from "react";
 import {
   ArrowLeft,
@@ -23,12 +25,15 @@ import {
   restrictionOptions,
 } from "../domain";
 import "./table-plan.css";
+import "./shared-table-cinematic.css";
+import { playInteractionSound } from "../experience/interactionSound";
 
 interface SharedTableProps {
   state: AppState;
   dispatch: Dispatch<Action>;
   onExplore: () => void;
   onPlan: () => void;
+  lowPower?: boolean;
 }
 const tastes = [...tasteOptions, "Cozy", "Lively"];
 const restrictions = restrictionOptions;
@@ -46,13 +51,18 @@ export function SharedTable({
   dispatch,
   onExplore,
   onPlan,
+  lowPower = false,
 }: SharedTableProps) {
   const [editingId, setEditingId] = useState(state.participants[0]?.id || "");
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [arrivingId, setArrivingId] = useState<string | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const addRef = useRef<HTMLButtonElement>(null);
+  const editorHeadingRef = useRef<HTMLHeadingElement>(null);
+  const editorRevealFrame = useRef<number | null>(null);
   const editing =
     state.participants.find((p) => p.id === editingId) || state.participants[0];
   const ranked = rankVenues(state);
@@ -62,13 +72,74 @@ export function SharedTable({
   useEffect(() => {
     if (adding) nameRef.current?.focus();
   }, [adding]);
+  useEffect(() => {
+    if (!arrivingId) return;
+    const timer = window.setTimeout(() => setArrivingId(null), 850);
+    return () => window.clearTimeout(timer);
+  }, [arrivingId]);
+  useEffect(() => {
+    if (lowPower) resetPerspective();
+  }, [lowPower]);
+  useEffect(() => cancelEditorReveal, []);
+  function cancelEditorReveal() {
+    if (editorRevealFrame.current !== null) {
+      window.cancelAnimationFrame(editorRevealFrame.current);
+      editorRevealFrame.current = null;
+    }
+  }
+  function selectParticipant(id: string) {
+    setEditingId(id);
+    setAdding(false);
+    cancelEditorReveal();
+    if (!window.matchMedia("(max-width: 620px)").matches) return;
+    // Wait for the selected name and any previously hidden editor to commit.
+    editorRevealFrame.current = window.requestAnimationFrame(() => {
+      editorRevealFrame.current = null;
+      const heading = editorHeadingRef.current;
+      if (!heading) return;
+      const instant =
+        lowPower ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      heading.focus({ preventScroll: true });
+      heading.scrollIntoView({
+        behavior: instant ? "instant" : "smooth",
+        block: "start",
+      });
+    });
+  }
+  function resetPerspective() {
+    stageRef.current?.style.removeProperty("--ct-table-pitch");
+    stageRef.current?.style.removeProperty("--ct-table-yaw");
+    stageRef.current?.style.removeProperty("--ct-light-x");
+  }
+  function movePerspective(event: PointerEvent<HTMLDivElement>) {
+    if (
+      lowPower ||
+      event.pointerType !== "mouse" ||
+      !window.matchMedia(
+        "(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
+      ).matches
+    )
+      return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+    event.currentTarget.style.setProperty(
+      "--ct-table-pitch",
+      `${10 - y * 3}deg`,
+    );
+    event.currentTarget.style.setProperty("--ct-table-yaw", `${x * 3}deg`);
+    event.currentTarget.style.setProperty("--ct-light-x", `${43 + x * 9}%`);
+  }
   function cancelAdd() {
+    cancelEditorReveal();
     setAdding(false);
     setName("");
     addRef.current?.focus();
   }
   function addGuest(event: FormEvent) {
     event.preventDefault();
+    cancelEditorReveal();
     const cleanName = name.trim();
     if (!cleanName || state.participants.length >= 6) return;
     const id = `guest-${crypto.randomUUID()}`;
@@ -83,7 +154,9 @@ export function SharedTable({
         restrictions: [],
       },
     });
+    playInteractionSound("seat");
     setEditingId(id);
+    setArrivingId(id);
     setAdding(false);
     setName("");
     requestAnimationFrame(() => document.getElementById(`seat-${id}`)?.focus());
@@ -106,13 +179,18 @@ export function SharedTable({
   }
   const seatPositions = state.participants.map((_, index) => {
     const angle =
-      ((-90 + (index * 360) / state.participants.length) * Math.PI) / 180;
-    return { x: 50 + 35 * Math.cos(angle), y: 50 + 32 * Math.sin(angle) };
+      ((90 + (index * 360) / state.participants.length) * Math.PI) / 180;
+    return {
+      x: 50 + 32 * Math.cos(angle),
+      y: 50 + (state.participants.length === 1 ? 28 : 31) * Math.sin(angle),
+      turn: (index * 360) / state.participants.length,
+    };
   });
   return (
     <section
-      className={`tp-scene tp-table-scene ${state.participants.length === 1 ? "tp-solo" : ""} ${state.participants.length >= 5 ? "tp-many" : ""}`}
+      className={`tp-scene tp-table-scene ct-cinematic-table ${state.participants.length === 1 ? "tp-solo" : ""} ${state.participants.length >= 5 ? "tp-many" : ""}`}
       aria-labelledby="table-heading"
+      data-low-power={lowPower || undefined}
     >
       <div className="tp-section-head">
         <div>
@@ -147,55 +225,146 @@ export function SharedTable({
       <div className="tp-table-layout">
         <div className="tp-table-side">
           <div
-            className="tp-table-top"
-            aria-label={`Your table has ${state.participants.length} ${state.participants.length === 1 ? "seat" : "seats"}`}
+            className="ct-table-stage"
+            ref={stageRef}
+            onPointerMove={movePerspective}
+            onPointerLeave={resetPerspective}
           >
-            <div className="tp-table-center">
-              <div className="tp-candle">
-                <span />
+            <div className="ct-stage-inscription" aria-hidden="true">
+              <span>THE EVENING BEGINS HERE</span>
+              <i>
+                {chosenVenue
+                  ? chosenVenue.name
+                  : "A little space for good company."}
+              </i>
+            </div>
+            <div className="ct-table-halo" aria-hidden="true" />
+            <div
+              className="tp-table-top"
+              role="group"
+              aria-label={`Your table has ${state.participants.length} ${state.participants.length === 1 ? "seat" : "seats"}`}
+              aria-describedby="table-seat-hint"
+            >
+              <div className="ct-linen-fold" aria-hidden="true" />
+              <div className="tp-table-center">
+                <svg
+                  className="ct-table-sprig"
+                  viewBox="0 0 130 110"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M40 100Q68 65 93 17"
+                    fill="none"
+                    stroke="#62684a"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M57 76Q26 71 33 46Q57 50 57 76M69 57Q89 64 109 43Q87 31 69 57M82 35Q57 35 63 13Q82 17 82 35M92 20Q107 21 116 5Q98 0 92 20"
+                    fill="#747e53"
+                  />
+                  <path
+                    d="M60 75L38 54M75 55L100 45M82 35L68 18"
+                    stroke="#a5ac79"
+                    fill="none"
+                  />
+                </svg>
+                <div className="ct-candle-holder" aria-hidden="true">
+                  <div className="tp-candle">
+                    <span />
+                  </div>
+                </div>
+                <span className="tp-table-script">
+                  a table for
+                  <br />
+                  <strong>
+                    {["one", "one", "two", "three", "four", "five", "six"][
+                      state.participants.length
+                    ] || state.participants.length}
+                  </strong>
+                </span>
               </div>
-              <span className="tp-table-script">
-                a table for
-                <br />
-                <strong>
-                  {["one", "one", "two", "three", "four", "five", "six"][
-                    state.participants.length
-                  ] || state.participants.length}
-                </strong>
+              {state.participants.map((person, i) => (
+                <button
+                  id={`seat-${person.id}`}
+                  key={person.id}
+                  className={`tp-seat ${editing?.id === person.id ? "is-active" : ""} ${arrivingId === person.id ? "ct-seat-arriving" : ""}`}
+                  style={{
+                    left: `${seatPositions[i]?.x || 50}%`,
+                    top: `${seatPositions[i]?.y || 50}%`,
+                    ...({
+                      "--ct-seat-turn": `${seatPositions[i]?.turn || 0}deg`,
+                      "--ct-napkin": person.color,
+                    } as CSSProperties),
+                  }}
+                  onClick={() => selectParticipant(person.id)}
+                  aria-label={`${person.name}${i > 0 ? " DEMO GUEST" : ""} — Edit ${person.name}'s tastes`}
+                  aria-pressed={editing?.id === person.id}
+                >
+                  <span className="ct-setting-props" aria-hidden="true">
+                    <span className="ct-dining-chair" />
+                    <svg className="ct-cutlery ct-fork" viewBox="0 0 18 100">
+                      <path d="M3 2v20m4-20v20m4-20v20m4-20v20M3 17v10c0 8 12 8 12 0V17M9 34v58" />
+                      <path d="M8 60h2l2 33c0 6-6 6-6 0Z" />
+                    </svg>
+                    <svg className="ct-cutlery ct-knife" viewBox="0 0 18 100">
+                      <path d="M7 2Q15 21 11 43L7 46Z" />
+                      <path d="M7 45h4l2 47c1 7-8 7-7 0Z" />
+                    </svg>
+                    <svg className="ct-wineglass" viewBox="0 0 44 88">
+                      <path
+                        d="M8 4H36L38 27C38 47 6 47 6 27Z"
+                        fill="#f9edd311"
+                        stroke="#e6ddbd"
+                        strokeWidth="1.3"
+                      />
+                      <path
+                        d="M7 24Q21 20 37 24L37 29C34 44 10 44 7 29Z"
+                        fill="#8f482b55"
+                      />
+                      <path
+                        d="M22 43v34M8 81Q22 73 36 81Z"
+                        fill="#f9edd318"
+                        stroke="#e6ddbd"
+                        strokeWidth="1.2"
+                      />
+                      <path
+                        d="M12 8L10 26Q10 34 15 36"
+                        fill="none"
+                        stroke="#fff8de99"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                    <span className="tp-plate">
+                      <span
+                        className="tp-napkin"
+                        style={{ backgroundColor: person.color }}
+                      />
+                      <span
+                        className="tp-monogram"
+                        data-initial={person.name.slice(0, 1)}
+                      />
+                    </span>
+                  </span>
+                  <span className="tp-seat-name">
+                    <span className="tp-seat-label">{person.name}</span>
+                    {i > 0 && <small aria-hidden="true">DEMO GUEST</small>}
+                    {editing?.id === person.id && (
+                      <span className="ct-place-card-rule" aria-hidden="true" />
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p id="table-seat-hint" className="ct-table-hint">
+              Choose a place card. Make yourself at home.
+            </p>
+            <div className="ct-stage-edge" aria-hidden="true">
+              <span>COMMON TABLE</span>
+              <span>
+                {String(state.participants.length).padStart(2, "0")} / 06 PLACES
+                SET
               </span>
             </div>
-            {state.participants.map((person, i) => (
-              <button
-                id={`seat-${person.id}`}
-                key={person.id}
-                className={`tp-seat ${editing?.id === person.id ? "is-active" : ""}`}
-                style={{
-                  left: `${seatPositions[i]?.x || 50}%`,
-                  top: `${seatPositions[i]?.y || 50}%`,
-                }}
-                onClick={() => {
-                  setEditingId(person.id);
-                  setAdding(false);
-                }}
-                aria-label={`${person.name}${i > 0 ? " DEMO GUEST" : ""} — Edit ${person.name}'s tastes`}
-                aria-pressed={editing?.id === person.id}
-              >
-                <span className="tp-plate" aria-hidden="true">
-                  <span
-                    className="tp-napkin"
-                    style={{ backgroundColor: person.color }}
-                  />
-                  <span
-                    className="tp-monogram"
-                    data-initial={person.name.slice(0, 1)}
-                  />
-                </span>
-                <span className="tp-seat-name">
-                  <span className="tp-seat-label">{person.name}</span>
-                  {i > 0 && <small aria-hidden="true">DEMO GUEST</small>}
-                </span>
-              </button>
-            ))}
           </div>
           <div className="tp-table-caption">
             <Users size={15} />
@@ -225,10 +394,7 @@ export function SharedTable({
             {state.participants.map((person) => (
               <button
                 key={person.id}
-                onClick={() => {
-                  setEditingId(person.id);
-                  setAdding(false);
-                }}
+                onClick={() => selectParticipant(person.id)}
                 aria-pressed={person.id === editing?.id}
               >
                 <span style={{ backgroundColor: person.color }}>
@@ -300,6 +466,7 @@ export function SharedTable({
                       title={`Remove ${editing.name}`}
                       aria-label={`Remove ${editing.name} from the table`}
                       onClick={() => {
+                        cancelEditorReveal();
                         dispatch({
                           type: "remove-participant",
                           id: editing.id,
@@ -317,7 +484,15 @@ export function SharedTable({
                     </button>
                   )}
                 </div>
-                <h3>What sounds good?</h3>
+                <h3
+                  id="table-taste-editor-heading"
+                  className="ct-taste-editor-heading"
+                  ref={editorHeadingRef}
+                  tabIndex={-1}
+                  aria-label={`${editing.name}’s tastes: What sounds good?`}
+                >
+                  What sounds good?
+                </h3>
                 <p className="tp-subtext">
                   Pick a few. We’ll find the overlap.
                 </p>

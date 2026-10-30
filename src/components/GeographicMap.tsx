@@ -10,6 +10,7 @@ import {
   Plus,
   RefreshCw,
   TriangleAlert,
+  Orbit,
 } from "lucide-react";
 import type {
   Map as GLMap,
@@ -339,6 +340,84 @@ export default function GeographicMap({
   const lastPointsSignature = useRef("");
   const lastFocusedPoint = useRef<string | null>(null);
   const [pointCount, setPointCount] = useState(0);
+  const [lookingAround, setLookingAround] = useState(false);
+  const cameraLook = useRef({
+    active: false,
+    sequence: 0,
+    timers: [] as number[],
+  });
+  const cancelLookAround = (updateState = true) => {
+    const current = cameraLook.current;
+    current.sequence++;
+    current.timers.forEach(window.clearTimeout);
+    current.timers = [];
+    if (current.active) {
+      current.active = false;
+      if (engine.current?.kind === "maplibre") engine.current.map.stop();
+      if (updateState) setLookingAround(false);
+    }
+  };
+  const lookAround = () => {
+    if (cameraLook.current.active) {
+      cancelLookAround();
+      return;
+    }
+    const active = engine.current;
+    if (active?.kind !== "maplibre" || motionOff || status !== "ready") return;
+    const map = active.map;
+    map.stop();
+    const original = {
+      center: map.getCenter(),
+      zoom: map.getZoom(),
+      pitch: map.getPitch(),
+      bearing: map.getBearing(),
+    };
+    const point = selectedPointRef.current;
+    const center: [number, number] = point
+      ? [point.longitude, point.latitude]
+      : [original.center.lng, original.center.lat];
+    const current = cameraLook.current;
+    current.active = true;
+    const sequence = ++current.sequence;
+    setLookingAround(true);
+    const step = (delay: number, action: () => void) =>
+      current.timers.push(
+        window.setTimeout(() => {
+          if (current.active && sequence === current.sequence) action();
+        }, delay),
+      );
+    map.easeTo({
+      center,
+      zoom: Math.max(15.2, original.zoom),
+      pitch: 58,
+      bearing: original.bearing - 24,
+      duration: 850,
+      essential: false,
+    });
+    step(850, () =>
+      map.easeTo({
+        bearing: original.bearing + 24,
+        pitch: 58,
+        duration: 1700,
+        essential: false,
+      }),
+    );
+    step(2550, () =>
+      map.easeTo({
+        center: original.center,
+        zoom: original.zoom,
+        pitch: original.pitch,
+        bearing: original.bearing,
+        duration: 850,
+        essential: false,
+      }),
+    );
+    step(3420, () => {
+      current.active = false;
+      current.timers = [];
+      setLookingAround(false);
+    });
+  };
   const publishPoints = (points: MapPoint[]) => {
     const signature = JSON.stringify(points);
     if (signature === lastPointsSignature.current) return;
@@ -347,6 +426,7 @@ export default function GeographicMap({
     onPointsChangeRef.current?.(points);
   };
   const focusPoint = (point: MapPoint) => {
+    cancelLookAround();
     const active = engine.current;
     if (!active) return;
     if (active.kind === "leaflet") {
@@ -411,6 +491,7 @@ export default function GeographicMap({
     lastFocusedPoint.current = null;
     refreshPoints.current = () => {};
     setStatus("loading");
+    setLookingAround(false);
     setRenderer("loading");
     setMessage("");
     setNotice("");
@@ -764,6 +845,20 @@ export default function GeographicMap({
       cleanups.push(() =>
         canvas.removeEventListener("webglcontextlost", loseContext),
       );
+      const interruptLook = (event: Event) => {
+        if (
+          event.type === "keydown" &&
+          (event as KeyboardEvent).key === "Escape"
+        )
+          return;
+        cancelLookAround();
+      };
+      for (const event of ["pointerdown", "wheel", "keydown"])
+        canvas.addEventListener(event, interruptLook);
+      cleanups.push(() => {
+        for (const event of ["pointerdown", "wheel", "keydown"])
+          canvas.removeEventListener(event, interruptLook);
+      });
       let initialDataError = false;
       map.on("load", () => {
         if (disposed) return;
@@ -853,6 +948,7 @@ export default function GeographicMap({
     }
     return () => {
       disposed = true;
+      cancelLookAround(false);
       abort.abort();
       clearTimeout(watchdog);
       cleanups.forEach((cleanup) => cleanup());
@@ -869,6 +965,7 @@ export default function GeographicMap({
   }, [motionOff, preferRaster, retry, coordinateValid]);
 
   useEffect(() => {
+    cancelLookAround();
     publishPoints([]);
     pointMarkers.current.forEach(({ marker }) => marker.remove());
     pointMarkers.current.clear();
@@ -938,6 +1035,7 @@ export default function GeographicMap({
   }, [selectedPoint]);
 
   const changeZoom = (delta: number) => {
+    cancelLookAround();
     const active = engine.current;
     if (!active) return;
     if (active.kind === "maplibre")
@@ -952,6 +1050,7 @@ export default function GeographicMap({
       );
   };
   const recenter = () => {
+    cancelLookAround();
     const active = engine.current;
     if (!active || !validLocation(location)) return;
     if (active.kind === "maplibre")
@@ -968,6 +1067,7 @@ export default function GeographicMap({
       });
   };
   const toggleDimension = () => {
+    cancelLookAround();
     const active = engine.current;
     if (active?.kind !== "maplibre" || motionOff) return;
     active.map.easeTo({
@@ -977,7 +1077,10 @@ export default function GeographicMap({
     });
     setDimensional((v) => !v);
   };
-  const retryMap = () => setRetry((v) => v + 1);
+  const retryMap = () => {
+    cancelLookAround();
+    setRetry((v) => v + 1);
+  };
   return (
     <section
       className={`geographic-map${night ? " geographic-map-night" : ""}${motionOff ? " geographic-map-still" : ""}`}
@@ -989,6 +1092,13 @@ export default function GeographicMap({
       data-atmosphere={atmosphere}
       data-lens={lens}
       data-poi-count={pointCount}
+      data-camera-look={lookingAround ? "active" : "idle"}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && cameraLook.current.active) {
+          event.preventDefault();
+          cancelLookAround();
+        }
+      }}
     >
       <div ref={container} className="geographic-map-canvas" />
       <div className="geo-map-material" aria-hidden="true" />
@@ -1007,6 +1117,21 @@ export default function GeographicMap({
       )}
       {status !== "error" && (
         <div className="geo-map-controls" aria-label="Geographic map controls">
+          <button
+            type="button"
+            className="geo-look-around"
+            aria-pressed={lookingAround}
+            aria-label={
+              lookingAround ? "Stop look-around" : "Look around this area"
+            }
+            onClick={lookAround}
+            disabled={
+              renderer !== "maplibre" || motionOff || status !== "ready"
+            }
+          >
+            <Orbit size={17} />
+            <span>{lookingAround ? "Stop" : "Look"}</span>
+          </button>
           <button
             type="button"
             onClick={toggleDimension}
@@ -1033,6 +1158,7 @@ export default function GeographicMap({
             type="button"
             aria-label="Reset north orientation"
             onClick={() => {
+              cancelLookAround();
               const active = engine.current;
               if (active?.kind === "maplibre")
                 active.map.easeTo({

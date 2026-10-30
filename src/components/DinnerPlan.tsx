@@ -19,8 +19,11 @@ import {
   planValidationErrors,
 } from "../domain";
 import "./table-plan.css";
+import { PrintingPress } from "./PrintingPress";
+import "./dinner-cinematic.css";
 
 interface DinnerPlanProps {
+  lowPower?: boolean;
   storageAvailable?: boolean;
   state: AppState;
   dispatch: Dispatch<Action>;
@@ -37,8 +40,18 @@ export function DinnerPlan({
   onExplore,
   onTable,
   storageAvailable = true,
+  lowPower = false,
 }: DinnerPlanProps) {
   const [message, setMessage] = useState("");
+  const [printRequest, setPrintRequest] = useState(0);
+  const printJobKey = JSON.stringify({
+    venueId: state.plan.venueId,
+    date: state.plan.date,
+    time: state.plan.time,
+    note: state.plan.note,
+    approvals: state.plan.approvals,
+    participants: state.participants,
+  });
   const venue = venues.find((v) => v.id === state.plan.venueId);
   const eligible =
     venue && rankVenues(state).some((r) => r.venue.id === venue.id);
@@ -66,6 +79,23 @@ export function DinnerPlan({
   const planText = venue
     ? `COMMON TABLE — Dinner plan\n\n${venue.name}\n${venue.cuisine} · ${venue.neighborhood}, Brooklyn\n${longDate} at ${state.plan.time}\nTable for ${state.participants.length}: ${people}\nEstimated $${venue.price} per person (demo estimate)\n${state.plan.note ? `\nNote: ${state.plan.note}\n` : ""}\nA suggested plan, not a booking. Fictional demo venue. Confirm location, hours, ingredients and availability before going.\nMade with Common Table`
     : "";
+  function savePlan() {
+    if (!canSave || state.plan.saved) return;
+    dispatch({ type: "save-plan" });
+    setPrintRequest((value) => value + 1);
+    setMessage(
+      storageAvailable
+        ? "Your dinner plan is saved on this device. No reservation was made."
+        : "Browser storage is unavailable. Your plan is only kept for this session; download it to keep a copy.",
+    );
+  }
+  function reprintPlan() {
+    if (!state.plan.saved || !canSave) return;
+    setPrintRequest((value) => value + 1);
+    setMessage(
+      "A fresh visual impression of your current dinner plan. No printer or download was started.",
+    );
+  }
   async function copyPlan() {
     try {
       await navigator.clipboard.writeText(planText);
@@ -118,75 +148,87 @@ export function DinnerPlan({
         </div>
       ) : (
         <div className="tp-plan-layout">
-          <article className="tp-receipt" aria-label="Dinner plan summary">
-            <div className="tp-receipt-top">
-              <span className="tp-receipt-brand">
-                common table<span>GOOD FOOD. BETTER COMPANY.</span>
-              </span>
-              <Utensils size={21} />
-            </div>
-            <div className="tp-receipt-status">
-              {state.plan.saved ? (
-                <>
-                  <CheckCircle2 size={14} />{" "}
-                  {storageAvailable
-                    ? "SAVED ON THIS DEVICE"
-                    : "KEPT FOR THIS SESSION"}
-                </>
-              ) : (
-                <>
-                  <Pencil size={13} /> YOUR EVENING, IN THE MAKING
-                </>
-              )}
-            </div>
-            <span className="tp-receipt-caption">WE’LL MEET AT</span>
-            <h3>{venue.name}</h3>
-            <p className="tp-receipt-cuisine">
-              {venue.cuisine} · {venue.neighborhood}
-            </p>
-            <img
-              className="tp-plan-photo"
-              src={venue.image}
-              alt={`Atmosphere inspiration for ${venue.name}`}
-            />
-            <div className="tp-receipt-line">
-              <CalendarDays size={17} />
-              <div>
-                <strong>{longDate}</strong>
-                <span>
-                  {state.plan.time || "Choose a time"} · your chosen local time
+          <PrintingPress
+            saved={state.plan.saved}
+            ready={canSave}
+            jobKey={printJobKey}
+            request={printRequest}
+            lowPower={lowPower}
+            storageAvailable={storageAvailable}
+            onOperate={savePlan}
+            onReprint={reprintPlan}
+          >
+            <article className="tp-receipt" aria-label="Dinner plan summary">
+              <div className="tp-receipt-top">
+                <span className="tp-receipt-brand">
+                  common table<span>GOOD FOOD. BETTER COMPANY.</span>
                 </span>
+                <Utensils size={21} />
               </div>
-            </div>
-            <div className="tp-receipt-line">
-              <Utensils size={17} />
-              <div>
-                <strong>Table for {state.participants.length}</strong>
-                <span>{people}</span>
+              <div className="tp-receipt-status">
+                {state.plan.saved ? (
+                  <>
+                    <CheckCircle2 size={14} />{" "}
+                    {storageAvailable
+                      ? "SAVED ON THIS DEVICE"
+                      : "KEPT FOR THIS SESSION"}
+                  </>
+                ) : (
+                  <>
+                    <Pencil size={13} /> YOUR EVENING, IN THE MAKING
+                  </>
+                )}
               </div>
-            </div>
-            <div className="tp-receipt-line">
-              <MapPin size={17} />
-              <div>
-                <strong>{venue.neighborhood}, Brooklyn</strong>
-                <span>Fictional venue · demonstration only</span>
+              <span className="tp-receipt-caption">WE’LL MEET AT</span>
+              <h3>{venue.name}</h3>
+              <p className="tp-receipt-cuisine">
+                {venue.cuisine} · {venue.neighborhood}
+              </p>
+              <img
+                className="tp-plan-photo"
+                src={venue.image}
+                alt={`Atmosphere inspiration for ${venue.name}`}
+              />
+              <div className="tp-receipt-line">
+                <CalendarDays size={17} />
+                <div>
+                  <strong>{longDate}</strong>
+                  <span>
+                    {state.plan.time || "Choose a time"} · your chosen local
+                    time
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="tp-receipt-total">
-              <span>Estimated per person</span>
-              <strong>
-                ${venue.price}
-                <small> + tip & tax</small>
-              </strong>
-            </div>
-            {state.plan.note && (
-              <p className="tp-receipt-note">“{state.plan.note}”</p>
-            )}
-            <p className="tp-receipt-footer">
-              Leave a little room for the unexpected.
-              <span>THIS IS A PLAN, NOT A RESERVATION.</span>
-            </p>
-          </article>
+              <div className="tp-receipt-line">
+                <Utensils size={17} />
+                <div>
+                  <strong>Table for {state.participants.length}</strong>
+                  <span>{people}</span>
+                </div>
+              </div>
+              <div className="tp-receipt-line">
+                <MapPin size={17} />
+                <div>
+                  <strong>{venue.neighborhood}, Brooklyn</strong>
+                  <span>Fictional venue · demonstration only</span>
+                </div>
+              </div>
+              <div className="tp-receipt-total">
+                <span>Estimated per person</span>
+                <strong>
+                  ${venue.price}
+                  <small> + tip & tax</small>
+                </strong>
+              </div>
+              {state.plan.note && (
+                <p className="tp-receipt-note">“{state.plan.note}”</p>
+              )}
+              <p className="tp-receipt-footer">
+                Leave a little room for the unexpected.
+                <span>THIS IS A PLAN, NOT A RESERVATION.</span>
+              </p>
+            </article>
+          </PrintingPress>
           <div className="tp-plan-editor">
             <div className="tp-plan-current">
               <img src={venue.image} alt="" />
@@ -331,15 +373,9 @@ export function DinnerPlan({
             </fieldset>
             <button
               className="tp-dark-button tp-save-plan"
-              disabled={!canSave || state.plan.saved}
-              onClick={() => {
-                dispatch({ type: "save-plan" });
-                setMessage(
-                  storageAvailable
-                    ? "Your dinner plan is saved on this device. No reservation was made."
-                    : "Browser storage is unavailable. Your plan is only kept for this session; download it to keep a copy.",
-                );
-              }}
+              disabled={!canSave}
+              aria-disabled={state.plan.saved}
+              onClick={savePlan}
             >
               {state.plan.saved ? (
                 <>

@@ -1,5 +1,7 @@
 # Common Table UI handoff
 
+**Latest visual revision:** see [cinematic/HANDOFF.md](cinematic/HANDOFF.md) for the restaurant room, hinged folio, table settings, working letterpress, current screenshots and recorded interactions. Older screenshots below document earlier iterations.
+
 **Current OpenStreetMap experience:** see [location/HANDOFF.md](location/HANDOFF.md) for the real map, city/device location, interactive mapped places, current screenshots and validation. The sections below record the earlier immersive dining-demo revision.
 
 Built on `feat/immersive-common-table`, from the repository's initial README. No public push or deployment, no private Kitchen Studio code, and no prototype ZIP was needed.

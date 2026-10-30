@@ -13,6 +13,8 @@ import {
   BellRing,
   Utensils,
   X,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useCommonTable, venues } from "./domain";
 import MenuBook from "./components/MenuBook";
@@ -22,6 +24,12 @@ import { ImmersiveMap } from "./components/ImmersiveMap";
 import { Waiter } from "./components/Waiter";
 import { LocationAtlas } from "./components/LocationAtlas";
 import { useLocationContext } from "./location/useLocationContext";
+import { EveningRoom } from "./components/EveningRoom";
+import {
+  disposeInteractionSound,
+  playInteractionSound,
+  setInteractionSoundEnabled,
+} from "./experience/interactionSound";
 
 type View = "explore" | "table" | "plan";
 const viewFromHash = (): View =>
@@ -54,7 +62,12 @@ export default function App() {
   const [waiterOpen, setWaiterOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [about, setAbout] = useState(false);
+  const [sound, setSound] = useState(false);
+  const [soundBusy, setSoundBusy] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
+  const stage = useRef<HTMLElement>(null);
+  const room = useRef<HTMLDivElement>(null);
+  const lightFrame = useRef<number | null>(null);
   const aboutRef = useRef<HTMLDialogElement>(null);
   const transition = useRef<ViewTransition | null>(null);
   const modeIntent = useRef<"map" | "book" | "real">(modeFromHash());
@@ -86,6 +99,33 @@ export default function App() {
     if (lowPower) transition.current?.skipTransition();
   }, [lowPower]);
   useEffect(() => () => transition.current?.skipTransition(), []);
+  useEffect(
+    () => () => {
+      disposeInteractionSound();
+      if (lightFrame.current !== null) cancelAnimationFrame(lightFrame.current);
+    },
+    [],
+  );
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const active = stage.current;
+    if (!active || lowPower || preference.matches) return;
+    const entrance = active.animate(
+      [
+        { opacity: 0.2, transform: "translateY(10px) scale(.996)" },
+        { opacity: 1, transform: "translateY(0) scale(1)" },
+      ],
+      { duration: 460, easing: "cubic-bezier(.18,.7,.24,1)" },
+    );
+    const stop = () => {
+      if (preference.matches) entrance.cancel();
+    };
+    preference.addEventListener("change", stop);
+    return () => {
+      entrance.cancel();
+      preference.removeEventListener("change", stop);
+    };
+  }, [view, mode, lowPower]);
   const switchMode = (next: "map" | "book" | "real") => {
     if (modeIntent.current === next) return;
     modeIntent.current = next;
@@ -109,6 +149,8 @@ export default function App() {
       });
   };
   const navigate = (next: View) => {
+    if (next !== view || modeIntent.current !== mode)
+      playInteractionSound("scene");
     setView(next);
     location.hash =
       next === "explore"
@@ -167,7 +209,33 @@ export default function App() {
     }
   };
   return (
-    <div className={`app ${lowPower ? "low-power" : ""}`}>
+    <div
+      ref={room}
+      className={`app cinematic ${lowPower ? "low-power" : ""}`}
+      data-view={view}
+      data-mode={mode}
+      onPointerMove={(event) => {
+        if (
+          lowPower ||
+          event.pointerType !== "mouse" ||
+          !window.matchMedia(
+            "(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference)",
+          ).matches
+        )
+          return;
+        const x = Math.max(
+          10,
+          Math.min(90, (event.clientX / window.innerWidth) * 100),
+        );
+        if (lightFrame.current !== null)
+          cancelAnimationFrame(lightFrame.current);
+        lightFrame.current = requestAnimationFrame(() => {
+          room.current?.style.setProperty("--room-light-x", `${x}%`);
+          lightFrame.current = null;
+        });
+      }}
+    >
+      <EveningRoom />
       <a
         href="#main"
         className="skip-link"
@@ -215,12 +283,33 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <button className="demo-pill" onClick={() => setAbout(true)}>
-          <span className="status-dot" /> A little demo{" "}
-          <ArrowUpRight size={13} />
-        </button>
+        <div className="header-tools">
+          <button
+            className="sound-toggle"
+            aria-label={sound ? "Sound on" : "Sound off"}
+            aria-pressed={sound}
+            disabled={soundBusy}
+            onClick={async () => {
+              setSoundBusy(true);
+              const enabled = await setInteractionSoundEnabled(!sound);
+              setSound(enabled);
+              setSoundBusy(false);
+              if (!enabled && !sound)
+                setNotice(
+                  "Sound could not start in this browser. Your evening still works silently.",
+                );
+            }}
+          >
+            {sound ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            <span>{sound ? "Sound on" : "Sound off"}</span>
+          </button>
+          <button className="demo-pill" onClick={() => setAbout(true)}>
+            <span className="status-dot" /> A little demo{" "}
+            <ArrowUpRight size={13} />
+          </button>
+        </div>
       </header>
-      <main id="main" tabIndex={-1}>
+      <main ref={stage} id="main" tabIndex={-1}>
         <section className="intro">
           <div>
             <div className="eyebrow">
@@ -470,6 +559,7 @@ export default function App() {
           )
         ) : view === "table" ? (
           <SharedTable
+            lowPower={lowPower}
             state={state}
             dispatch={dispatch}
             onExplore={openMenu}
@@ -477,6 +567,7 @@ export default function App() {
           />
         ) : (
           <DinnerPlan
+            lowPower={lowPower}
             storageAvailable={storageAvailable}
             state={state}
             dispatch={dispatch}

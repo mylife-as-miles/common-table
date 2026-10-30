@@ -2,7 +2,12 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["app.spec.ts", "immersive.spec.ts", "location.spec.ts"],
+  testMatch: [
+    "app.spec.ts",
+    "immersive.spec.ts",
+    "location.spec.ts",
+    "cinematic.spec.ts",
+  ],
   fullyParallel: true,
   workers: 2,
   timeout: 30_000,

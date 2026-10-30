@@ -1,8 +1,16 @@
 # Common Table
 
-An immersive food discovery and dinner-planning app. Start with real location-based geography, or enter the illustrated demo neighborhood → tactile menu book → shared table → dinner plan. Built independently from the initial README; no Kitchen Studio code was accessed or copied. Local feature branch only, no public push or deployment.
+An immersive food discovery and dinner-planning app. Start with real location-based geography, or enter the illustrated demo neighborhood → tactile menu book → shared table → dinner plan. Built independently from the initial README. Kitchen Studio’s press UI was inspected read-only after the user explicitly asked for code review; no private source or assets were copied or modified. Local feature branch only, no public push or deployment.
 
 **Capability boundaries:** the real map uses OpenStreetMap geography, OpenFreeMap vector data and actual building heights where available. City search is connected. Device location is requested only after pressing **Use my location** and is kept in memory for this session; map/place-search services receive the chosen area, but coordinates are not put in guest invitations or dinner plans. No API key is required. Real named places from the loaded OSM vector tiles can be inspected and kept in a session-only collection; these map labels are not personalized or verified restaurant recommendations. All six dining-demo restaurants, menus, prices, ratings, dietary tags, and walking times remain fictional or illustrative. They are never moved onto your real map as nearby venues. Qloo, real restaurant recommendations, invitations, live collaboration, and bookings are **not integrated**. No messages are sent.
+
+## Cinematic restaurant room
+
+The atlas, physical folio, guest place settings and receipt press now sit in an original restaurant set with warm pendant lighting, dark wood and readable paper. The folio has an operable hinged cover, physical page corner and a two-sided paper turn; actual guests sit at porcelain/linen place settings. Saving an approved dinner plan operates the original olive-and-brass letterpress and feeds out that same receipt. The lever is keyboard operable; reprint changes only the impression, while edits cancel stale paper and invalidate agreement as before.
+
+The real map has a finite **Look around** camera move with Stop/Escape/direct-input cancellation. Optional interaction sound is **off by default**; enabling it creates short local paper, bell, seat and press cues. There is no ambient audio loop. Reduced motion and low power retain immediate, functional results. All Common Table materials, mechanisms and sound are original. A subsequent user-authorized read-only review of Kitchen Studio’s press supplied interaction references for stepped rigid-paper feed, a briefly opening head and resistant perforation tear. No private source or assets were copied, imported, or modified. This is an independent web implementation, not a claim of pixel matching the native app.
+
+Current production screenshots, interaction recording and verification are in [the cinematic handoff](artifacts/cinematic/HANDOFF.md). Reproduce the captures with `node scripts/capture-cinematic.mjs` and the recorded actions with `node scripts/record-cinematic.mjs` against the production server. Independent visual research and observed fixes are documented in [CINEMATIC_DESIGN_REVIEW.md](docs/CINEMATIC_DESIGN_REVIEW.md).
 
 ## Run
 
@@ -38,7 +46,7 @@ Only OSM-provided names, categories and coordinates are displayed. Place data va
 
 ## Accessibility and performance
 
-Semantic controls, labeled forms, native modal focus handling, mobile tab arrow-key navigation, focus restoration after guest cancel/remove, live feedback, and visible focus indicators. Tab-focusing an offscreen demo-map token brings it into view without scrolling the hidden canvas. The service counter stays in document flow and never covers map controls. Honors reduced motion and offers a low-power setting. The real map lazily loads WebGL-based MapLibre or a lighter Leaflet 2D renderer. The authored demo uses SVG/CSS and can run without third-party requests. Finite page turns use Web Animations with cancellation; shared photo/title motion uses the View Transition API with an immediate fallback. No perpetual animation loop is used. Fonts and illustrative dining photos are local; live map/geocode data requires provider connectivity.
+Semantic controls, labeled forms, native modal focus handling, mobile tab arrow-key navigation, focus restoration after guest cancel/remove, live feedback, and visible focus indicators. Tab-focusing an offscreen demo-map token brings it into view without scrolling the hidden canvas. The service counter stays in document flow and never covers map controls. Honors reduced motion and offers a low-power setting. The shared room uses static CSS/SVG with event-driven light and finite transitions. The real map lazily loads WebGL-based MapLibre or a lighter Leaflet 2D renderer. The authored demo uses SVG/CSS and can run without third-party requests. Finite page turns use Web Animations with cancellation; shared photo/title motion uses the View Transition API with an immediate fallback. No perpetual animation loop is used. Fonts and illustrative dining photos are local; live map/geocode data requires provider connectivity.
 
 ## Verify
 
@@ -48,11 +56,11 @@ npm run test:e2e
 npm run screenshots
 ```
 
-Current verification: **42 domain/backend tests and 48 browser checks pass**, including fifteen automated WCAG A/AA scans.
+Verification for the latest cinematic revision is recorded in [artifacts/cinematic/HANDOFF.md](artifacts/cinematic/HANDOFF.md).
 
 Browser tests use system Chromium (`/usr/bin/chromium`); set `CHROMIUM_PATH` for another path. Tests cover actual pointer actions, connected selection, repeated shortlist/veto/undo, exhausted results, guest cancel/Escape/focus, approvals and invalidation, persistence, copy/download, Back navigation, mobile overflow, motion fallbacks, and automated WCAG A/AA scans. Automated checks supplement manual review and do not establish full accessibility conformance.
 
-Thirteen final screenshots are in `artifacts/`, including the atlas on desktop/mobile, evening light, the Waiter's pad, and the connected book/table/plan. Capture requires the dev server on port 4174 (or set `PREVIEW_URL`). An actual recorded interaction is in `artifacts/immersive/interaction-demo.mp4`; `scripts/record-demo.mjs` reproduces a WebM recording after `npx playwright install ffmpeg`.
+Thirteen earlier dining-demo screenshots are retained in `artifacts/`, including the atlas on desktop/mobile, evening light, the Waiter's pad, and the connected book/table/plan. Capture requires the dev server on port 4174 (or set `PREVIEW_URL`). An actual recorded interaction is in `artifacts/immersive/interaction-demo.mp4`; `scripts/record-demo.mjs` reproduces a WebM recording after `npx playwright install ffmpeg`.
 
 Current real-map screenshots and live-provider evidence are in `artifacts/location/`. `node scripts/capture-location.mjs` captures the real vector map in Brooklyn and a live searched Paris area; all shown names and geography come from the live map providers. Automated browser tests mock external tile/style requests and do not sweep public raster tile servers.
 

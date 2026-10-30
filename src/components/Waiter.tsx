@@ -28,6 +28,7 @@ import {
   planValidationErrors,
 } from "../domain";
 import "./waiter.css";
+import { playInteractionSound } from "../experience/interactionSound";
 
 type View = "explore" | "table" | "plan";
 type Course = "place" | "table" | "evening";
@@ -336,6 +337,7 @@ export function Waiter({
     onOpenMenu();
   }
   function ringBell() {
+    playInteractionSound("bell");
     setRing((value) => value + 1);
     if (mode === "real" && course === "place") {
       setResponse(
