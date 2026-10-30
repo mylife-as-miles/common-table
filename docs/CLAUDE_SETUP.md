@@ -1,8 +1,18 @@
-# Claude Sonnet 5.5: server preparation and bounded tests
+# Claude Sonnet 5.5: Waiter adapter and bounded tests
 
-The server adapter, private configuration, mocked tests and explicit smoke-test commands are prepared in Common Table. The existing Waiter UI still uses local guidance; no guessed Kitchen Studio integration or private Kitchen Studio source change has been made. The requested integration target and the meaning of “Startrz credits” need clarification before application wiring.
+Common Table's Waiter now has local tips and an optional Claude service option connected to a server adapter. The browser path currently returns clearly labelled, contextual **offline demo answers**. It never calls Claude, even when the server is configured for live CLI testing. No Kitchen Studio source has been modified or copied.
 
-No real API key, organization preflight or paid generation has been tested. All provider responses used by tests are mocked. No credits have been spent, billing settings changed, top-up requested, public push made or deployment performed.
+No real API key, organization preflight or paid generation has been tested. All provider responses used by tests are mocked. No credits have been spent, billing settings changed, top-up requested, public push made or deployment performed. Revoke any key disclosed in chat and configure its replacement through the private editor or secret store.
+
+## Waiter browser flow
+
+Open The Waiter, select **Claude · offline demo**, enter a small request and submit. A source stamp explicitly says **OFFLINE DEMO · CLAUDE NOT CALLED**. Local tips keep the existing deterministic actions; generated/sample answers never dispatch venue, table or plan changes.
+
+`GET /api/waiter/status` reports only availability. `POST /api/waiter/reply` requires same-origin JSON with a custom request header and a bounded, allowlisted context. The browser supplies the selected fictional venue ID, seat count, minimum budget, listed dietary needs, pad view and whether the plan was saved. Guest names, real map names/coordinates, plan notes and dates are excluded from that context. Free text remains user supplied, so do not include secrets in a question.
+
+The server constructs its own trusted guidance. Caller-supplied prompts, endpoints, keys, models and extra fields are rejected. Replies render as plain text. Duplicate submissions are locked; cancellation, closing, navigation or a changed venue/table/plan invalidate pending replies. Requests are not automatically retried and no reply changes the plan.
+
+**Paid browser access is blocked in this test phase.** A live server configuration reports the browser service as disabled and rejects a browser generation request before creating a client or spending a reservation. The CLI commands below are the only live-test path. Removing that block requires a separately tested session/authentication design, not a public environment toggle.
 
 ## Enter the key securely
 
@@ -53,11 +63,11 @@ The ledger stores counters/attempt metadata, not keys, prompts or replies. The e
 
 ## Test and security evidence
 
-Tests use injected dummy credentials, globally blocked network transport and temporary databases. They cover the exact host/model/account, sanitized failures, UTF-8/body bounds, cancellation, no retries, CLI defaults, and nine independent processes competing for five persistent reservations. Real access or account credit behavior cannot be established from mocks.
+Tests use injected dummy credentials, blocked external transport, loopback HTTP fixtures and temporary databases. They cover the exact host/model/account, sanitized failures, UTF-8/body bounds, cancellation, no retries, CLI defaults, and nine independent processes competing for five persistent reservations. Waiter HTTP tests also cover origin/CSRF validation, paid-web blocking, catalogue consistency, oversized and incomplete uploads, rate limits and disconnects. An early-error keep-alive issue found by the independent tests was fixed by closing incomplete request connections; a later valid request succeeds. Real access or account credit behavior cannot be established from mocks.
 
-Current checks: **30/30 Claude-specific tests and 72/72 total unit/API tests pass**; strict frontend/server TypeScript and the production build pass. A synthetic server-key canary was absent from all scanned browser artifacts. [Verification summary](../artifacts/claude/verification.json), [complete test output](../artifacts/claude/unit-results.tap) and [build output](../artifacts/claude/build-results.txt) are retained. No browser UI changed in this phase, and no new browser integration is claimed.
+Current checks: **30/30 Claude-specific tests, 15/15 Waiter HTTP tests and 87/87 total unit/API tests pass**; strict frontend/server TypeScript and the production build pass. The full **86/86 browser suite passes with no failures, skips or flaky tests**, including the 8 new Waiter cases: duplicate submissions, cancellation, stale replies, privacy, plain-text rendering, disabled fallback, mobile focus return and desktop/mobile accessibility scans. A synthetic server-key canary was absent from all 15 scanned browser artifacts. [Verification summary](../artifacts/claude-waiter/verification.json), [complete unit/API output](../artifacts/claude-waiter/unit-results.tap), [browser report](../artifacts/claude-waiter/browser-results.json), [build output](../artifacts/claude-waiter/build-results.txt) and [screenshots/review](../artifacts/claude-waiter/HANDOFF.md) are retained.
 
-The implementation has no public HTTP Claude route or browser import. UI wiring is pending the integration-scope answer; paid access is not exposed through the current web preview.
+The browser imports no provider client, key, server configuration or ledger. The mock-only Waiter HTTP route works in Vite and the local production server. Paid access is not exposed through the current web preview.
 
 ## Primary references
 

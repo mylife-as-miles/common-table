@@ -7,6 +7,8 @@ import { stat, readFile, realpath } from "node:fs/promises";
 import { resolve, relative, extname, isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createApiHandler, type ApiOptions } from "./location-api.ts";
+import { readClaudeConfig, type ClaudeConfig } from "./claude-config.ts";
+import { createWaiterApiHandler, type WaiterApiOptions } from "./waiter-api.ts";
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -101,14 +103,19 @@ async function serveStatic(
   }
 }
 
-export function createAppServer(
-  options: ApiOptions & { distDir?: string } = {},
-) {
+export interface AppServerOptions extends ApiOptions {
+  distDir?: string;
+  claudeConfig?: ClaudeConfig;
+  waiter?: WaiterApiOptions;
+}
+
+export function createAppServer(options: AppServerOptions = {}) {
   const api = createApiHandler(options);
+  const waiter = createWaiterApiHandler(options.claudeConfig ?? readClaudeConfig(), options.waiter);
   const directory = options.distDir ?? resolve("dist");
-  return createServer(async (req, res) => {
+  const server = createServer(async (req, res) => {
     try {
-      if (!(await api(req, res))) await serveStatic(req, res, directory);
+      if (!(await waiter(req, res)) && !(await api(req, res))) await serveStatic(req, res, directory);
     } catch {
       // Internal request errors are never printed or forwarded.
       if (!res.headersSent)
@@ -116,6 +123,8 @@ export function createAppServer(
       res.end("The request could not be completed.");
     }
   });
+  server.once("close", () => waiter.close());
+  return server;
 }
 
 // Importing this module (for tests or another server) has no listening side effect.

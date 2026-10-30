@@ -1,0 +1,532 @@
+TAP version 13
+# Subtest: the persistent Claude ledger reserves one conservative dollar per attempt and has no automatic refill
+ok 1 - the persistent Claude ledger reserves one conservative dollar per attempt and has no automatic refill
+  ---
+  duration_ms: 31.011988
+  type: 'test'
+  ...
+# Subtest: separate ledger instances share one cap without releasing earlier reservations
+ok 2 - separate ledger instances share one cap without releasing earlier reservations
+  ---
+  duration_ms: 9.189648
+  type: 'test'
+  ...
+# Subtest: independent Node processes atomically share the five-attempt cap
+ok 3 - independent Node processes atomically share the five-attempt cap
+  ---
+  duration_ms: 620.087469
+  type: 'test'
+  ...
+# Subtest: invalid paths and unusable or corrupt SQL files fail closed with safe errors
+ok 4 - invalid paths and unusable or corrupt SQL files fail closed with safe errors
+  ---
+  duration_ms: 6.52839
+  type: 'test'
+  ...
+# Subtest: an exhausted ledger with lost SQL schema fails closed instead of refilling on restart
+ok 5 - an exhausted ledger with lost SQL schema fails closed instead of refilling on restart
+  ---
+  duration_ms: 26.65348
+  type: 'test'
+  ...
+# Subtest: deleting an exhausted main database does not automatically create a fresh allowance
+ok 6 - deleting an exhausted main database does not automatically create a fresh allowance
+  ---
+  duration_ms: 7.212848
+  type: 'test'
+  ...
+# Subtest: default smoke remains offline even with a key and live environment mode
+ok 7 - default smoke remains offline even with a key and live environment mode
+  ---
+  duration_ms: 560.161821
+  type: 'test'
+  ...
+# Subtest: live smoke requires an explicit live mode and disabled mode blocks preflight
+ok 8 - live smoke requires an explicit live mode and disabled mode blocks preflight
+  ---
+  duration_ms: 524.110897
+  type: 'test'
+  ...
+# Subtest: unknown CLI arguments fail without echoing them or contacting the provider
+ok 9 - unknown CLI arguments fail without echoing them or contacting the provider
+  ---
+  duration_ms: 204.24419
+  type: 'test'
+  ...
+# Subtest: mock and disabled modes cannot call a provider or create a live-budget ledger
+ok 10 - mock and disabled modes cannot call a provider or create a live-budget ledger
+  ---
+  duration_ms: 171.1911
+  type: 'test'
+  ...
+# Subtest: verified preflight is coalesced, free of reservations, and precedes one pinned bounded generation
+ok 11 - verified preflight is coalesced, free of reservations, and precedes one pinned bounded generation
+  ---
+  duration_ms: 71.730922
+  type: 'test'
+  ...
+# Subtest: wrong organization name or id and wrong model stop before generation or budget initialization
+ok 12 - wrong organization name or id and wrong model stop before generation or budget initialization
+  ---
+  duration_ms: 9.301316
+  type: 'test'
+  ...
+# Subtest: unconfigured or invalid factory config fails before any fetch or SQL side effect
+ok 13 - unconfigured or invalid factory config fails before any fetch or SQL side effect
+  ---
+  duration_ms: 9.416669
+  type: 'test'
+  ...
+# Subtest: plain text validation and the combined16KiB UTF8 limit reject before preflight or reservation
+ok 14 - plain text validation and the combined16KiB UTF8 limit reject before preflight or reservation
+  ---
+  duration_ms: 6.093335
+  type: 'test'
+  ...
+# Subtest: all paid failures retain their reservation and401,429,5xx or thrown upstream errors never retry or leak details
+ok 15 - all paid failures retain their reservation and401,429,5xx or thrown upstream errors never retry or leak details
+  ---
+  duration_ms: 128.27264
+  type: 'test'
+  ...
+# Subtest: preflight upstream failures are sanitized and never reach messages or initialize budget
+ok 16 - preflight upstream failures are sanitized and never reach messages or initialize budget
+  ---
+  duration_ms: 13.641668
+  type: 'test'
+  ...
+# Subtest: redirected successful responses and malformed JSON are rejected without forwarding provider diagnostics
+ok 17 - redirected successful responses and malformed JSON are rejected without forwarding provider diagnostics
+  ---
+  duration_ms: 34.745759
+  type: 'test'
+  ...
+# Subtest: invalid usage, empty text, tools and a wrong returned model never become successful replies or refund attempts
+ok 18 - invalid usage, empty text, tools and a wrong returned model never become successful replies or refund attempts
+  ---
+  duration_ms: 185.591442
+  type: 'test'
+  ...
+# Subtest: text blocks are joined while private thinking blocks are excluded from returned text
+ok 19 - text blocks are joined while private thinking blocks are excluded from returned text
+  ---
+  duration_ms: 21.692735
+  type: 'test'
+  ...
+# Subtest: timeouts cover a transport ignoring abort and a stalled response body without retrying or refunding
+ok 20 - timeouts cover a transport ignoring abort and a stalled response body without retrying or refunding
+  ---
+  duration_ms: 118.984605
+  type: 'test'
+  ...
+# Subtest: oversized declared and streamed bodies are cancelled at the64KiB boundary
+ok 21 - oversized declared and streamed bodies are cancelled at the64KiB boundary
+  ---
+  duration_ms: 16.733053
+  type: 'test'
+  ...
+# Subtest: pre-aborted input costs nothing while cancellation after POST keeps exactly one reservation
+ok 22 - pre-aborted input costs nothing while cancellation after POST keeps exactly one reservation
+  ---
+  duration_ms: 12.257508
+  type: 'test'
+  ...
+# Subtest: cancellation during preflight setup is not lost before the abort listener is attached
+ok 23 - cancellation during preflight setup is not lost before the abort listener is attached
+  ---
+  duration_ms: 5.78282
+  type: 'test'
+  ...
+# Subtest: concurrent live callers and a restarted client cannot exceed five paid attempts
+ok 24 - concurrent live callers and a restarted client cannot exceed five paid attempts
+  ---
+  duration_ms: 51.234264
+  type: 'test'
+  ...
+# Subtest: SQL reservation failure prevents generation and an injected budget remains caller-owned
+ok 25 - SQL reservation failure prevents generation and an injected budget remains caller-owned
+  ---
+  duration_ms: 12.600744
+  type: 'test'
+  ...
+# Subtest: client close aborts in-flight work, retains the reservation and rejects later calls
+ok 26 - client close aborts in-flight work, retains the reservation and rejects later calls
+  ---
+  duration_ms: 12.993073
+  type: 'test'
+  ...
+# Subtest: Claude configuration defaults to mock with a fixed model, organization and local ledger without creating one
+ok 27 - Claude configuration defaults to mock with a fixed model, organization and local ledger without creating one
+  ---
+  duration_ms: 12.751931
+  type: 'test'
+  ...
+# Subtest: live config requires an explicit server key while mock and disabled require no key
+ok 28 - live config requires an explicit server key while mock and disabled require no key
+  ---
+  duration_ms: 6.973408
+  type: 'test'
+  ...
+# Subtest: only the authorized model is accepted and configuration errors never echo supplied values
+ok 29 - only the authorized model is accepted and configuration errors never echo supplied values
+  ---
+  duration_ms: 9.732755
+  type: 'test'
+  ...
+# Subtest: browser-secret names and endpoint, ledger or budget overrides are rejected even in mock mode
+ok 30 - browser-secret names and endpoint, ledger or budget overrides are rejected even in mock mode
+  ---
+  duration_ms: 4.636537
+  type: 'test'
+  ...
+# Subtest: solo recommendations respond to stated taste without claiming an integration
+ok 31 - solo recommendations respond to stated taste without claiming an integration
+  ---
+  duration_ms: 23.827223
+  type: 'test'
+  ...
+# Subtest: every participant budget is a hard constraint, not an average
+ok 32 - every participant budget is a hard constraint, not an average
+  ---
+  duration_ms: 5.328185
+  type: 'test'
+  ...
+# Subtest: combined restrictions must all be explicitly supported by a venue
+ok 33 - combined restrictions must all be explicitly supported by a venue
+  ---
+  duration_ms: 0.706361
+  type: 'test'
+  ...
+# Subtest: unknown restrictions result in no candidates instead of being silently ignored
+ok 34 - unknown restrictions result in no candidates instead of being silently ignored
+  ---
+  duration_ms: 0.227091
+  type: 'test'
+  ...
+# Subtest: veto revises the selected venue, clears a vetoed plan, and excludes it from ranking
+ok 35 - veto revises the selected venue, clears a vetoed plan, and excludes it from ranking
+  ---
+  duration_ms: 0.557768
+  type: 'test'
+  ...
+# Subtest: repeated veto is idempotent and undo returns the venue to candidates
+ok 36 - repeated veto is idempotent and undo returns the venue to candidates
+  ---
+  duration_ms: 0.314612
+  type: 'test'
+  ...
+# Subtest: all candidates can be passed on without falling back to a rejected restaurant
+ok 37 - all candidates can be passed on without falling back to a rejected restaurant
+  ---
+  duration_ms: 5.73011
+  type: 'test'
+  ...
+# Subtest: shortlist toggles are reversible and a veto removes the venue from it
+ok 38 - shortlist toggles are reversible and a veto removes the venue from it
+  ---
+  duration_ms: 0.296045
+  type: 'test'
+  ...
+# Subtest: a valid plan saves once and changing details invalidates that saved snapshot
+ok 39 - a valid plan saves once and changing details invalidates that saved snapshot
+  ---
+  duration_ms: 0.323837
+  type: 'test'
+  ...
+# Subtest: a plan requires every current person’s local approval before it can save
+ok 40 - a plan requires every current person’s local approval before it can save
+  ---
+  duration_ms: 0.491359
+  type: 'test'
+  ...
+# Subtest: approval toggles are reversible, never duplicate, and reopening agreement invalidates saved status
+ok 41 - approval toggles are reversible, never duplicate, and reopening agreement invalidates saved status
+  ---
+  duration_ms: 0.251678
+  type: 'test'
+  ...
+# Subtest: plan details, people, preferences, venue replacement and vetoes clear previous agreement
+ok 42 - plan details, people, preferences, venue replacement and vetoes clear previous agreement
+  ---
+  duration_ms: 0.507462
+  type: 'test'
+  ...
+# Subtest: browsing, shortlisting, and choosing an already chosen venue preserve agreement
+ok 43 - browsing, shortlisting, and choosing an already chosen venue preserve agreement
+  ---
+  duration_ms: 0.189475
+  type: 'test'
+  ...
+# Subtest: changing the table invalidates a saved plan even when the restaurant still fits
+ok 44 - changing the table invalidates a saved plan even when the restaurant still fits
+  ---
+  duration_ms: 0.23918
+  type: 'test'
+  ...
+# Subtest: a budget change that rules out the restaurant clears the plan and revises candidates
+ok 45 - a budget change that rules out the restaurant clears the plan and revises candidates
+  ---
+  duration_ms: 0.249495
+  type: 'test'
+  ...
+# Subtest: browsing another menu preserves a saved dinner plan until explicitly choosing a replacement
+ok 46 - browsing another menu preserves a saved dinner plan until explicitly choosing a replacement
+  ---
+  duration_ms: 0.143165
+  type: 'test'
+  ...
+# Subtest: invalid or past dates and malformed times cannot be saved
+ok 47 - invalid or past dates and malformed times cannot be saved
+  ---
+  duration_ms: 0.194151
+  type: 'test'
+  ...
+# Subtest: cannot save a plan without a restaurant
+ok 48 - cannot save a plan without a restaurant
+  ---
+  duration_ms: 0.130666
+  type: 'test'
+  ...
+# Subtest: duplicate people and invalid profile edits cannot corrupt the table
+ok 49 - duplicate people and invalid profile edits cannot corrupt the table
+  ---
+  duration_ms: 0.177627
+  type: 'test'
+  ...
+# Subtest: local persistence roundtrips a valid saved plan
+ok 50 - local persistence roundtrips a valid saved plan
+  ---
+  duration_ms: 4.918
+  type: 'test'
+  ...
+# Subtest: legacy saved plans without agreement migrate to unapproved drafts
+ok 51 - legacy saved plans without agreement migrate to unapproved drafts
+  ---
+  duration_ms: 0.281823
+  type: 'test'
+  ...
+# Subtest: hydration filters unknown and duplicate approval IDs and never calls a repaired snapshot saved
+ok 52 - hydration filters unknown and duplicate approval IDs and never calls a repaired snapshot saved
+  ---
+  duration_ms: 1.419172
+  type: 'test'
+  ...
+# Subtest: hydration revises a vetoed selection and clears an ineligible chosen restaurant
+ok 53 - hydration revises a vetoed selection and clears an ineligible chosen restaurant
+  ---
+  duration_ms: 0.235243
+  type: 'test'
+  ...
+# Subtest: hydration applies budget and dietary constraints before displaying a selected menu
+ok 54 - hydration applies budget and dietary constraints before displaying a selected menu
+  ---
+  duration_ms: 0.14625
+  type: 'test'
+  ...
+# Subtest: hydration restores You as the first protected seat and marks repaired snapshots editable
+ok 55 - hydration restores You as the first protected seat and marks repaired snapshots editable
+  ---
+  duration_ms: 0.199159
+  type: 'test'
+  ...
+# Subtest: restoring an exhausted table never re-enables its chosen restaurant
+ok 56 - restoring an exhausted table never re-enables its chosen restaurant
+  ---
+  duration_ms: 0.157287
+  type: 'test'
+  ...
+# Subtest: corrupt, unsupported, duplicate-person and structurally invalid storage resets safely
+ok 57 - corrupt, unsupported, duplicate-person and structurally invalid storage resets safely
+  ---
+  duration_ms: 2.587142
+  type: 'test'
+  ...
+# Subtest: stale restaurant IDs and duplicate lists are cleaned during restore
+ok 58 - stale restaurant IDs and duplicate lists are cleaned during restore
+  ---
+  duration_ms: 3.171335
+  type: 'test'
+  ...
+# Subtest: malformed persisted calendar dates become safe editable defaults
+ok 59 - malformed persisted calendar dates become safe editable defaults
+  ---
+  duration_ms: 0.403306
+  type: 'test'
+  ...
+# Subtest: the local table caps at six non-overlapping seats
+ok 60 - the local table caps at six non-overlapping seats
+  ---
+  duration_ms: 0.422505
+  type: 'test'
+  ...
+# Subtest: expired saved plans restore as editable drafts
+ok 61 - expired saved plans restore as editable drafts
+  ---
+  duration_ms: 0.19948
+  type: 'test'
+  ...
+# Subtest: exported plans retain edits and clearly disclose demo and reservation status
+ok 62 - exported plans retain edits and clearly disclose demo and reservation status
+  ---
+  duration_ms: 0.278508
+  type: 'test'
+  ...
+# Subtest: reset creates an independent solo draft without previous vetoes or saved state
+ok 63 - reset creates an independent solo draft without previous vetoes or saved state
+  ---
+  duration_ms: 0.542105
+  type: 'test'
+  ...
+# Subtest: city search uses Photon and sanitizes real OpenStreetMap features
+ok 64 - city search uses Photon and sanitizes real OpenStreetMap features
+  ---
+  duration_ms: 40.254176
+  type: 'test'
+  ...
+# Subtest: search input cannot select an upstream host and malformed geographic features are excluded
+ok 65 - search input cannot select an upstream host and malformed geographic features are excluded
+  ---
+  duration_ms: 27.346861
+  type: 'test'
+  ...
+# Subtest: provider quota, outage and malformed-payload failures use safe unavailable responses
+ok 66 - provider quota, outage and malformed-payload failures use safe unavailable responses
+  ---
+  duration_ms: 14.840059
+  type: 'test'
+  ...
+# Subtest: place requests abort at the configured timeout without exposing thrown errors
+ok 67 - place requests abort at the configured timeout without exposing thrown errors
+  ---
+  duration_ms: 30.764426
+  type: 'test'
+  ...
+# Subtest: place queries validate before fetching, missing matches are empty results, and provider outage is not an empty success
+ok 68 - place queries validate before fetching, missing matches are empty results, and provider outage is not an empty success
+  ---
+  duration_ms: 76.299828
+  type: 'test'
+  ...
+# Subtest: city search cache coalesces repeated calls, lasts fifteen minutes and rate-limits different rapid searches
+ok 69 - city search cache coalesces repeated calls, lasts fifteen minutes and rate-limits different rapid searches
+  ---
+  duration_ms: 73.362083
+  type: 'test'
+  ...
+# Subtest: API methods are read-only, HEAD has no body, unknown API paths do not return SPA HTML
+ok 70 - API methods are read-only, HEAD has no body, unknown API paths do not return SPA HTML
+  ---
+  duration_ms: 14.814269
+  type: 'test'
+  ...
+# Subtest: standalone server serves built SPA/assets but cannot expose traversal, secret files or escaping symlinks
+ok 71 - standalone server serves built SPA/assets but cannot expose traversal, secret files or escaping symlinks
+  ---
+  duration_ms: 90.375448
+  type: 'test'
+  ...
+# Subtest: middleware passes non-API requests through without starting a second server
+ok 72 - middleware passes non-API requests through without starting a second server
+  ---
+  duration_ms: 0.284157
+  type: 'test'
+  ...
+# Subtest: real standalone routing serves only an explicit offline reply and exposes safe status without a provider or ledger
+ok 73 - real standalone routing serves only an explicit offline reply and exposes safe status without a provider or ledger
+  ---
+  duration_ms: 91.017151
+  type: 'test'
+  ...
+# Subtest: live and disabled browser modes cannot invoke even an injected client or expose key/configuration
+ok 74 - live and disabled browser modes cannot invoke even an injected client or expose key/configuration
+  ---
+  duration_ms: 61.652783
+  type: 'test'
+  ...
+# Subtest: a mock client receives trimmed text, trusted server rules and only the context allowlist
+ok 75 - a mock client receives trimmed text, trusted server rules and only the context allowlist
+  ---
+  duration_ms: 6.939316
+  type: 'test'
+  ...
+# Subtest: server catalogue ids, names, prices and dietary labels stay aligned with the app catalogue
+ok 76 - server catalogue ids, names, prices and dietary labels stay aligned with the app catalogue
+  ---
+  duration_ms: 24.580184
+  type: 'test'
+  ...
+# Subtest: real map replies cannot pass off fictional demo restaurants as mapped facts
+ok 77 - real map replies cannot pass off fictional demo restaurants as mapped facts
+  ---
+  duration_ms: 9.56324
+  type: 'test'
+  ...
+# Subtest: foreign/missing origins, forged proxy headers and browser navigation cannot bypass the CSRF boundary
+ok 78 - foreign/missing origins, forged proxy headers and browser navigation cannot bypass the CSRF boundary
+  ---
+  duration_ms: 24.463298
+  type: 'test'
+  ...
+# Subtest: an explicit public origin works through TLS termination while forwarded headers alone grant nothing
+ok 79 - an explicit public origin works through TLS termination while forwarded headers alone grant nothing
+  ---
+  duration_ms: 4.852081
+  type: 'test'
+  ...
+# Subtest: route methods, raw path normalization and media type are strict and never produce a paid request
+ok 80 - route methods, raw path normalization and media type are strict and never produce a paid request
+  ---
+  duration_ms: 53.875848
+  type: 'test'
+  ...
+# Subtest: unsupported context values, extra private fields and caller model/provider controls are rejected before the client
+ok 81 - unsupported context values, extra private fields and caller model/provider controls are rejected before the client
+  ---
+  duration_ms: 100.23713
+  type: 'test'
+  ...
+# Subtest: declared and chunked payloads are bounded by UTF8 bytes and malformed JSON/UTF8 is safe
+ok 82 - declared and chunked payloads are bounded by UTF8 bytes and malformed JSON/UTF8 is safe
+  ---
+  duration_ms: 35.065299
+  type: 'test'
+  ...
+# Subtest: only bounded mock source and the pinned optional model may cross the HTTP boundary
+ok 83 - only bounded mock source and the pinned optional model may cross the HTTP boundary
+  ---
+  duration_ms: 57.807341
+  type: 'test'
+  ...
+# Subtest: busy requests are not coalesced and the per-adapter interval is enforced without automatic resubmission
+ok 84 - busy requests are not coalesced and the per-adapter interval is enforced without automatic resubmission
+  ---
+  duration_ms: 13.849459
+  type: 'test'
+  ...
+# Subtest: timeout bounds both a slow request body and an unresponsive mock adapter
+ok 85 - timeout bounds both a slow request body and an unresponsive mock adapter
+  ---
+  duration_ms: 51.253733
+  type: 'test'
+  ...
+# Subtest: disconnect cancels the in-flight adapter and releases busy state for a later explicit request
+ok 86 - disconnect cancels the in-flight adapter and releases busy state for a later explicit request
+  ---
+  duration_ms: 16.377804
+  type: 'test'
+  ...
+# Subtest: closing the handler aborts pending work safely and does not close a caller-owned client
+ok 87 - closing the handler aborts pending work safely and does not close a caller-owned client
+  ---
+  duration_ms: 5.938122
+  type: 'test'
+  ...
+1..87
+# tests 87
+# suites 0
+# pass 87
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2486.558144

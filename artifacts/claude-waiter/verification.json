@@ -1,0 +1,14 @@
+{
+  "syntheticBuildCanaryLeaked": false,
+  "clientArtifactsScanned": 15,
+  "unitApiTestsPassed": 87,
+  "focusedBrowserTestsPassed": 8,
+  "liveGenerationCalls": 0,
+  "actualCreditsSpentUsd": 0,
+  "liveApiAccessVerified": false,
+  "browserTestsPassed": 86,
+  "browserTestsFailed": 0,
+  "browserTestsFlaky": 0,
+  "browserTestsSkipped": 0,
+  "browserDurationSeconds": 209
+}

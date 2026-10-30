@@ -16,7 +16,7 @@ Current production screenshots, interaction recording and verification are in [t
 
 ## Run
 
-Claude server preparation is documented in [CLAUDE_SETUP.md](docs/CLAUDE_SETUP.md). It defaults to offline mocks, reads `ANTHROPIC_API_KEY` only on the server, pins Sonnet 5.5 and has a persistent five-attempt/$5 test guard. The key belongs in the ignored, owner-only `.env.local` or a server secret store, never chat or `VITE_*`. The Waiter UI remains local; application wiring and live testing await the requested target/account clarification and secure key setup. No live credits have been spent.
+The Waiter's server adapter is documented in [CLAUDE_SETUP.md](docs/CLAUDE_SETUP.md). Local tips remain available; the optional Claude path currently returns clearly labelled offline demo answers. Paid browser requests are blocked. The separate, explicitly invoked CLI smoke test pins Sonnet 5.5, reads `ANTHROPIC_API_KEY` only on the server, and shares a persistent five-attempt/$5 test guard. Enter the key in the ignored, owner-only `.env.local` or a server secret store, never chat or `VITE_*`. Live API access is not verified and no live credits have been spent.
 
 Node 24.5 or later (the scripts support inherited HTTP proxies with Node's environment-proxy option):
 
@@ -45,7 +45,7 @@ Only OSM-provided names, categories and coordinates are displayed. Place data va
 - Start solo or add up to five local demo guests. Edit tastes, moods, budgets, and dietary needs. Every person's budget and all restrictions are hard constraints; taste overlap ranks eligible candidates.
 - Choose a venue, set the date/time/note, collect each participant's **simulated local approval**, and save. People or plan changes clear approvals and require saving again. Browsing other venues preserves the existing plan.
 - Copy/download the suggested plan as text. This does not create a hosted sharing link or send an invitation.
-- The Waiter is a tangible brass service bell and ring-bound service pad. On the real map it follows the selected mapped place and can keep that same place; it explicitly distinguishes the fictional dining plan. Ring the character for a contextual tip, ask why a place fits, cycle through eligible alternatives, keep a contender, or work through the steps to finish tonight. Typed requests recognize a limited local set of intents and give an honest fallback. It has no model/API connection or permission to book, invite, or share location.
+- The Waiter is a tangible brass service bell and ring-bound service pad. On the real map it follows the selected mapped place and can keep that same place; it explicitly distinguishes the fictional dining plan. Ring the character for a contextual tip, ask why a place fits, cycle through eligible alternatives, keep a contender, or work through the steps to finish tonight. Local typed requests recognize a limited set of intents. The optional Claude path exercises the server with labelled offline answers; it cannot book, invite, share location, or mutate the plan. Closing, cancelling, or changing context discards pending answers. No live browser model connection is claimed.
 - Browser-local persistence validates stored data and recovers safely from obsolete or malformed snapshots. Storage failures are disclosed; session-only plans can still be exported.
 
 ## Accessibility and performance

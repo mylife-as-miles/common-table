@@ -9,6 +9,7 @@ export default defineConfig({
     "immersive.spec.ts",
     "location.spec.ts",
     "cinematic.spec.ts",
+    "waiter-claude.spec.ts",
   ],
   fullyParallel: true,
   workers: 2,

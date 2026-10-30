@@ -1,0 +1,98 @@
+
+Running 86 tests using 2 workers
+
+(node:90527) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:90528) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/86] tests/app.spec.ts:41:1 › map, book, table and dinner plan retain the same chosen venue; Back returns to table
+[2/86] tests/app.spec.ts:78:1 › shortlist toggles repeatedly without duplicate contenders
+[3/86] tests/app.spec.ts:104:1 › repeated vetoes revise recommendations, reach an honest empty state and can be undone
+[4/86] tests/app.spec.ts:137:1 › guest creation handles cancel, Escape, focus return, adding and removing
+[5/86] tests/app.spec.ts:170:1 › all dietary restrictions and the lowest budget are respected in candidate retrieval
+[6/86] tests/app.spec.ts:206:1 › save, edit, reload, save again and download produce the revised dinner plan
+[7/86] tests/app.spec.ts:256:1 › invalid schedule cannot be saved and corrupted browser storage recovers safely
+[8/86] tests/app.spec.ts:276:1 › blocked browser storage keeps a temporary usable plan without claiming persistence
+[9/86] tests/app.spec.ts:309:1 › keyboard dialog focus is contained; Escape and Waiter close return focus without actions
+[10/86] tests/app.spec.ts:349:1 › mobile pages support keyboard switching, no horizontal overflow and motion fallbacks
+[11/86] tests/app.spec.ts:406:5 › WCAG A/AA automated scan: desktop explore
+[12/86] tests/app.spec.ts:406:5 › WCAG A/AA automated scan: desktop menu
+[13/86] tests/app.spec.ts:406:5 › WCAG A/AA automated scan: desktop table
+[14/86] tests/app.spec.ts:406:5 › WCAG A/AA automated scan: desktop plan
+[15/86] tests/app.spec.ts:406:5 › WCAG A/AA automated scan: mobile explore
+[16/86] tests/app.spec.ts:406:5 › WCAG A/AA automated scan: mobile menu
+[17/86] tests/app.spec.ts:406:5 › WCAG A/AA automated scan: mobile table
+[18/86] tests/app.spec.ts:406:5 › WCAG A/AA automated scan: mobile plan
+[19/86] tests/cinematic.spec.ts:288:1 › saving persists immediately while the physical cycle remains finite and ignores repeated busy-lever presses
+[20/86] tests/cinematic.spec.ts:339:1 › reprinting changes the physical impression without rewriting the saved plan or starting an export
+[21/86] tests/cinematic.spec.ts:390:1 › editing during a press cancels stale paper and approvals, and a later cycle prints the revised draft
+[22/86] tests/cinematic.spec.ts:425:1 › leaving a running press tears down its presentation and cannot revive an invalidated plan on return
+[23/86] tests/cinematic.spec.ts:449:1 › the physical lever supports keyboard operation and retained focus through save and reprint
+[24/86] tests/cinematic.spec.ts:489:3 › reduced motion keeps folio and press functional with immediate, static presentation
+[25/86] tests/cinematic.spec.ts:489:3 › low power keeps folio and press functional with immediate, static presentation
+[26/86] tests/cinematic.spec.ts:586:1 › folio cover and folded page corner retain venue continuity and cancel active motion on navigation
+[27/86] tests/cinematic.spec.ts:662:1 › fine-pointer folio lighting responds to motion, resets on leave and leaves the main action unobstructed
+[28/86] tests/cinematic.spec.ts:724:1 › interaction sound creates no audio context before opt-in and switching it off stops subsequent cues
+[29/86] tests/cinematic.spec.ts:817:1 › map look-around is finite, stops on command, and Escape cancels it before folding the atlas
+[30/86] tests/cinematic.spec.ts:869:3 › physical folio and printed ticket remain usable without horizontal overflow at 320px
+[31/86] tests/cinematic.spec.ts:869:3 › physical folio and printed ticket remain usable without horizontal overflow at 390px
+[32/86] tests/cinematic.spec.ts:941:1 › the motor feeds a rigid current ticket through several distinct dwell positions
+[33/86] tests/cinematic.spec.ts:1018:1 › keyboard tear keeps focus, is repeat-safe, and never saves or exports a second time
+[34/86] tests/cinematic.spec.ts:1053:1 › short pulls, Escape and native touch cancellation leave the ticket attached and allow a later deliberate tear
+[35/86] tests/cinematic.spec.ts:1114:1 › a full pull detaches the same ticket clear of the console and reprint reattaches without another domain write
+[36/86] tests/cinematic.spec.ts:1173:1 › editing during an unfinished pull cancels the old gesture and leaves one live current proof
+[37/86] tests/cinematic.spec.ts:1215:1 › navigation during a captured pull releases the old gesture and returns to an attached saved plan
+[38/86] tests/cinematic.spec.ts:1233:1 › tapping actual mobile seats reveals the single existing taste editor for the selected person
+[39/86] tests/cinematic.spec.ts:1276:1 › a closed folio keeps its paper inaccessible after resize and a window blur event, then reopens to one live menu
+[40/86] tests/cinematic.spec.ts:1309:1 › a real paper pull returns when short, cancels on Escape, and turns forward and back into the same dinner plan
+[41/86] tests/cinematic.spec.ts:1385:1 › queued native page turns settle once per action and engine motion stops on Escape, navigation and low power
+[42/86] tests/cinematic.spec.ts:1501:1 › touch paper curls return, turn in both directions, and cancel without exposing duplicate actions on mobile
+[43/86] tests/cinematic.spec.ts:1596:5 › projected table keeps 1 native place cards individually usable at 1440px
+[44/86] tests/cinematic.spec.ts:1596:5 › projected table keeps 3 native place cards individually usable at 1440px
+[45/86] tests/cinematic.spec.ts:1596:5 › projected table keeps 6 native place cards individually usable at 1440px
+[46/86] tests/cinematic.spec.ts:1596:5 › projected table keeps 1 native place cards individually usable at 390px
+[47/86] tests/cinematic.spec.ts:1596:5 › projected table keeps 3 native place cards individually usable at 390px
+[48/86] tests/cinematic.spec.ts:1596:5 › projected table keeps 6 native place cards individually usable at 390px
+[49/86] tests/immersive.spec.ts:70:1 › map distinguishes a background tap, a drag and a photo-pin selection; keyboard Home resets
+[50/86] tests/immersive.spec.ts:103:1 › camera zoom clamps, pan controls and compass reset work repeatedly; lighting and depth change the scene
+[51/86] tests/immersive.spec.ts:182:1 › restaurant index is a keyboard equivalent and rapid book/map changes retain the selected venue
+[52/86] tests/immersive.spec.ts:223:1 › mobile keyboard pin focus moves the camera without scrolling the clipped canvas
+[53/86] tests/immersive.spec.ts:268:1 › group limits filter map pins and index, and The Waiter explains the actual group budget and needs
+[54/86] tests/immersive.spec.ts:326:1 › reduced-motion and low-power map views are flat, stable and still usable
+[55/86] tests/immersive.spec.ts:370:1 › mobile postcard bookmark has an unobstructed hit target before and after scrolling
+[56/86] tests/immersive.spec.ts:414:1 › Waiter alternatives cycle through eligible venues, preserve a chosen plan and actually update the shortlist
+[57/86] tests/immersive.spec.ts:478:1 › Waiter accepts useful typed requests and honestly handles unsupported services without sending or replacing a plan
+[58/86] tests/immersive.spec.ts:519:1 › Waiter is a real modal with native keyboard focus, Escape return and an explicit finish-plan action
+[59/86] tests/immersive.spec.ts:562:3 › WCAG A/AA automated scan: desktop Waiter modal and fit details
+[60/86] tests/immersive.spec.ts:562:3 › WCAG A/AA automated scan: mobile Waiter modal and fit details
+[61/86] tests/location.spec.ts:279:1 › real OpenStreetMap geography loads without device permission or weather services
+[62/86] tests/location.spec.ts:301:1 › device location is used only after the explicit button and updates the actual map coordinates
+[63/86] tests/location.spec.ts:328:1 › denied device permission keeps the map usable and city search remains available
+[64/86] tests/location.spec.ts:358:1 › the standard geographic map actually pans by keyboard and recenters the chosen area without requesting location
+[65/86] tests/location.spec.ts:389:1 › cancelling a location request prevents a late GPS response from replacing a chosen city
+[66/86] tests/location.spec.ts:428:1 › city search handles empty results, repeated submissions, network errors and timeout recovery
+[67/86] tests/location.spec.ts:491:1 › newer city searches and clear/cancel cannot be overwritten by late search responses
+[68/86] tests/location.spec.ts:572:1 › real city geography never relocates fictional restaurants, and the authored dinner demo remains separate
+[69/86] tests/location.spec.ts:609:1 › the real vector renderer can load a local minimal style fixture without external map requests
+[70/86] tests/location.spec.ts:645:1 › rendered named map places can be selected while fictional dinner venues stay separate
+[71/86] tests/location.spec.ts:663:1 › area lenses filter actual rendered place categories and parking never becomes an outdoors suggestion
+[72/86] tests/location.spec.ts:727:1 › mapped place notes support repeated keep and unkeep, close focus, and revisiting after a city and demo detour
+[73/86] tests/location.spec.ts:824:1 › changing to Paris discovers a localized mapped name and selecting it cancels a late GPS result
+[74/86] tests/location.spec.ts:872:1 › area atmosphere and unfolded view respond to repeated controls and Escape preserves search focus before folding
+[75/86] tests/location.spec.ts:903:1 › The Waiter follows the same real mapped place and shares its keep state without touching the demo shortlist
+[76/86] tests/location.spec.ts:969:1 › mobile mapped-place selection reveals a useful peek and Read notes transfers keyboard focus to that place
+[77/86] tests/location.spec.ts:1010:3 › WCAG A/AA automated scan: desktop real location controls and attribution
+[78/86] tests/location.spec.ts:1010:3 › WCAG A/AA automated scan: mobile real location controls and attribution
+[79/86] tests/waiter-claude.spec.ts:71:1 › the real default adapter is explicitly selected, accurately labelled offline, and does not change the plan
+[80/86] tests/waiter-claude.spec.ts:147:1 › repeated Enter sends one pending request, Cancel restores input focus, and a later explicit request works
+[81/86] tests/waiter-claude.spec.ts:177:1 › course and venue changes clear old answers and discard a pending answer for the previous venue
+[82/86] tests/waiter-claude.spec.ts:216:1 › closing cancels the request, restores the opener and sends fresh aggregate context after editing the table
+[83/86] tests/waiter-claude.spec.ts:272:1 › reply text stays literal, failed/mislabeled responses are sanitized, and errors never auto-resubmit
+[84/86] tests/waiter-claude.spec.ts:316:1 › disabled browser Claude cannot submit and local guidance remains useful
+[85/86] tests/waiter-claude.spec.ts:340:3 › offline provider guidance meets WCAG AA and has a reachable exit on desktop
+[86/86] tests/waiter-claude.spec.ts:340:3 › offline provider guidance meets WCAG AA and has a reachable exit on mobile
+  86 passed (3.5m)

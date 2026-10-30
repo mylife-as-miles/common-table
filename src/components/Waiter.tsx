@@ -29,6 +29,7 @@ import {
 } from "../domain";
 import "./waiter.css";
 import { playInteractionSound } from "../experience/interactionSound";
+import { useWaiterClaude } from "../experience/waiterClaude";
 
 type View = "explore" | "table" | "plan";
 type Course = "place" | "table" | "evening";
@@ -259,7 +260,8 @@ export function Waiter({
   const [course, setCourse] = useState<Course>("place");
   const [why, setWhy] = useState(false);
   const [request, setRequest] = useState("");
-  const [response, setResponse] = useState("");
+  const [response, setLocalResponse] = useState("");
+  const [requestService, setRequestService] = useState<"local" | "claude">("local");
   const [ring, setRing] = useState(0);
   const ranked = rankVenues(state);
   const selected =
@@ -286,6 +288,26 @@ export function Waiter({
       }[realPoint.category]
     : "Area guide";
   const realName = realPoint?.name || realLocation || "Your chosen area";
+  const claude = useWaiterClaude(
+    open,
+    {
+      view: course === "table" ? "table" : course === "evening" ? "plan" : "explore",
+      mode,
+      venueId: selected.id,
+      participantCount: state.participants.length,
+      budget: minimumBudget,
+      restrictions: dietaryNeeds,
+      ...(state.plan.venueId ? { planVenueId: state.plan.venueId } : {}),
+      planSaved: state.plan.saved,
+    },
+    `${view}:${course}:${realPoint?.id ?? ""}:${realLocation ?? ""}:${JSON.stringify(state.plan)}:${JSON.stringify(state.participants)}`,
+  );
+
+  // Any local gesture supersedes a pending answer; generated text cannot act on state.
+  function setResponse(value: string) {
+    claude.clear();
+    setLocalResponse(value);
+  }
 
   // A previously displayed response must not describe the place the user left.
   useEffect(() => {
@@ -308,6 +330,7 @@ export function Waiter({
       setWhy(false);
       setRequest("");
       setResponse("");
+      setRequestService("local");
       setRing((value) => value + 1);
       dialog.current.showModal();
     } else if (!open && dialog.current?.open) {
@@ -321,9 +344,11 @@ export function Waiter({
   }, [open, view]);
 
   function close() {
+    claude.clear();
     onOpenChange(false);
   }
   function closeForNavigation() {
+    claude.clear();
     navigating.current = true;
     dialog.current?.close();
     onOpenChange(false);
@@ -432,6 +457,13 @@ export function Waiter({
   }
   function handleRequest(event: FormEvent) {
     event.preventDefault();
+    if (requestService === "claude") {
+      if (request.trim() && !claude.busy) {
+        setLocalResponse("");
+        void claude.ask(request.trim());
+      } else if (!request.trim()) requestInput.current?.focus();
+      return;
+    }
     const text = request.trim().toLowerCase();
     if (!text) {
       requestInput.current?.focus();
@@ -1005,14 +1037,76 @@ export function Waiter({
                 <span>{response}</span>
               </p>
             )}
+            {claude.reply && (
+              <div className="cw-claude-result" role="status">
+                <span className="cw-claude-label">
+                  {claude.reply.source === "mock"
+                    ? "OFFLINE DEMO · CLAUDE NOT CALLED"
+                    : "CLAUDE SONNET 5.5 · GUIDANCE"}
+                </span>
+                <p>{claude.reply.text}</p>
+              </div>
+            )}
             <form className="cw-request" onSubmit={handleRequest}>
               <label htmlFor="cw-small-request">Or leave a small request</label>
-              <div>
+              <fieldset className="cw-provider-options">
+                <legend>How would you like help?</legend>
+                <label>
+                  <input
+                    type="radio"
+                    name="cw-request-service"
+                    value="local"
+                    checked={requestService === "local"}
+                    onChange={() => {
+                      claude.clear();
+                      setRequestService("local");
+                    }}
+                  />
+                  Local tips
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="cw-request-service"
+                    value="claude"
+                    checked={requestService === "claude"}
+                    onChange={() => {
+                      claude.clear();
+                      setLocalResponse("");
+                      setRequestService("claude");
+                    }}
+                  />
+                  Claude
+                  <span>
+                    {claude.mode === "checking"
+                      ? "checking"
+                      : claude.mode === "mock"
+                        ? "offline demo"
+                        : claude.mode === "live"
+                          ? "live"
+                          : "unavailable"}
+                  </span>
+                </label>
+              </fieldset>
+              {requestService === "claude" && (
+                <p className="cw-provider-note" id="cw-provider-note">
+                  {claude.mode === "mock"
+                    ? "Try a sample answer. Claude is not called and no credits are used."
+                    : claude.mode === "live"
+                      ? "Your question and demo table needs go to Claude. Guest names and map locations are excluded."
+                      : claude.mode === "checking"
+                        ? "Checking whether Claude guidance is available…"
+                        : "Claude guidance is not available here yet. Local tips are ready to help."}
+                </p>
+              )}
+              <div className="cw-request-field">
                 <input
                   ref={requestInput}
                   id="cw-small-request"
                   value={request}
-                  maxLength={180}
+                  maxLength={600}
+                  readOnly={claude.busy}
+                  aria-describedby={requestService === "claude" ? "cw-provider-note" : undefined}
                   onChange={(event) => setRequest(event.target.value)}
                   placeholder="e.g. why this place?"
                   autoComplete="off"
@@ -1020,11 +1114,31 @@ export function Waiter({
                 <button
                   type="submit"
                   aria-label="Ask The Waiter"
-                  disabled={!request.trim()}
+                  disabled={
+                    !request.trim() ||
+                    claude.busy ||
+                    (requestService === "claude" && !["mock", "live"].includes(claude.mode))
+                  }
                 >
                   <Send size={15} />
                 </button>
               </div>
+              {claude.busy && (
+                <div className="cw-request-pending" role="status">
+                  <span>Preparing a little guidance…</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      claude.clear();
+                      setLocalResponse("Request cancelled. Your choices stay as they were.");
+                      requestInput.current?.focus();
+                    }}
+                  >
+                    Cancel request
+                  </button>
+                </div>
+              )}
+              {claude.error && <p className="cw-request-error" role="alert">{claude.error}</p>}
             </form>
             <p className="cw-disclosure">
               {mode === "real"
@@ -1036,6 +1150,9 @@ export function Waiter({
                   : "Places, tastes & plans. No bookings, messages, or location sharing."}
               </span>
             </p>
+            <button className="cw-return" type="button" onClick={close}>
+              Back to the evening <ArrowUpRight size={14} />
+            </button>
           </div>
         </section>
       </dialog>
