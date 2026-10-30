@@ -10,6 +10,10 @@
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
     "screenshots": "node scripts/capture.mjs",
+    "claude:check": "node --env-file-if-exists=.env.local --import tsx scripts/claude-status.ts",
+    "test:claude": "tsx --test tests/claude*.test.ts",
+    "preclaude:smoke": "npm run test:claude",
+    "claude:smoke": "node --use-env-proxy --env-file-if-exists=.env.local --import tsx scripts/claude-smoke.ts",
     "start": "node --use-env-proxy --env-file-if-exists=.env.local --import tsx server/index.ts"
   },
   "dependencies": {

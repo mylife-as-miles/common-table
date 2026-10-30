@@ -11,5 +11,10 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["server/**/*.ts", "tests/location-api.test.ts"]
+  "include": [
+    "server/**/*.ts",
+    "tests/location-api.test.ts",
+    "tests/claude*.test.ts",
+    "scripts/claude-*.ts"
+  ]
 }

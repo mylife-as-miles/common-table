@@ -16,6 +16,8 @@ Current production screenshots, interaction recording and verification are in [t
 
 ## Run
 
+Claude server preparation is documented in [CLAUDE_SETUP.md](docs/CLAUDE_SETUP.md). It defaults to offline mocks, reads `ANTHROPIC_API_KEY` only on the server, pins Sonnet 5.5 and has a persistent five-attempt/$5 test guard. The key belongs in the ignored, owner-only `.env.local` or a server secret store, never chat or `VITE_*`. The Waiter UI remains local; application wiring and live testing await the requested target/account clarification and secure key setup. No live credits have been spent.
+
 Node 24.5 or later (the scripts support inherited HTTP proxies with Node's environment-proxy option):
 
 ```sh

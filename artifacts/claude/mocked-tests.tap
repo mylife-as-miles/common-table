@@ -1,0 +1,190 @@
+TAP version 13
+# Subtest: the persistent Claude ledger reserves one conservative dollar per attempt and has no automatic refill
+ok 1 - the persistent Claude ledger reserves one conservative dollar per attempt and has no automatic refill
+  ---
+  duration_ms: 21.483814
+  type: 'test'
+  ...
+# Subtest: separate ledger instances share one cap without releasing earlier reservations
+ok 2 - separate ledger instances share one cap without releasing earlier reservations
+  ---
+  duration_ms: 9.358093
+  type: 'test'
+  ...
+# Subtest: independent Node processes atomically share the five-attempt cap
+ok 3 - independent Node processes atomically share the five-attempt cap
+  ---
+  duration_ms: 423.051835
+  type: 'test'
+  ...
+# Subtest: invalid paths and unusable or corrupt SQL files fail closed with safe errors
+ok 4 - invalid paths and unusable or corrupt SQL files fail closed with safe errors
+  ---
+  duration_ms: 5.714808
+  type: 'test'
+  ...
+# Subtest: an exhausted ledger with lost SQL schema fails closed instead of refilling on restart
+ok 5 - an exhausted ledger with lost SQL schema fails closed instead of refilling on restart
+  ---
+  duration_ms: 5.39612
+  type: 'test'
+  ...
+# Subtest: deleting an exhausted main database does not automatically create a fresh allowance
+ok 6 - deleting an exhausted main database does not automatically create a fresh allowance
+  ---
+  duration_ms: 3.555874
+  type: 'test'
+  ...
+# Subtest: default smoke remains offline even with a key and live environment mode
+ok 7 - default smoke remains offline even with a key and live environment mode
+  ---
+  duration_ms: 392.221565
+  type: 'test'
+  ...
+# Subtest: live smoke requires an explicit live mode and disabled mode blocks preflight
+ok 8 - live smoke requires an explicit live mode and disabled mode blocks preflight
+  ---
+  duration_ms: 215.488527
+  type: 'test'
+  ...
+# Subtest: unknown CLI arguments fail without echoing them or contacting the provider
+ok 9 - unknown CLI arguments fail without echoing them or contacting the provider
+  ---
+  duration_ms: 86.024835
+  type: 'test'
+  ...
+# Subtest: mock and disabled modes cannot call a provider or create a live-budget ledger
+ok 10 - mock and disabled modes cannot call a provider or create a live-budget ledger
+  ---
+  duration_ms: 53.276291
+  type: 'test'
+  ...
+# Subtest: verified preflight is coalesced, free of reservations, and precedes one pinned bounded generation
+ok 11 - verified preflight is coalesced, free of reservations, and precedes one pinned bounded generation
+  ---
+  duration_ms: 93.615592
+  type: 'test'
+  ...
+# Subtest: wrong organization name or id and wrong model stop before generation or budget initialization
+ok 12 - wrong organization name or id and wrong model stop before generation or budget initialization
+  ---
+  duration_ms: 8.943029
+  type: 'test'
+  ...
+# Subtest: unconfigured or invalid factory config fails before any fetch or SQL side effect
+ok 13 - unconfigured or invalid factory config fails before any fetch or SQL side effect
+  ---
+  duration_ms: 2.083911
+  type: 'test'
+  ...
+# Subtest: plain text validation and the combined16KiB UTF8 limit reject before preflight or reservation
+ok 14 - plain text validation and the combined16KiB UTF8 limit reject before preflight or reservation
+  ---
+  duration_ms: 7.570297
+  type: 'test'
+  ...
+# Subtest: all paid failures retain their reservation and401,429,5xx or thrown upstream errors never retry or leak details
+ok 15 - all paid failures retain their reservation and401,429,5xx or thrown upstream errors never retry or leak details
+  ---
+  duration_ms: 42.981606
+  type: 'test'
+  ...
+# Subtest: preflight upstream failures are sanitized and never reach messages or initialize budget
+ok 16 - preflight upstream failures are sanitized and never reach messages or initialize budget
+  ---
+  duration_ms: 3.909645
+  type: 'test'
+  ...
+# Subtest: redirected successful responses and malformed JSON are rejected without forwarding provider diagnostics
+ok 17 - redirected successful responses and malformed JSON are rejected without forwarding provider diagnostics
+  ---
+  duration_ms: 11.563106
+  type: 'test'
+  ...
+# Subtest: invalid usage, empty text, tools and a wrong returned model never become successful replies or refund attempts
+ok 18 - invalid usage, empty text, tools and a wrong returned model never become successful replies or refund attempts
+  ---
+  duration_ms: 86.845789
+  type: 'test'
+  ...
+# Subtest: text blocks are joined while private thinking blocks are excluded from returned text
+ok 19 - text blocks are joined while private thinking blocks are excluded from returned text
+  ---
+  duration_ms: 3.060249
+  type: 'test'
+  ...
+# Subtest: timeouts cover a transport ignoring abort and a stalled response body without retrying or refunding
+ok 20 - timeouts cover a transport ignoring abort and a stalled response body without retrying or refunding
+  ---
+  duration_ms: 97.192487
+  type: 'test'
+  ...
+# Subtest: oversized declared and streamed bodies are cancelled at the64KiB boundary
+ok 21 - oversized declared and streamed bodies are cancelled at the64KiB boundary
+  ---
+  duration_ms: 16.433104
+  type: 'test'
+  ...
+# Subtest: pre-aborted input costs nothing while cancellation after POST keeps exactly one reservation
+ok 22 - pre-aborted input costs nothing while cancellation after POST keeps exactly one reservation
+  ---
+  duration_ms: 6.773799
+  type: 'test'
+  ...
+# Subtest: cancellation during preflight setup is not lost before the abort listener is attached
+ok 23 - cancellation during preflight setup is not lost before the abort listener is attached
+  ---
+  duration_ms: 1.685322
+  type: 'test'
+  ...
+# Subtest: concurrent live callers and a restarted client cannot exceed five paid attempts
+ok 24 - concurrent live callers and a restarted client cannot exceed five paid attempts
+  ---
+  duration_ms: 6.371534
+  type: 'test'
+  ...
+# Subtest: SQL reservation failure prevents generation and an injected budget remains caller-owned
+ok 25 - SQL reservation failure prevents generation and an injected budget remains caller-owned
+  ---
+  duration_ms: 4.494715
+  type: 'test'
+  ...
+# Subtest: client close aborts in-flight work, retains the reservation and rejects later calls
+ok 26 - client close aborts in-flight work, retains the reservation and rejects later calls
+  ---
+  duration_ms: 4.257828
+  type: 'test'
+  ...
+# Subtest: Claude configuration defaults to mock with a fixed model, organization and local ledger without creating one
+ok 27 - Claude configuration defaults to mock with a fixed model, organization and local ledger without creating one
+  ---
+  duration_ms: 11.715515
+  type: 'test'
+  ...
+# Subtest: live config requires an explicit server key while mock and disabled require no key
+ok 28 - live config requires an explicit server key while mock and disabled require no key
+  ---
+  duration_ms: 2.310242
+  type: 'test'
+  ...
+# Subtest: only the authorized model is accepted and configuration errors never echo supplied values
+ok 29 - only the authorized model is accepted and configuration errors never echo supplied values
+  ---
+  duration_ms: 4.845817
+  type: 'test'
+  ...
+# Subtest: browser-secret names and endpoint, ledger or budget overrides are rejected even in mock mode
+ok 30 - browser-secret names and endpoint, ledger or budget overrides are rejected even in mock mode
+  ---
+  duration_ms: 2.710714
+  type: 'test'
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 987.846335
