@@ -1,0 +1,12 @@
+{
+  "source": "Actual local production UI and pointer gestures; original rendered table assets; fictional dining data",
+  "errors": [],
+  "desktop": {
+    "width": 1440,
+    "height": 1000
+  },
+  "mobile": {
+    "width": 390,
+    "height": 844
+  }
+}

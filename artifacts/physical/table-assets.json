@@ -1,0 +1,50 @@
+{
+  "source": "original locked Blender scene; final six WebPs and exact source-camera projections",
+  "production_images_match": true,
+  "runtime_projections_match": true,
+  "total_bytes": 717654,
+  "assets": [
+    {
+      "file": "table-1.webp",
+      "bytes": 109550,
+      "width": 1100,
+      "height": 1100,
+      "sha256": "db0f11bd83f57dd4f1790d0f8d42c55bbdd207700ce11f26194ec7d119557e6d"
+    },
+    {
+      "file": "table-2.webp",
+      "bytes": 111820,
+      "width": 1100,
+      "height": 1100,
+      "sha256": "9202658bd9f7d5bb7d365ce9b1a0ed08eb698c6066223cedef5e343640566b42"
+    },
+    {
+      "file": "table-3.webp",
+      "bytes": 118486,
+      "width": 1100,
+      "height": 1100,
+      "sha256": "816373b153e6fe1b44c96bc64f91c05ec4c0c2353fe9c1796ee98dc5f9fde1a8"
+    },
+    {
+      "file": "table-4.webp",
+      "bytes": 122392,
+      "width": 1100,
+      "height": 1100,
+      "sha256": "9ea1f0170d4d615c2b4e72c4ce6b711fc52c93a73616af47f3275c9cd5c8d1a4"
+    },
+    {
+      "file": "table-5.webp",
+      "bytes": 126672,
+      "width": 1100,
+      "height": 1100,
+      "sha256": "5bd0cbf514fc866744701a977d5f0befe988d01b6effae56cd8feead191bb4d4"
+    },
+    {
+      "file": "table-6.webp",
+      "bytes": 128734,
+      "width": 1100,
+      "height": 1100,
+      "sha256": "2e3779d011f98e6b32c8aff6092e714740d70527b03c48732d2851298840b67e"
+    }
+  ]
+}

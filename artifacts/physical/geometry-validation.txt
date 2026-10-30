@@ -1,0 +1,6 @@
+1 seats: every card clears every plate/glass; card feet remain on wood; cloth clears tabletop
+2 seats: every card clears every plate/glass; card feet remain on wood; cloth clears tabletop
+3 seats: every card clears every plate/glass; card feet remain on wood; cloth clears tabletop
+4 seats: every card clears every plate/glass; card feet remain on wood; cloth clears tabletop
+5 seats: every card clears every plate/glass; card feet remain on wood; cloth clears tabletop
+6 seats: every card clears every plate/glass; card feet remain on wood; cloth clears tabletop

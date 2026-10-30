@@ -5,7 +5,6 @@ import {
   type Dispatch,
   type FormEvent,
   type PointerEvent,
-  type CSSProperties,
 } from "react";
 import {
   ArrowLeft,
@@ -27,6 +26,7 @@ import {
 import "./table-plan.css";
 import "./shared-table-cinematic.css";
 import { playInteractionSound } from "../experience/interactionSound";
+import { PhysicalTableStage } from "./table-only/PhysicalTableStage";
 
 interface SharedTableProps {
   state: AppState;
@@ -110,7 +110,6 @@ export function SharedTable({
   function resetPerspective() {
     stageRef.current?.style.removeProperty("--ct-table-pitch");
     stageRef.current?.style.removeProperty("--ct-table-yaw");
-    stageRef.current?.style.removeProperty("--ct-light-x");
   }
   function movePerspective(event: PointerEvent<HTMLDivElement>) {
     if (
@@ -124,12 +123,8 @@ export function SharedTable({
     const bounds = event.currentTarget.getBoundingClientRect();
     const x = (event.clientX - bounds.left) / bounds.width - 0.5;
     const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-    event.currentTarget.style.setProperty(
-      "--ct-table-pitch",
-      `${10 - y * 3}deg`,
-    );
-    event.currentTarget.style.setProperty("--ct-table-yaw", `${x * 3}deg`);
-    event.currentTarget.style.setProperty("--ct-light-x", `${43 + x * 9}%`);
+    event.currentTarget.style.setProperty("--ct-table-pitch", `${-y * 1.2}deg`);
+    event.currentTarget.style.setProperty("--ct-table-yaw", `${x * 1.2}deg`);
   }
   function cancelAdd() {
     cancelEditorReveal();
@@ -177,15 +172,6 @@ export function SharedTable({
       },
     });
   }
-  const seatPositions = state.participants.map((_, index) => {
-    const angle =
-      ((90 + (index * 360) / state.participants.length) * Math.PI) / 180;
-    return {
-      x: 50 + 32 * Math.cos(angle),
-      y: 50 + (state.participants.length === 1 ? 28 : 31) * Math.sin(angle),
-      turn: (index * 360) / state.participants.length,
-    };
-  });
   return (
     <section
       className={`tp-scene tp-table-scene ct-cinematic-table ${state.participants.length === 1 ? "tp-solo" : ""} ${state.participants.length >= 5 ? "tp-many" : ""}`}
@@ -238,123 +224,13 @@ export function SharedTable({
                   : "A little space for good company."}
               </i>
             </div>
-            <div className="ct-table-halo" aria-hidden="true" />
-            <div
-              className="tp-table-top"
-              role="group"
-              aria-label={`Your table has ${state.participants.length} ${state.participants.length === 1 ? "seat" : "seats"}`}
-              aria-describedby="table-seat-hint"
-            >
-              <div className="ct-linen-fold" aria-hidden="true" />
-              <div className="tp-table-center">
-                <svg
-                  className="ct-table-sprig"
-                  viewBox="0 0 130 110"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M40 100Q68 65 93 17"
-                    fill="none"
-                    stroke="#62684a"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M57 76Q26 71 33 46Q57 50 57 76M69 57Q89 64 109 43Q87 31 69 57M82 35Q57 35 63 13Q82 17 82 35M92 20Q107 21 116 5Q98 0 92 20"
-                    fill="#747e53"
-                  />
-                  <path
-                    d="M60 75L38 54M75 55L100 45M82 35L68 18"
-                    stroke="#a5ac79"
-                    fill="none"
-                  />
-                </svg>
-                <div className="ct-candle-holder" aria-hidden="true">
-                  <div className="tp-candle">
-                    <span />
-                  </div>
-                </div>
-                <span className="tp-table-script">
-                  a table for
-                  <br />
-                  <strong>
-                    {["one", "one", "two", "three", "four", "five", "six"][
-                      state.participants.length
-                    ] || state.participants.length}
-                  </strong>
-                </span>
-              </div>
-              {state.participants.map((person, i) => (
-                <button
-                  id={`seat-${person.id}`}
-                  key={person.id}
-                  className={`tp-seat ${editing?.id === person.id ? "is-active" : ""} ${arrivingId === person.id ? "ct-seat-arriving" : ""}`}
-                  style={{
-                    left: `${seatPositions[i]?.x || 50}%`,
-                    top: `${seatPositions[i]?.y || 50}%`,
-                    ...({
-                      "--ct-seat-turn": `${seatPositions[i]?.turn || 0}deg`,
-                      "--ct-napkin": person.color,
-                    } as CSSProperties),
-                  }}
-                  onClick={() => selectParticipant(person.id)}
-                  aria-label={`${person.name}${i > 0 ? " DEMO GUEST" : ""} — Edit ${person.name}'s tastes`}
-                  aria-pressed={editing?.id === person.id}
-                >
-                  <span className="ct-setting-props" aria-hidden="true">
-                    <span className="ct-dining-chair" />
-                    <svg className="ct-cutlery ct-fork" viewBox="0 0 18 100">
-                      <path d="M3 2v20m4-20v20m4-20v20m4-20v20M3 17v10c0 8 12 8 12 0V17M9 34v58" />
-                      <path d="M8 60h2l2 33c0 6-6 6-6 0Z" />
-                    </svg>
-                    <svg className="ct-cutlery ct-knife" viewBox="0 0 18 100">
-                      <path d="M7 2Q15 21 11 43L7 46Z" />
-                      <path d="M7 45h4l2 47c1 7-8 7-7 0Z" />
-                    </svg>
-                    <svg className="ct-wineglass" viewBox="0 0 44 88">
-                      <path
-                        d="M8 4H36L38 27C38 47 6 47 6 27Z"
-                        fill="#f9edd311"
-                        stroke="#e6ddbd"
-                        strokeWidth="1.3"
-                      />
-                      <path
-                        d="M7 24Q21 20 37 24L37 29C34 44 10 44 7 29Z"
-                        fill="#8f482b55"
-                      />
-                      <path
-                        d="M22 43v34M8 81Q22 73 36 81Z"
-                        fill="#f9edd318"
-                        stroke="#e6ddbd"
-                        strokeWidth="1.2"
-                      />
-                      <path
-                        d="M12 8L10 26Q10 34 15 36"
-                        fill="none"
-                        stroke="#fff8de99"
-                        strokeWidth="2"
-                      />
-                    </svg>
-                    <span className="tp-plate">
-                      <span
-                        className="tp-napkin"
-                        style={{ backgroundColor: person.color }}
-                      />
-                      <span
-                        className="tp-monogram"
-                        data-initial={person.name.slice(0, 1)}
-                      />
-                    </span>
-                  </span>
-                  <span className="tp-seat-name">
-                    <span className="tp-seat-label">{person.name}</span>
-                    {i > 0 && <small aria-hidden="true">DEMO GUEST</small>}
-                    {editing?.id === person.id && (
-                      <span className="ct-place-card-rule" aria-hidden="true" />
-                    )}
-                  </span>
-                </button>
-              ))}
-            </div>
+            <PhysicalTableStage
+              participants={state.participants}
+              editingId={editing?.id ?? "you"}
+              arrivingId={arrivingId}
+              onSelect={selectParticipant}
+              lowPower={lowPower}
+            />
             <p id="table-seat-hint" className="ct-table-hint">
               Choose a place card. Make yourself at home.
             </p>

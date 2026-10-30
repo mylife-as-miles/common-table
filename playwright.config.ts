@@ -1,5 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
+const externalPreview = process.env.PLAYWRIGHT_BASE_URL;
+
 export default defineConfig({
   testDir: "./tests",
   testMatch: [
@@ -14,7 +16,7 @@ export default defineConfig({
   expect: { timeout: 5_000 },
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://localhost:4174",
+    baseURL: externalPreview || "http://localhost:4174",
     viewport: { width: 1440, height: 1000 },
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
@@ -23,10 +25,12 @@ export default defineConfig({
       args: ["--no-sandbox"],
     },
   },
-  webServer: {
-    command: "npm run dev -- --port 4174 --strictPort",
-    url: "http://localhost:4174",
-    reuseExistingServer: true,
-    timeout: 30_000,
-  },
+  webServer: externalPreview
+    ? undefined
+    : {
+        command: "npm run dev -- --port 4174 --strictPort",
+        url: "http://localhost:4174",
+        reuseExistingServer: true,
+        timeout: 30_000,
+      },
 });

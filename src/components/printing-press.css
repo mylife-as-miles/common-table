@@ -1195,3 +1195,319 @@
 .printing-press[data-phase="printed"] .pp-receipt-feed {
   overflow: visible;
 }
+/* The retained stub, fibres, and ragged edge make the release legible. The ticket remains one live sheet. */
+.pp-operating-instruction .pp-tear-instruction {
+  font-family: var(--font-sans, Arial, sans-serif);
+  font-style: normal;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #e0e7cc;
+  max-width: 330px;
+  margin: 8px auto 0;
+}
+.pp-perforation-anchor {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 9px;
+  z-index: 0;
+  pointer-events: none;
+  background: #eae1c6;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 62%,
+    97% 48%,
+    94% 80%,
+    90% 51%,
+    87% 74%,
+    83% 42%,
+    80% 72%,
+    76% 51%,
+    72% 85%,
+    68% 56%,
+    64% 76%,
+    60% 42%,
+    56% 69%,
+    52% 51%,
+    48% 87%,
+    44% 59%,
+    40% 76%,
+    36% 42%,
+    32% 69%,
+    28% 47%,
+    24% 79%,
+    20% 52%,
+    16% 72%,
+    12% 44%,
+    8% 76%,
+    4% 53%,
+    0 81%
+  );
+  box-shadow: 0 3px 2px #11220d70;
+}
+.printing-press[data-paper="pulling"] .pp-perforation-anchor {
+  clip-path: none;
+  background: transparent;
+  box-shadow: none;
+}
+.pp-perforation-anchor:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 8px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ece3c8 0 11px,
+    #d0c5a2 11px 12px
+  );
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 65%,
+    96% 48%,
+    92% 76%,
+    88% 48%,
+    84% 80%,
+    79% 46%,
+    74% 72%,
+    69% 51%,
+    64% 83%,
+    59% 48%,
+    54% 76%,
+    49% 47%,
+    44% 80%,
+    39% 48%,
+    34% 76%,
+    29% 45%,
+    24% 82%,
+    19% 49%,
+    14% 75%,
+    9% 47%,
+    4% 79%,
+    0 56%
+  );
+}
+.pp-fibre-bridge {
+  position: absolute;
+  left: var(--pp-tear-reveal, 0%);
+  right: 0;
+  top: 6px;
+  height: calc(var(--pp-tension, 0px) + 2px);
+  background: repeating-linear-gradient(
+    92deg,
+    transparent 0 7px,
+    #f4ecd5 7px 8px,
+    transparent 8px 11px,
+    #cbc09c 11px 12px,
+    transparent 12px 17px
+  );
+  opacity: 0.85;
+  transform-origin: 100% 0;
+  pointer-events: none;
+}
+.pp-tear-front {
+  position: absolute;
+  width: 7px;
+  height: 12px;
+  left: calc(var(--pp-tear-reveal, 0%) - 4px);
+  top: calc(var(--pp-tension, 0px) / 2 + 2px);
+  background: repeating-linear-gradient(
+    70deg,
+    #f5edd9 0 1px,
+    transparent 1px 3px
+  );
+  transform: rotate(-22deg);
+  opacity: 0;
+}
+.printing-press[data-paper="pulling"] .pp-tear-front {
+  opacity: 1;
+}
+.pp-live-sheet {
+  z-index: 1;
+}
+.pp-ragged-edge {
+  position: absolute;
+  left: 0;
+  top: -11px;
+  width: 100%;
+  height: 14px;
+  display: block;
+  overflow: visible;
+  z-index: 4;
+  pointer-events: none;
+  clip-path: inset(0 calc(100% - var(--pp-tear-reveal, 0%)) 0 0);
+}
+.printing-press[data-paper="attached"] .pp-ragged-edge {
+  opacity: 0;
+}
+.printing-press[data-paper="pulling"] .pp-live-sheet {
+  transform: translateY(var(--pp-pull-y, 0px))
+    rotate(calc(var(--pp-tear-progress, 0) * -0.75deg));
+  transform-origin: 88% 0;
+}
+.pp-tear-perforation {
+  padding: 8px 11px 7px;
+  background: linear-gradient(#e7ddbd33, #fff9e9 30%, #fbf7eb);
+  border-bottom: 0;
+  box-shadow: inset 0 5px 7px #43502a13;
+}
+.pp-tear-rule {
+  top: 1px;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #8a8b6b 0 3px,
+    transparent 3px 7px
+  );
+}
+.pp-tear-rule:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 2px;
+  width: var(--pp-tear-reveal, 0%);
+  background: #8b6d45;
+  box-shadow: 0 1px 0 #fcf5de;
+}
+.pp-tear-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 9px 15px;
+  border-radius: 1px 1px 9px 9px;
+  background: linear-gradient(#fdf7e5, #f0e2bd 88%, #dfcda1);
+  border-color: #b7a478;
+  border-bottom-color: #a28d60;
+  box-shadow:
+    inset 0 2px 0 #fffbed,
+    0 4px 4px #63532920;
+  color: #4b5c37;
+  font-weight: 500;
+  transition:
+    box-shadow 0.15s,
+    background 0.15s;
+  position: relative;
+  z-index: 3;
+}
+.pp-tear-handle:before,
+.pp-tear-handle:after {
+  display: none;
+}
+.pp-tab-fold {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 14px;
+  height: 19px;
+  flex-shrink: 0;
+  border-left: 1px solid #a2936a77;
+  border-right: 1px solid #a2936a77;
+}
+.pp-tab-fold > i {
+  display: block;
+  height: 13px;
+  width: 1px;
+  background: #a48f60;
+  box-shadow: 1px 0 0 #fff7dd;
+}
+.pp-tear-handle:hover {
+  background: linear-gradient(#fffaeb, #edddb5);
+  box-shadow:
+    inset 0 2px 0 #fffbed,
+    0 5px 5px #63532928;
+}
+.printing-press[data-paper="detached"] .pp-live-sheet:before {
+  display: none;
+}
+.printing-press[data-paper="detached"] .pp-ragged-edge {
+  animation: pp-rip-across 0.24s steps(5, end) both;
+}
+.printing-press[data-paper="detached"] .pp-fibre-bridge {
+  display: none;
+}
+.printing-press[data-paper="detached"] .pp-perforation-anchor {
+  height: 10px;
+}
+@keyframes pp-rip-across {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@media (max-width: 620px) {
+  .pp-tear-handle {
+    min-height: 46px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  .pp-operating-instruction .pp-tear-instruction {
+    font-size: 10px;
+    max-width: 250px;
+  }
+}
+.printing-press.pp-still .pp-ragged-edge {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .printing-press .pp-ragged-edge {
+    animation: none !important;
+  }
+}
+.pp-grip-instruction {
+  display: block;
+  font-size: 9px;
+  line-height: 1.5;
+  color: #5e6b47;
+  margin: 4px auto 0;
+  max-width: 220px;
+}
+/* Paper bends at the held side; only a few short fibres remain at the moving tear front. */
+.printing-press[data-paper="pulling"] .pp-live-sheet {
+  transform: translateY(calc(var(--pp-pull-y, 0px) * 0.22))
+    rotate(calc(var(--pp-tear-progress, 0) * -1.35deg));
+  transform-origin: 100% 0;
+}
+.pp-fibre-bridge {
+  height: calc(var(--pp-tension, 0px) * 0.22 + 2px);
+  background: linear-gradient(110deg, #f4ecd5, #e9dfc3);
+  opacity: 1;
+  box-shadow: inset 0 -1px 1px #b8ad8b44;
+  clip-path: polygon(2px 0, 100% 0, 100% 100%, 0 100%, 3px 74%, 0 45%, 3px 20%);
+}
+.pp-fibre-bridge:before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 2px;
+  bottom: 0;
+  width: 5px;
+  background: repeating-linear-gradient(
+    68deg,
+    #eee5cd 0 1px,
+    transparent 1px 3px
+  );
+}
+.pp-tear-front {
+  width: 5px;
+  height: 7px;
+  top: calc(var(--pp-tension, 0px) * 0.12 + 2px);
+  background: repeating-linear-gradient(
+    70deg,
+    #f5edd9 0 1px,
+    transparent 1px 3px
+  );
+}
+.printing-press[data-paper="pulling"] .pp-tear-handle:focus-visible {
+  outline-width: 1px;
+  outline-offset: 2px;
+}

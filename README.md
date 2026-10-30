@@ -6,11 +6,13 @@ An immersive food discovery and dinner-planning app. Start with real location-ba
 
 ## Cinematic restaurant room
 
-The atlas, physical folio, guest place settings and receipt press now sit in an original restaurant set with warm pendant lighting, dark wood and readable paper. The folio has an operable hinged cover, physical page corner and a two-sided paper turn; actual guests sit at porcelain/linen place settings. Saving an approved dinner plan operates the original olive-and-brass letterpress and feeds out that same receipt. The lever is keyboard operable; reprint changes only the impression, while edits cancel stale paper and invalidate agreement as before.
+The atlas, physical folio, guest place settings and receipt press sit in a shared restaurant set with warm pendant lighting, dark wood and readable paper. The folio now uses **StPageFlip, the same soft-page engine used by Proofline**: a real corner drag bends the printed sheet, reveals its reverse and casts a fold shadow. Short drags return; completed turns select the adjacent restaurant once. Native forward/back controls and static motion fallbacks perform the same work. The licensed engine has a documented lifecycle patch so only active turns schedule animation frames.
 
-The real map has a finite **Look around** camera move with Stop/Escape/direct-input cancellation. Optional interaction sound is **off by default**; enabling it creates short local paper, bell, seat and press cues. There is no ambient audio loop. Reduced motion and low power retain immediate, functional results. All Common Table materials, mechanisms and sound are original. A subsequent user-authorized read-only review of Kitchen Studio’s press supplied interaction references for stepped rigid-paper feed, a briefly opening head and resistant perforation tear. No private source or assets were copied, imported, or modified. This is an independent web implementation, not a claim of pixel matching the native app.
+The table uses original physically rendered wood, linen, porcelain, glass, metal and chair assets, with native participant controls aligned through projections from the render's actual camera. These are local rendered stills with live place cards and optional pointer depth, rather than a real-time game renderer. Saving an approved dinner plan operates the original olive-and-brass letterpress and feeds out that same receipt. A visible grip and perforation let you pull against an advancing ragged seam; short pulls return, while a full pull or tap/Enter/Space detaches the same live receipt. The lever is keyboard operable; reprint changes only the impression, while edits cancel stale paper and invalidate agreement as before.
 
-Current production screenshots, interaction recording and verification are in [the cinematic handoff](artifacts/cinematic/HANDOFF.md). Reproduce the captures with `node scripts/capture-cinematic.mjs` and the recorded actions with `node scripts/record-cinematic.mjs` against the production server. Independent visual research and observed fixes are documented in [CINEMATIC_DESIGN_REVIEW.md](docs/CINEMATIC_DESIGN_REVIEW.md).
+The real map has a finite **Look around** camera move with Stop/Escape/direct-input cancellation. Optional interaction sound is **off by default**; enabling it creates short local paper, bell, seat and press cues. There is no ambient audio loop. Reduced motion and low power retain immediate, functional results. Common Table's scene assets, press mechanism and sound are original; the soft-paper solver is credited separately. A user-authorized read-only review of Kitchen Studio’s press supplied interaction references for stepped rigid-paper feed, a briefly opening head and resistant perforation tear. No private source or assets were copied, imported, or modified. This is an independent web implementation, not a claim of pixel matching the native app.
+
+Current production screenshots, interaction recording and verification are in [the physical-paper handoff](artifacts/physical/HANDOFF.md). Reproduce them with `node scripts/capture-physical.mjs` against the production server. The [earlier cinematic handoff](artifacts/cinematic/HANDOFF.md) is historical. Independent visual research and observed fixes are documented in [CINEMATIC_DESIGN_REVIEW.md](docs/CINEMATIC_DESIGN_REVIEW.md).
 
 ## Run
 
@@ -56,7 +58,7 @@ npm run test:e2e
 npm run screenshots
 ```
 
-Verification for the latest cinematic revision is recorded in [artifacts/cinematic/HANDOFF.md](artifacts/cinematic/HANDOFF.md).
+Verification for the latest paper/table revision is recorded in [artifacts/physical/HANDOFF.md](artifacts/physical/HANDOFF.md). To check an already running production build, set `PLAYWRIGHT_BASE_URL=http://localhost:4173`.
 
 Browser tests use system Chromium (`/usr/bin/chromium`); set `CHROMIUM_PATH` for another path. Tests cover actual pointer actions, connected selection, repeated shortlist/veto/undo, exhausted results, guest cancel/Escape/focus, approvals and invalidation, persistence, copy/download, Back navigation, mobile overflow, motion fallbacks, and automated WCAG A/AA scans. Automated checks supplement manual review and do not establish full accessibility conformance.
 
@@ -83,8 +85,10 @@ Current real-map screenshots and live-provider evidence are in `artifacts/locati
 
 ## Assets
 
+The original physical table models, procedural materials, lighting and source-camera projections are reproducible with `scripts/table-only/build_assets.py` (Blender + Pillow); normal app builds use the checked-in WebPs. StPageFlip 2.0.7 supplies the soft-paper solver under its retained MIT license, with the finite-render lifecycle adaptation documented in `src/components/book/README.md`.
+
 Cormorant Garamond and DM Sans from Google Fonts, subset and served locally (SIL Open Font License; `public/fonts/OFL-*.txt`). Illustrative photography from Unsplash; URLs in `public/images/SOURCES.txt`. The original schematic map is not a navigation service.
 
 Live provider references: [OpenFreeMap quick start](https://openfreemap.org/quick_start/), [MapLibre](https://maplibre.org/maplibre-gl-js/docs/), [OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/), [Photon](https://github.com/komoot/photon). Credits stay visible on the map. The public services offer no app-specific availability guarantee; configurable/self-hosted providers remain an option for production scale.
 
-Reference research and the limits of accessible sources are documented in [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md). Bump informed spatial presence; Proofline informed physical origin and return. The atlas, character, UI, geometry, and behavior are original implementations.
+Reference research and the limits of accessible sources are documented in [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md). Bump informed spatial presence; Proofline informed physical origin and return. The atlas, character, table scene and app state integration are original; the soft-paper engine is separately credited above.

@@ -1,5 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import type {
+  KeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   ArrowDownLeft,
   ArrowLeft,
@@ -18,9 +22,14 @@ import {
 import type { Venue } from "../domain/types";
 import "./menu-book.css";
 import { playInteractionSound } from "../experience/interactionSound";
+import { PaperCurl } from "./book/PaperCurl";
+import type { CurlDirection, CurlState } from "./book/PaperCurl";
+import { pagePrint } from "./book/pagePrint";
 
 export interface MenuBookProps {
   venue: Venue;
+  nextVenue?: Venue;
+  previousVenue?: Venue;
   shortlisted: boolean;
   chosen?: boolean;
   onShortlist: () => void;
@@ -36,6 +45,8 @@ export interface MenuBookProps {
 
 export default function MenuBook({
   venue,
+  nextVenue,
+  previousVenue,
   shortlisted,
   chosen = false,
   onShortlist,
@@ -48,21 +59,35 @@ export default function MenuBook({
   reason,
   lowPower,
 }: MenuBookProps) {
-  const previousVenue = useRef(venue);
   const rightPage = useRef<HTMLElement>(null);
   const photo = useRef<HTMLImageElement>(null);
   const tabs = useRef<HTMLDivElement>(null);
   const panelId = useId();
   const scene = useRef<HTMLDivElement>(null);
   const frontBoard = useRef<HTMLDivElement>(null);
-  const turningSheet = useRef<HTMLDivElement>(null);
+  const paperPages = useRef<HTMLDivElement>(null);
+  const curlStage = useRef<HTMLDivElement>(null);
+  const curl = useRef<PaperCurl | null>(null);
+  const curlState = useRef<CurlState>("idle");
+  const queue = useRef<CurlDirection[]>([]);
+  const committedTarget = useRef<string | null>(null);
+  const deferredTurn = useRef<number | null>(null);
+  const drag = useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    direction: CurlDirection;
+    moved: boolean;
+    target: HTMLButtonElement;
+  } | null>(null);
+  const suppressCornerClick = useRef(false);
   const folioToggle = useRef<HTMLButtonElement>(null);
   const animations = useRef(new Set<Animation>());
   const pointerFrame = useRef<number | null>(null);
   const coverStart = useRef("rotateY(0deg)");
-  const turnDirection = useRef<"next" | "previous">("next");
   const [isOpen, setIsOpen] = useState(true);
-  const [leafPrint, setLeafPrint] = useState(venue);
+  const openState = useRef(isOpen);
+  openState.current = isOpen;
   const [reducedMotion, setReducedMotion] = useState(
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -91,6 +116,7 @@ export default function MenuBook({
   const followPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (
       motionOff ||
+      curl.current ||
       isMobile ||
       !isOpen ||
       event.pointerType !== "mouse" ||
@@ -117,6 +143,7 @@ export default function MenuBook({
     });
   };
   const toggleFolio = () => {
+    stopCurl();
     coverStart.current = frontBoard.current
       ? getComputedStyle(frontBoard.current).transform
       : isOpen
@@ -126,15 +153,202 @@ export default function MenuBook({
     setIsOpen((value) => !value);
     resetParallax();
   };
-  const nextRestaurant = () => {
-    turnDirection.current = "next";
-    playInteractionSound("page");
-    onNext();
+  const latest = useRef({
+    venue,
+    nextVenue,
+    previousVenue,
+    onNext,
+    onPrevious,
+    index,
+    total,
+  });
+  latest.current = {
+    venue,
+    nextVenue,
+    previousVenue,
+    onNext,
+    onPrevious,
+    index,
+    total,
   };
-  const previousRestaurant = () => {
-    turnDirection.current = "previous";
+  const updateCurlState = (state: CurlState) => {
+    curlState.current = state;
+    if (scene.current) scene.current.dataset.flipState = state;
+    if (paperPages.current) {
+      paperPages.current.inert = state !== "idle" || !openState.current;
+      paperPages.current.setAttribute(
+        "aria-hidden",
+        String(state !== "idle" || !openState.current),
+      );
+    }
+    if (curlStage.current) curlStage.current.dataset.flipState = state;
+  };
+  const stopCurl = (clearQueue = true) => {
+    if (curl.current) suppressCornerClick.current = true;
+    curl.current?.dispose();
+    curl.current = null;
+    committedTarget.current = null;
+    updateCurlState("idle");
+    if (clearQueue) queue.current = [];
+    if (deferredTurn.current !== null)
+      cancelAnimationFrame(deferredTurn.current);
+    deferredTurn.current = null;
+    const active = drag.current;
+    if (active) suppressCornerClick.current = true;
+    drag.current = null;
+    if (active?.target.hasPointerCapture(active.pointerId))
+      active.target.releasePointerCapture(active.pointerId);
+  };
+  const makeCurl = (direction: CurlDirection) => {
+    const stage = curlStage.current,
+      pages = paperPages.current;
+    if (!stage || !pages) return null;
+    const place = pages.querySelector<HTMLElement>(".book-page-left");
+    const menu = pages.querySelector<HTMLElement>(".book-page-right");
+    if (!place || !menu) return null;
+    const data = latest.current;
+    const before = data.previousVenue || data.venue;
+    const after = data.nextVenue || data.venue;
+    const width = pages.clientWidth,
+      height = pages.clientHeight;
+    const sequence = [before, data.venue, after];
+    const print = sequence.flatMap((item, i) => {
+      const pageIndex =
+        (data.index + i - 1 + data.total) % Math.max(data.total, 1);
+      if (isMobile)
+        return [
+          pagePrint(
+            mobileView === "menu" ? menu : place,
+            item,
+            pageIndex,
+            mobileView,
+            i === 1,
+          ),
+        ];
+      return [
+        pagePrint(place, item, pageIndex, "place", i === 1),
+        pagePrint(menu, item, pageIndex, "menu", i === 1),
+      ];
+    });
+    const target = direction === "next" ? after : before;
+    const instance = new PaperCurl(
+      stage,
+      print,
+      width,
+      height,
+      isMobile,
+      updateCurlState,
+      (turned) => {
+        if (curl.current !== instance) return;
+        if (!turned) {
+          stopCurl();
+          return;
+        }
+        committedTarget.current = target.id;
+        // Domain state changes once, only after the physical leaf settles.
+        if (direction === "next") latest.current.onNext();
+        else latest.current.onPrevious();
+      },
+    );
+    curl.current = instance;
+    return instance;
+  };
+  const requestTurn = (direction: CurlDirection) => {
+    if (latest.current.total < 2) return;
+    if (
+      (curl.current && curlState.current === "flipping") ||
+      deferredTurn.current !== null
+    ) {
+      queue.current.push(direction);
+      return;
+    }
+    stopCurl(false);
+    if (
+      motionOff ||
+      !isOpen ||
+      !(direction === "next"
+        ? latest.current.nextVenue
+        : latest.current.previousVenue)
+    ) {
+      playInteractionSound("page");
+      if (direction === "next") latest.current.onNext();
+      else latest.current.onPrevious();
+      return;
+    }
+    const instance = makeCurl(direction);
+    if (instance) {
+      playInteractionSound("page");
+      instance.flip(direction);
+    }
+  };
+  const nextRestaurant = () => requestTurn("next");
+  const previousRestaurant = () => requestTurn("previous");
+  const beginCornerDrag = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+    direction: CurlDirection,
+  ) => {
+    suppressCornerClick.current = false;
+    if (event.button !== 0 || motionOff || !isOpen || total < 2) return;
+    if (!(direction === "next" ? nextVenue : previousVenue)) return;
+    if (curlState.current === "flipping") return;
+    stopCurl();
+    const instance = makeCurl(direction);
+    if (!instance) return;
+    event.preventDefault();
+    event.currentTarget.focus({ preventScroll: true });
+    event.currentTarget.setPointerCapture(event.pointerId);
+    drag.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      direction,
+      moved: false,
+      target: event.currentTarget,
+    };
+    instance.begin(instance.point(event.clientX, event.clientY));
+  };
+  const moveCornerDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const active = drag.current,
+      instance = curl.current;
+    if (!active || !instance || active.pointerId !== event.pointerId) return;
+    if (Math.hypot(event.clientX - active.x, event.clientY - active.y) > 5)
+      active.moved = true;
+    if (active.moved)
+      instance.move(instance.point(event.clientX, event.clientY));
+  };
+  const endCornerDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const active = drag.current,
+      instance = curl.current;
+    if (!active || !instance || active.pointerId !== event.pointerId) return;
+    drag.current = null;
+    if (active.target.hasPointerCapture(event.pointerId))
+      active.target.releasePointerCapture(event.pointerId);
+    if (!active.moved) {
+      stopCurl();
+      suppressCornerClick.current = false;
+      return;
+    }
+    suppressCornerClick.current = true;
     playInteractionSound("page");
-    onPrevious();
+    const distance =
+      active.direction === "next"
+        ? active.x - event.clientX
+        : event.clientX - active.x;
+    const pageWidth =
+      (paperPages.current?.clientWidth || 360) / (isMobile ? 1 : 2);
+    const commit = distance > Math.max(36, pageWidth * 0.28);
+    instance.release(instance.point(event.clientX, event.clientY), commit);
+  };
+  const cornerClick = (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    direction: CurlDirection,
+  ) => {
+    if (suppressCornerClick.current && event.detail > 0) {
+      suppressCornerClick.current = false;
+      return;
+    }
+    suppressCornerClick.current = false;
+    requestTurn(direction);
   };
   const [mobileView, setMobileView] = useState<"place" | "menu">("menu");
   const [isMobile, setIsMobile] = useState(
@@ -237,87 +451,39 @@ export default function MenuBook({
       faceAnimations.forEach((face) => face.cancel());
     };
   }, [isOpen, isMobile, motionOff]);
+  useLayoutEffect(() => {
+    if (!curl.current) return;
+    if (committedTarget.current === venue.id) {
+      const waiting = queue.current.shift();
+      stopCurl(false);
+      if (waiting)
+        deferredTurn.current = requestAnimationFrame(() => {
+          deferredTurn.current = null;
+          requestTurn(waiting);
+        });
+    } else stopCurl();
+  }, [venue.id]);
   useEffect(() => {
-    if (previousVenue.current.id === venue.id) return;
-    const previous = previousVenue.current;
-    previousVenue.current = venue;
-    setLeafPrint(previous);
-    if (motionOff || !isOpen) return;
-    const running: Animation[] = [];
-    const sheet = turningSheet.current;
-    if (sheet?.animate) {
-      const backwards = turnDirection.current === "previous";
-      sheet.dataset.direction = backwards ? "previous" : "next";
-      const sign = backwards ? 1 : -1;
-      sheet.style.opacity = "1";
-      const leafAnimation = play(
-        sheet,
-        [
-          { transform: "perspective(1400px) rotateY(0deg)", offset: 0 },
-          {
-            transform: `perspective(1400px) rotateY(${sign * (isMobile ? 32 : 70)}deg)`,
-            offset: 0.4,
-          },
-          {
-            transform: `perspective(1400px) rotateY(${sign * (isMobile ? 50 : 155)}deg)`,
-            offset: 0.8,
-          },
-          {
-            transform: `perspective(1400px) rotateY(${sign * (isMobile ? 59 : 176)}deg)`,
-            offset: 0.98,
-          },
-          {
-            transform: `perspective(1400px) rotateY(${sign * (isMobile ? 62 : 179)}deg)`,
-            offset: 1,
-          },
-        ],
-        { duration: isMobile ? 440 : 780, easing: "cubic-bezier(.2,.6,.25,1)" },
-      );
-      leafAnimation.finished
-        .then(() => {
-          sheet.style.opacity = "0";
-        })
-        .catch(() => {});
-      running.push(leafAnimation);
-      const frontFace = sheet.querySelector<HTMLElement>(".folio-leaf-front");
-      const backFace = sheet.querySelector<HTMLElement>(".folio-leaf-back");
-      if (!isMobile && frontFace && backFace) {
-        const frontFrames = [
-          { opacity: 1, offset: 0 },
-          { opacity: 1, offset: 0.49 },
-          { opacity: 0, offset: 0.495 },
-          { opacity: 0, offset: 1 },
-        ];
-        running.push(
-          play(frontFace, frontFrames, {
-            duration: 780,
-            easing: "cubic-bezier(.2,.6,.25,1)",
-          }),
-        );
-        running.push(
-          play(
-            backFace,
-            frontFrames.map((frame) => ({
-              ...frame,
-              opacity: 1 - frame.opacity,
-            })),
-            { duration: 780, easing: "cubic-bezier(.2,.6,.25,1)" },
-          ),
-        );
+    stopCurl();
+  }, [isMobile, mobileView, isOpen, motionOff]);
+  useEffect(() => {
+    const cancel = () => stopCurl();
+    const key = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape" && curl.current) {
+        event.preventDefault();
+        stopCurl();
       }
-    }
-    if (photo.current?.animate)
-      running.push(
-        play(photo.current, [{ opacity: 0.35 }, { opacity: 1 }], {
-          duration: 480,
-        }),
-      );
-    turnDirection.current = "next";
-    return () => {
-      if (sheet) sheet.style.opacity = "0";
-      running.forEach((animation) => animation.cancel());
     };
-  }, [venue.id, motionOff, isOpen, isMobile]);
+    window.addEventListener("resize", cancel);
+    window.addEventListener("blur", cancel);
+    window.addEventListener("keydown", key);
+    return () => {
+      window.removeEventListener("resize", cancel);
+      window.removeEventListener("blur", cancel);
+      window.removeEventListener("keydown", key);
+      stopCurl();
+    };
+  }, []);
   const handleTabKeys = (event: KeyboardEvent<HTMLButtonElement>) => {
     let next: "place" | "menu";
     if (event.key === "Home") next = "place";
@@ -337,6 +503,7 @@ export default function MenuBook({
       ref={scene}
       className={`menu-book-scene${lowPower ? " menu-book-low-power" : ""}${!isOpen ? " folio-closed" : ""}`}
       data-folio-open={isOpen}
+      data-flip-state="idle"
       onPointerMove={followPointer}
       onPointerLeave={resetParallax}
     >
@@ -408,6 +575,7 @@ export default function MenuBook({
         />
         <div
           className="book-pages"
+          ref={paperPages}
           id={`${panelId}-spread`}
           aria-hidden={!isOpen}
           inert={!isOpen}
@@ -486,7 +654,10 @@ export default function MenuBook({
               <button
                 className={`book-bookmark${shortlisted ? " is-saved" : ""}`}
                 type="button"
-                onClick={onShortlist}
+                onClick={() => {
+                  stopCurl();
+                  onShortlist();
+                }}
                 aria-label={
                   shortlisted
                     ? `Remove ${venue.name} from shortlist`
@@ -533,61 +704,79 @@ export default function MenuBook({
                 <p>{reason}</p>
               </div>
             </div>
-            <button className="book-choose" type="button" onClick={onChoose}>
+            <button
+              className="book-choose"
+              type="button"
+              onClick={() => {
+                stopCurl();
+                onChoose();
+              }}
+            >
               <span>
                 {chosen ? <Check size={16} /> : <ArrowDownLeft size={17} />}{" "}
                 {chosen ? "At your table · review" : "Bring this to the table"}
               </span>
               <ArrowRight size={17} />
             </button>
-            <button className="book-veto" type="button" onClick={onVeto}>
+            <button
+              className="book-veto"
+              type="button"
+              onClick={() => {
+                stopCurl();
+                onVeto();
+              }}
+            >
               <X size={12} /> Not this time · find another
             </button>
             <div className="book-page-number">
               <span>Something everyone can say yes to.</span>
               <span>{String(index * 2 + 2).padStart(2, "0")}</span>
             </div>
-            <button
-              type="button"
-              className="folio-page-corner"
-              onClick={nextRestaurant}
-              aria-label="Turn this page"
-              disabled={total < 2}
-            >
-              <span className="folio-corner-paper" aria-hidden="true" />
-              <ChevronRight size={15} />
-            </button>
           </section>
           <div className="book-spine" aria-hidden="true" />
-          <div
-            ref={turningSheet}
-            className="folio-turn-sheet"
-            aria-hidden="true"
-          >
-            <div className="folio-leaf-front">
-              <span>COMMON TABLE · THE SUPPER EDITION</span>
-              <b>{leafPrint.name}</b>
-              <i>{leafPrint.cuisine}</i>
-              <div className="folio-leaf-rule" />
-              {leafPrint.menu.slice(0, 3).map((dish) => (
-                <p key={dish.name}>
-                  {dish.name}
-                  <em>${dish.price}</em>
-                </p>
-              ))}
-              <Utensils size={28} strokeWidth={1} />
-            </div>
-            <div className="folio-leaf-back">
-              <span className="folio-back-imprint">
-                COMMON TABLE · GOOD COMPANY
-              </span>
-              <img src={venue.image} alt="" />
-              <b>A little off the beaten path.</b>
-              <p>{venue.story || venue.description}</p>
-              <Utensils size={24} strokeWidth={1} />
-            </div>
-          </div>
         </div>
+        <div
+          ref={curlStage}
+          className="folio-curl-stage"
+          aria-hidden="true"
+          data-flip-state="idle"
+        />
+        <button
+          type="button"
+          className="folio-page-corner"
+          onClick={(event) => cornerClick(event, "next")}
+          onPointerDown={(event) => beginCornerDrag(event, "next")}
+          onPointerMove={moveCornerDrag}
+          onPointerUp={endCornerDrag}
+          onPointerCancel={() => {
+            suppressCornerClick.current = true;
+            stopCurl();
+          }}
+          aria-label="Turn this page"
+          hidden={!isOpen}
+          disabled={total < 2}
+        >
+          <span className="folio-corner-paper" aria-hidden="true" />
+          <ChevronRight size={15} />
+        </button>
+        <button
+          type="button"
+          className="folio-back-corner"
+          onClick={(event) => cornerClick(event, "previous")}
+          onPointerDown={(event) => beginCornerDrag(event, "previous")}
+          onPointerMove={moveCornerDrag}
+          onPointerUp={endCornerDrag}
+          onPointerCancel={() => {
+            suppressCornerClick.current = true;
+            stopCurl();
+          }}
+          aria-label="Turn back a page"
+          hidden={!isOpen}
+          disabled={total < 2}
+        >
+          <span aria-hidden="true" />
+          <ArrowLeft size={13} />
+        </button>
         <div
           ref={frontBoard}
           className="folio-front-board"
@@ -633,6 +822,9 @@ export default function MenuBook({
           <span>CT</span>
         </div>
       </article>
+      <p className="folio-turn-hint">
+        Drag a paper corner · or use the arrows to turn
+      </p>
       <div className="book-navigation" aria-label="Browse restaurant menus">
         <button
           type="button"

@@ -192,6 +192,11 @@ export default function App() {
         ranked[(idx + direction + ranked.length) % ranked.length].venue.id,
     });
   };
+  const adjacentVenue = (direction: number) => {
+    if (!ranked.length) return undefined;
+    const idx = ranked.findIndex((x) => x.venue.id === selectedVenue.id);
+    return ranked[(idx + direction + ranked.length) % ranked.length]?.venue;
+  };
   const choose = () => {
     dispatch({ type: "choose-plan", venueId: selectedVenue.id });
     navigate("table");
@@ -514,6 +519,8 @@ export default function App() {
                   <MenuBook
                     chosen={state.plan.venueId === selectedVenue.id}
                     venue={selectedVenue}
+                    nextVenue={adjacentVenue(1)}
+                    previousVenue={adjacentVenue(-1)}
                     shortlisted={state.shortlist.includes(selectedVenue.id)}
                     onShortlist={() => {
                       dispatch({
@@ -602,9 +609,9 @@ export default function App() {
         realPoint={mode === "real" ? locationContext.selectedPoint : null}
         realPointKept={Boolean(
           locationContext.selectedPoint &&
-            locationContext.savedPoints.some(
-              (point) => point.id === locationContext.selectedPoint?.id,
-            ),
+          locationContext.savedPoints.some(
+            (point) => point.id === locationContext.selectedPoint?.id,
+          ),
         )}
         onKeepRealPoint={() => {
           if (locationContext.selectedPoint)

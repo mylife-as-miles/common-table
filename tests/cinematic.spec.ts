@@ -50,6 +50,24 @@ const tear = (page: Page) =>
     name: "Tear off dinner plan",
     exact: true,
   });
+async function usableTearHandle(page: Page) {
+  const handle = tear(page);
+  await expect(handle).toHaveAccessibleDescription(/pull|drag|Enter/i);
+  await handle.scrollIntoViewIfNeeded();
+  const target = await handle.boundingBox();
+  expect(target!.width).toBeGreaterThanOrEqual(44);
+  expect(target!.height).toBeGreaterThanOrEqual(44);
+  expect(
+    await handle.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return (
+        document
+          .elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+          ?.closest("button") === el
+      );
+    }),
+  ).toBe(true);
+}
 async function printedPlan(page: Page) {
   await plan(page);
   await page.clock.install();
@@ -96,6 +114,106 @@ async function watchVisualOnlyWrites(page: Page) {
       ),
     ).toBe(0);
   };
+}
+async function trackFrames(page: Page) {
+  await page.addInitScript(() => {
+    const pending = new Set<number>();
+    (window as unknown as { __pendingFrames: Set<number> }).__pendingFrames =
+      pending;
+    const request = window.requestAnimationFrame.bind(window);
+    const cancel = window.cancelAnimationFrame.bind(window);
+    window.requestAnimationFrame = (callback) => {
+      const id = request((time) => {
+        pending.delete(id);
+        callback(time);
+      });
+      pending.add(id);
+      return id;
+    };
+    window.cancelAnimationFrame = (id) => {
+      pending.delete(id);
+      cancel(id);
+    };
+  });
+}
+const venueTitle = (page: Page) =>
+  page.locator(".book-restaurant-title").getByRole("heading");
+async function noFrames(page: Page) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __pendingFrames: Set<number> })
+            .__pendingFrames.size,
+      ),
+    )
+    .toBe(0);
+}
+async function settledBook(page: Page) {
+  await expect(folio(page)).toHaveAttribute("data-flip-state", "idle");
+  await expect(page.locator(".folio-curl-engine")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Bring this to the table", exact: true }),
+  ).toHaveCount(1);
+}
+async function beginLeafPull(
+  page: Page,
+  direction: "next" | "previous",
+  fraction: number,
+) {
+  const handle = page.getByRole("button", {
+    name: direction === "next" ? "Turn this page" : "Turn back a page",
+    exact: true,
+  });
+  await handle.scrollIntoViewIfNeeded();
+  const target = await handle.boundingBox();
+  const paper = await page.locator(".book-pages").boundingBox();
+  expect(target).not.toBeNull();
+  expect(paper).not.toBeNull();
+  const x = target!.x + target!.width / 2,
+    y = target!.y + target!.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(
+    x + (direction === "next" ? -1 : 1) * paper!.width * fraction,
+    y - Math.min(50, paper!.height * fraction),
+    { steps: 12 },
+  );
+}
+async function snapshotsArePaintOnly(page: Page) {
+  const stage = page.locator(".folio-curl-stage");
+  await expect(stage).toHaveAttribute("aria-hidden", "true");
+  expect(await stage.locator(".folio-curl-leaf").count()).toBeGreaterThan(0);
+  await expect(stage.locator("[id]")).toHaveCount(0);
+  expect(
+    await stage
+      .locator("button,a[href],input,select,textarea,[tabindex]")
+      .evaluateAll((elements) =>
+        elements.every(
+          (el) =>
+            (el as HTMLElement).tabIndex < 0 && el.closest("[inert]") !== null,
+        ),
+      ),
+  ).toBe(true);
+  const duplicateIds = await page.locator("[id]").evaluateAll((elements) => {
+    const seen = new Set<string>();
+    return elements
+      .map((el) => el.id)
+      .filter((id) => {
+        if (seen.has(id)) return true;
+        seen.add(id);
+        return false;
+      });
+  });
+  expect(duplicateIds).toEqual([]);
+  await expect(page.locator(".book-pages")).toHaveAttribute("inert", "");
+  await expect(page.locator(".book-pages")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+  await expect(
+    page.getByRole("button", { name: "Bring this to the table", exact: true }),
+  ).toHaveCount(0);
 }
 async function localMap(page: Page) {
   const tile = Buffer.from(
@@ -371,6 +489,7 @@ for (const mode of ["reduced motion", "low power"] as const) {
   test(`${mode} keeps folio and press functional with immediate, static presentation`, async ({
     page,
   }) => {
+    await trackFrames(page);
     if (mode === "reduced motion")
       await page.emulateMedia({ reducedMotion: "reduce" });
     else
@@ -387,6 +506,8 @@ for (const mode of ["reduced motion", "low power"] as const) {
     await page
       .getByRole("button", { name: "Turn this page", exact: true })
       .click();
+    await settledBook(page);
+    await noFrames(page);
     expect(
       await folio(page).evaluate(
         (el) =>
@@ -465,6 +586,7 @@ for (const mode of ["reduced motion", "low power"] as const) {
 test("folio cover and folded page corner retain venue continuity and cancel active motion on navigation", async ({
   page,
 }) => {
+  await trackFrames(page);
   await page.addInitScript(() => {
     const original = Element.prototype.animate;
     (
@@ -523,16 +645,10 @@ test("folio cover and folded page corner retain venue continuity and cancel acti
   await page
     .getByRole("button", { name: "Turn this page", exact: true })
     .click();
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        (
-          window as unknown as { __folioAnimations: Animation[] }
-        ).__folioAnimations.some((a) => a.playState === "running"),
-      ),
-    )
-    .toBe(true);
+  await expect(folio(page)).toHaveAttribute("data-flip-state", "flipping");
   await nav(page, "Your table").click();
+  await expect(page.locator(".folio-curl-engine")).toHaveCount(0);
+  await noFrames(page);
   expect(
     await page.evaluate(
       () =>
@@ -805,6 +921,7 @@ for (const width of [320, 390]) {
       page.getByRole("article", { name: "Dinner plan summary" }),
     ).toHaveCount(1);
     await aa(page);
+    await usableTearHandle(page);
     await tear(page).click();
     await expect(press(page)).toHaveAttribute("data-paper", "detached");
     expect(
@@ -910,6 +1027,7 @@ test("keyboard tear keeps focus, is repeat-safe, and never saves or exports a se
     (el) =>
       ((window as unknown as { __tearTicket: Element }).__tearTicket = el),
   );
+  await usableTearHandle(page);
   await tear(page).focus();
   await page.keyboard.press("Space");
   await expect(press(page)).toHaveAttribute("data-paper", "detached");
@@ -1154,3 +1272,479 @@ test("tapping actual mobile seats reveals the single existing taste editor for t
   await expect(heading).toBeFocused();
   await expect(heading).toHaveCount(1);
 });
+
+test("a closed folio keeps its paper inaccessible after resize and a window blur event, then reopens to one live menu", async ({
+  page,
+}) => {
+  await trackFrames(page);
+  await page.goto("/#menu");
+  const first = (await venueTitle(page).innerText()).trim();
+  await page.getByRole("button", { name: "Close folio", exact: true }).click();
+  const paper = page.locator(".book-pages");
+  const closed = async () => {
+    await expect(folio(page)).toHaveAttribute("data-folio-open", "false");
+    await expect(paper).toHaveAttribute("inert", "");
+    await expect(paper).toHaveAttribute("aria-hidden", "true");
+    await expect(
+      page.getByRole("button", {
+        name: "Bring this to the table",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+  };
+  await closed();
+  await page.setViewportSize({ width: 1000, height: 900 });
+  await closed();
+  // Headless Chromium keeps tabs focused; explicitly exercise the browser lifecycle event.
+  await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+  await closed();
+  await page.getByRole("button", { name: "Open folio", exact: true }).click();
+  await settledBook(page);
+  await expect(paper).not.toHaveAttribute("inert", "");
+  await expect(paper).toHaveAttribute("aria-hidden", "false");
+  await expect(venueTitle(page)).toHaveText(first);
+  await noFrames(page);
+});
+
+test("a real paper pull returns when short, cancels on Escape, and turns forward and back into the same dinner plan", async ({
+  page,
+}, testInfo) => {
+  await trackFrames(page);
+  await page.goto("/#menu");
+  await settledBook(page);
+  const first = (await venueTitle(page).innerText()).trim();
+  const before = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    STORAGE_KEY,
+  );
+  await beginLeafPull(page, "next", 0.06);
+  await expect(folio(page)).toHaveAttribute("data-flip-state", "dragging");
+  await snapshotsArePaintOnly(page);
+  await page.mouse.up();
+  await settledBook(page);
+  await expect(venueTitle(page)).toHaveText(first);
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY),
+  ).toBe(before);
+
+  const corner = page.getByRole("button", {
+    name: "Turn this page",
+    exact: true,
+  });
+  await corner.scrollIntoViewIfNeeded();
+  const box = await corner.boundingBox();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(
+    box!.x + box!.width / 2 - 12,
+    box!.y + box!.height / 2 - 4,
+    { steps: 3 },
+  );
+  await expect(folio(page)).toHaveAttribute("data-flip-state", "dragging");
+  await page.getByRole("button", { name: "Close folio", exact: true }).focus();
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press("Tab");
+    expect(
+      await page.evaluate(
+        () =>
+          document.activeElement?.closest("[inert],[aria-hidden='true']") ===
+          null,
+      ),
+    ).toBe(true);
+  }
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await settledBook(page);
+  await expect(venueTitle(page)).toHaveText(first);
+  await noFrames(page);
+
+  await beginLeafPull(page, "next", 0.6);
+  await snapshotsArePaintOnly(page);
+  await testInfo.attach("actual-dragged-paper", {
+    body: await page.screenshot(),
+    contentType: "image/png",
+  });
+  await page.mouse.up();
+  await expect(venueTitle(page)).not.toHaveText(first);
+  await settledBook(page);
+  await noFrames(page);
+  await beginLeafPull(page, "previous", 0.8);
+  await page.mouse.up();
+  await expect(venueTitle(page)).toHaveText(first);
+  await settledBook(page);
+  await page
+    .getByRole("button", { name: "Bring this to the table", exact: true })
+    .click();
+  await expect(page.locator(".tp-chosen-venue")).toContainText(first);
+  await nav(page, "Dinner plan").click();
+  await expect(
+    press(page).getByRole("article", { name: "Dinner plan summary" }),
+  ).toContainText(first);
+});
+
+test("queued native page turns settle once per action and engine motion stops on Escape, navigation and low power", async ({
+  page,
+}) => {
+  await trackFrames(page);
+  await page.goto("/#menu");
+  const next = page.getByRole("button", {
+    name: "Next restaurant",
+    exact: true,
+  });
+  const previous = page.getByRole("button", {
+    name: "Previous restaurant",
+    exact: true,
+  });
+  const first = (await venueTitle(page).innerText()).trim();
+  await next.click();
+  await expect(venueTitle(page)).not.toHaveText(first);
+  await settledBook(page);
+  const second = (await venueTitle(page).innerText()).trim();
+  await previous.click();
+  await expect(venueTitle(page)).toHaveText(first);
+  await settledBook(page);
+  await noFrames(page);
+  await page.clock.install();
+  // Rewrap the installed clock's RAF so pending-frame assertions remain real.
+  await page.evaluate(() => {
+    const pending = new Set<number>();
+    (window as unknown as { __pendingFrames: Set<number> }).__pendingFrames =
+      pending;
+    const request = window.requestAnimationFrame.bind(window);
+    const cancel = window.cancelAnimationFrame.bind(window);
+    window.requestAnimationFrame = (callback) => {
+      const id = request((time) => {
+        pending.delete(id);
+        callback(time);
+      });
+      pending.add(id);
+      return id;
+    };
+    window.cancelAnimationFrame = (id) => {
+      pending.delete(id);
+      cancel(id);
+    };
+  });
+  await page.clock.pauseAt(
+    new Date(await page.evaluate(() => Date.now() + 100)),
+  );
+  await next.click();
+  await next.click();
+  // Stop exactly between one completed turn and its queued successor's RAF.
+  let reachedGap = false;
+  for (let frame = 0; frame < 100; frame++) {
+    await page.clock.runFor(16);
+    const gap = await page.evaluate(() => ({
+      title: document
+        .querySelector(".book-restaurant-title h2")
+        ?.textContent?.trim(),
+      phase:
+        document.querySelector<HTMLElement>(".menu-book-scene")?.dataset
+          .flipState,
+      engines: document.querySelectorAll(".folio-curl-engine").length,
+      pending: (window as unknown as { __pendingFrames: Set<number> })
+        .__pendingFrames.size,
+    }));
+    if (
+      gap.title === second &&
+      gap.phase === "idle" &&
+      gap.engines === 0 &&
+      gap.pending > 0
+    ) {
+      reachedGap = true;
+      break;
+    }
+  }
+  expect(
+    reachedGap,
+    "the queued successor waits for the next animation frame",
+  ).toBe(true);
+  await previous.click();
+  await expect(folio(page)).toHaveAttribute("data-flip-state", "idle");
+  await expect(page.locator(".folio-curl-engine")).toHaveCount(0);
+  await page.clock.runFor(3000);
+  await expect(venueTitle(page)).toHaveText(second);
+  await settledBook(page);
+  await page.clock.resume();
+  await noFrames(page);
+  await next.click();
+  await expect(folio(page)).toHaveAttribute("data-flip-state", "flipping");
+  await page.keyboard.press("Escape");
+  await settledBook(page);
+  await expect(venueTitle(page)).toHaveText(second);
+  await noFrames(page);
+  await next.click();
+  await expect(folio(page)).toHaveAttribute("data-flip-state", "flipping");
+  await nav(page, "Your table").click();
+  await expect(page.locator(".folio-curl-engine")).toHaveCount(0);
+  await noFrames(page);
+  await page.goto("/#menu");
+  await expect(venueTitle(page)).toHaveText(second);
+  await page
+    .getByRole("button", { name: "Next restaurant", exact: true })
+    .click();
+  await expect(folio(page)).toHaveAttribute("data-flip-state", "flipping");
+  await page
+    .getByRole("button", { name: "Low-power view", exact: true })
+    .click();
+  await settledBook(page);
+  await expect(venueTitle(page)).toHaveText(second);
+  await noFrames(page);
+  await page
+    .getByRole("button", { name: "Next restaurant", exact: true })
+    .click();
+  await expect(venueTitle(page)).not.toHaveText(second);
+  await settledBook(page);
+  await noFrames(page);
+});
+
+test("touch paper curls return, turn in both directions, and cancel without exposing duplicate actions on mobile", async ({
+  page,
+  context,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await trackFrames(page);
+  await page.goto("/#menu");
+  const first = (await venueTitle(page).innerText()).trim();
+  const session = await context.newCDPSession(page);
+  await session.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 1,
+  });
+  const gesture = async (
+    direction: "next" | "previous",
+    fraction: number,
+    cancel = false,
+  ) => {
+    const handle = page.getByRole("button", {
+      name: direction === "next" ? "Turn this page" : "Turn back a page",
+      exact: true,
+    });
+    await handle.scrollIntoViewIfNeeded();
+    const box = await handle.boundingBox(),
+      paper = await page.locator(".book-pages").boundingBox();
+    const start = {
+      id: 7,
+      x: box!.x + box!.width / 2,
+      y: box!.y + box!.height / 2,
+    };
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [start],
+    });
+    for (let step = 1; step <= 10; step++) {
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [
+          {
+            ...start,
+            x:
+              start.x +
+              ((direction === "next" ? -1 : 1) *
+                paper!.width *
+                fraction *
+                step) /
+                10,
+            y: start.y - (40 * step) / 10,
+          },
+        ],
+      });
+    }
+    await expect(folio(page)).toHaveAttribute("data-flip-state", "dragging");
+    await snapshotsArePaintOnly(page);
+    await session.send("Input.dispatchTouchEvent", {
+      type: cancel ? "touchCancel" : "touchEnd",
+      touchPoints: [],
+    });
+    await settledBook(page);
+  };
+  await gesture("next", 0.06);
+  await expect(venueTitle(page)).toHaveText(first);
+  await gesture("next", 0.8);
+  await expect(venueTitle(page)).not.toHaveText(first);
+  await gesture("previous", 0.8);
+  await expect(venueTitle(page)).toHaveText(first);
+  await gesture("next", 0.8, true);
+  await expect(venueTitle(page)).toHaveText(first);
+  await noFrames(page);
+  await session.send("Emulation.setTouchEmulationEnabled", { enabled: false });
+  await page
+    .getByRole("button", { name: "Turn this page", exact: true })
+    .focus();
+  await page.keyboard.press("Enter");
+  await expect(venueTitle(page)).not.toHaveText(first);
+  await settledBook(page);
+  await page
+    .getByRole("button", { name: "Turn back a page", exact: true })
+    .focus();
+  await page.keyboard.press("Enter");
+  await expect(venueTitle(page)).toHaveText(first);
+  await settledBook(page);
+  await page
+    .getByRole("button", { name: "Bring this to the table", exact: true })
+    .click();
+  await expect(page.locator(".tp-chosen-venue")).toContainText(first);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
+for (const width of [1440, 390]) {
+  for (const count of [1, 3, 6]) {
+    test(`projected table keeps ${count} native place cards individually usable at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/#table");
+      const names = ["You", "Maya", "Theo", "Priya", "Noor", "Eli"].slice(
+        0,
+        count,
+      );
+      for (const name of names.slice(1)) {
+        await page
+          .getByRole("button", { name: "Add a demo guest", exact: true })
+          .click();
+        await page.getByLabel("Guest’s name").fill(name);
+        await page
+          .getByRole("button", { name: "Set their place", exact: true })
+          .click();
+      }
+      const seats = page.locator(".tp-seat");
+      await expect(seats).toHaveCount(count);
+      const frame = page.locator(".ct-physical-frame");
+      await expect(frame).toHaveAttribute("data-image-loaded", "true");
+      const render = frame.locator(".ct-table-render");
+      const image = await render.evaluate((el) => {
+        const img = el as HTMLImageElement,
+          r = img.getBoundingClientRect();
+        const bounds = img.parentElement!.getBoundingClientRect();
+        return {
+          loaded: img.complete,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+          fit: getComputedStyle(img).objectFit,
+          ratio: r.width / r.height,
+          frameRatio: bounds.width / bounds.height,
+          left: r.left - bounds.left,
+          top: r.top - bounds.top,
+          width: r.width - bounds.width,
+          height: r.height - bounds.height,
+        };
+      });
+      expect(image.loaded).toBe(true);
+      expect(image.naturalWidth).toBeGreaterThan(0);
+      expect(image.naturalHeight).toBeGreaterThan(0);
+      expect(image.fit).toBe("contain");
+      expect(image.ratio).toBeCloseTo(
+        image.naturalWidth / image.naturalHeight,
+        2,
+      );
+      expect(image.frameRatio).toBeCloseTo(image.ratio, 2);
+      for (const offset of [image.left, image.top, image.width, image.height])
+        expect(Math.abs(offset)).toBeLessThanOrEqual(1);
+      await expect(
+        page.getByRole("group", {
+          name: `Your table has ${count} ${count === 1 ? "seat" : "seats"}`,
+          exact: true,
+        }),
+      ).toBeVisible();
+      const cards = await seats.evaluateAll((elements) =>
+        elements.map((el) => {
+          const r = el.getBoundingClientRect();
+          return {
+            x: r.x,
+            y: r.y,
+            right: r.right,
+            bottom: r.bottom,
+            width: r.width,
+            height: r.height,
+          };
+        }),
+      );
+      for (const card of cards) {
+        expect(card.width).toBeGreaterThanOrEqual(44);
+        expect(card.height).toBeGreaterThanOrEqual(44);
+      }
+      for (let a = 0; a < cards.length; a++) {
+        for (let b = a + 1; b < cards.length; b++) {
+          const horizontal =
+            Math.min(cards[a].right, cards[b].right) -
+            Math.max(cards[a].x, cards[b].x);
+          const vertical =
+            Math.min(cards[a].bottom, cards[b].bottom) -
+            Math.max(cards[a].y, cards[b].y);
+          expect(
+            horizontal <= 0 || vertical <= 0,
+            `${names[a]} and ${names[b]} have separate native targets`,
+          ).toBe(true);
+        }
+      }
+      const heading = page.locator("#table-taste-editor-heading");
+      for (const name of names) {
+        const seat = seats.filter({
+          has: page.locator(".tp-seat-label", {
+            hasText: new RegExp(`^${name}$`),
+          }),
+        });
+        await seat.scrollIntoViewIfNeeded();
+        expect(
+          await seat.evaluate((el) => {
+            const r = el.getBoundingClientRect();
+            return (
+              document
+                .elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+                ?.closest("button") === el
+            );
+          }),
+          `${name} can receive a real center click`,
+        ).toBe(true);
+        await seat.click();
+        await expect(seat).toHaveAttribute("aria-pressed", "true");
+        const paperCard = seat.locator(".ct-physical-card");
+        await paperCard.scrollIntoViewIfNeeded();
+        expect(
+          await paperCard.evaluate((el) => {
+            const r = el.getBoundingClientRect();
+            return (
+              document
+                .elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+                ?.closest("button") === el.closest("button")
+            );
+          }),
+          `${name}'s actual paper card receives its own native click`,
+        ).toBe(true);
+        await paperCard.click();
+        await expect(seat).toHaveAttribute("aria-pressed", "true");
+        await expect(heading).toHaveAccessibleName(
+          `${name}’s tastes: What sounds good?`,
+        );
+        if (width === 390) {
+          await expect(heading).toBeFocused();
+          await expect
+            .poll(() =>
+              heading.evaluate((el) => {
+                const r = el.getBoundingClientRect();
+                return r.top >= 0 && r.bottom <= innerHeight;
+              }),
+            )
+            .toBe(true);
+        }
+      }
+      await expect(heading).toHaveCount(1);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      if (count === 6) {
+        await expect(
+          page.getByRole("button", { name: "Add a demo guest", exact: true }),
+        ).toBeDisabled();
+        await aa(page);
+      }
+    });
+  }
+}

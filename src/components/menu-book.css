@@ -143,7 +143,7 @@
   background: #756345;
   margin: 2px 0 23px;
 }
-.book-venue-photo {
+:is(.book-venue-photo, .folio-print-photo) {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -283,7 +283,7 @@
   color: #a24a32;
   background: #e7ddc3;
 }
-.book-restaurant-title {
+:is(.book-restaurant-title, .folio-print-title) {
   text-align: center;
   padding-top: 9px;
 }
@@ -293,7 +293,7 @@
   background: #ac7450;
   margin: 0 auto 14px;
 }
-.book-restaurant-title h2 {
+:is(.book-restaurant-title, .folio-print-title) h2 {
   font-family: var(--font-serif, Georgia, serif);
   font-size: clamp(35px, 4vw, 58px);
   font-weight: 400;
@@ -397,7 +397,7 @@
   margin: 4px 0 0;
   color: #76785e;
 }
-.book-choose {
+:is(.book-choose, .folio-print-action) {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -420,16 +420,16 @@
     background 0.2s,
     transform 0.2s;
 }
-.book-choose > span {
+:is(.book-choose, .folio-print-action) > span {
   display: flex;
   align-items: center;
   gap: 9px;
 }
-.book-choose:hover {
+:is(.book-choose, .folio-print-action):hover {
   background: #3f4e2c;
   transform: translateY(-1px);
 }
-.book-choose:active {
+:is(.book-choose, .folio-print-action):active {
   transform: translateY(1px);
 }
 .book-veto {
@@ -515,10 +515,10 @@
   animation: menu-page-turn 0.65s cubic-bezier(0.19, 1, 0.22, 1);
   transform-origin: left center;
 }
-.menu-book-turning .book-restaurant-title {
+.menu-book-turning :is(.book-restaurant-title, .folio-print-title) {
   animation: menu-type-in 0.65s ease-out;
 }
-.menu-book-turning .book-venue-photo {
+.menu-book-turning :is(.book-venue-photo, .folio-print-photo) {
   animation: menu-photo-in 0.65s ease-out;
 }
 @keyframes menu-page-turn {
@@ -602,7 +602,7 @@
   .book-photo-wrap {
     height: 224px;
   }
-  .book-restaurant-title h2 {
+  :is(.book-restaurant-title, .folio-print-title) h2 {
     font-size: 43px;
   }
   .book-menu-items {
@@ -668,10 +668,10 @@
   .book-spine {
     display: none;
   }
-  .book-restaurant-title h2 {
+  :is(.book-restaurant-title, .folio-print-title) h2 {
     font-size: 51px;
   }
-  .book-restaurant-title {
+  :is(.book-restaurant-title, .folio-print-title) {
     padding-top: 13px;
   }
   .book-menu-items {
@@ -689,7 +689,7 @@
   .book-match-note p {
     font-size: 11px;
   }
-  .book-choose {
+  :is(.book-choose, .folio-print-action) {
     font-size: 13px;
     min-height: 49px;
   }
@@ -740,7 +740,7 @@
     gap: 9px;
     font-size: 10px;
   }
-  .book-restaurant-title h2 {
+  :is(.book-restaurant-title, .folio-print-title) h2 {
     font-size: 43px;
   }
   .book-left-story h3 {
@@ -862,7 +862,7 @@
 .book-match-note {
   margin: 22px 0 17px;
 }
-.book-choose {
+:is(.book-choose, .folio-print-action) {
   font-size: 13px;
   min-height: 48px;
 }
@@ -918,12 +918,12 @@
   .book-menu-items li p {
     font-size: 11px !important;
   }
-  .book-choose {
+  :is(.book-choose, .folio-print-action) {
     padding: 12px 10px;
     gap: 8px;
     font-size: 12px;
   }
-  .book-choose > span {
+  :is(.book-choose, .folio-print-action) > span {
     gap: 6px;
   }
   .book-match-note {
@@ -983,10 +983,10 @@
     padding-top: 25px;
     padding-bottom: 20px;
   }
-  .book-restaurant-title h2 {
+  :is(.book-restaurant-title, .folio-print-title) h2 {
     font-size: 47px;
   }
-  .book-restaurant-title {
+  :is(.book-restaurant-title, .folio-print-title) {
     padding-top: 6px;
   }
   .book-menu-divider {
@@ -1008,7 +1008,7 @@
   .book-dish-name {
     font-size: 19px;
   }
-  .book-choose {
+  :is(.book-choose, .folio-print-action) {
     font-size: 13px;
     min-height: 49px;
   }
@@ -1098,7 +1098,7 @@
   .book-dish-name {
     font-size: 18px;
   }
-  .book-restaurant-title h2 {
+  :is(.book-restaurant-title, .folio-print-title) h2 {
     font-size: 41px;
   }
   .book-match-note {
@@ -1364,7 +1364,7 @@
   border-color: #c9d0ac;
   transform: rotate(0.6deg);
 }
-.book-choose {
+:is(.book-choose, .folio-print-action) {
   background: linear-gradient(165deg, #657447, #45582e);
   border-color: #425229;
   box-shadow:
@@ -1376,14 +1376,14 @@
     background 0.2s,
     box-shadow 0.15s;
 }
-.book-choose:hover {
+:is(.book-choose, .folio-print-action):hover {
   background: linear-gradient(165deg, #75864e, #4a5f30);
   box-shadow:
     inset 0 1px 0 #d1d9a23e,
     0 3px 0 #344725,
     0 7px 7px #74613d30;
 }
-.book-choose:active {
+:is(.book-choose, .folio-print-action):active {
   transform: translateY(2px);
   box-shadow:
     inset 0 1px 0 #d1d9a22e,
@@ -2237,4 +2237,133 @@
 .folio-leaf-back,
 .folio-leaf-front {
   pointer-events: none;
+}
+
+/* Real soft paper: StPageFlip owns clipped leaves only during a user turn. */
+.folio-curl-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0;
+  overflow: hidden;
+  border-radius: 3px 6px 6px 3px;
+  contain: layout paint;
+}
+.menu-book-scene[data-flip-state="dragging"] .folio-curl-stage,
+.menu-book-scene[data-flip-state="flipping"] .folio-curl-stage {
+  opacity: 1;
+}
+.menu-book-scene[data-flip-state="dragging"] .book-pages,
+.menu-book-scene[data-flip-state="flipping"] .book-pages {
+  opacity: 0;
+  pointer-events: none;
+}
+.folio-curl-engine,
+.folio-curl-engine .stf__wrapper,
+.folio-curl-engine .stf__block {
+  height: 100%;
+  width: 100%;
+}
+.folio-curl-stage .stf__parent {
+  transform: none;
+}
+.folio-curl-leaf {
+  background: #f3ead7;
+  overflow: hidden;
+}
+.folio-curl-leaf > .folio-printed-page {
+  display: flex !important;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 0;
+  pointer-events: none;
+}
+.folio-curl-leaf .book-bookmark,
+.folio-print-action {
+  pointer-events: none;
+}
+.folio-back-corner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 17;
+  width: 55px;
+  height: 54px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #776a47;
+  cursor: grab;
+  touch-action: none;
+}
+.folio-back-corner > span {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    40deg,
+    #e1d3b5 8%,
+    #fff5df 48%,
+    #aa956953 51%,
+    transparent 57%
+  );
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+.folio-back-corner > svg {
+  position: absolute;
+  left: 10px;
+  bottom: 11px;
+}
+.folio-back-corner:hover > span {
+  filter: brightness(1.05);
+}
+.folio-back-corner:focus-visible {
+  outline: 2px solid #9f5334;
+  outline-offset: -3px;
+}
+.folio-back-corner[hidden] {
+  display: none;
+}
+.folio-page-corner {
+  touch-action: none;
+  cursor: grab;
+}
+.folio-page-corner[hidden] {
+  display: none;
+}
+.folio-page-corner:active,
+.folio-back-corner:active {
+  cursor: grabbing;
+}
+.folio-turn-hint {
+  margin: 33px 0 -16px;
+  text-align: center;
+  font: 10px/1.6 var(--font-sans, sans-serif);
+  letter-spacing: 0.55px;
+  color: #a99c7f;
+}
+@media (max-width: 760px) {
+  .folio-back-corner {
+    width: 46px;
+    height: 46px;
+  }
+  .folio-turn-hint {
+    font-size: 10px;
+    letter-spacing: 0;
+    margin-top: 34px;
+  }
+  .folio-printed-page.book-page-left .book-page-number {
+    padding-left: 22px;
+  }
+}
+.menu-book-low-power .folio-turn-hint {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .folio-turn-hint {
+    display: none;
+  }
 }

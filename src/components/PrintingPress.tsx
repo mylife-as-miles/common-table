@@ -98,6 +98,7 @@ export function PrintingPress({
   const [detached, setDetached] = useState(false);
   const [pulling, setPulling] = useState(false);
   const [pullPixels, setPullPixels] = useState(0);
+  const [tearProgress, setTearProgress] = useState(0);
   const [tearMessage, setTearMessage] = useState("");
   useEffect(() => {
     const held = pull.current;
@@ -107,6 +108,7 @@ export function PrintingPress({
     setDetached(false);
     setPulling(false);
     setPullPixels(0);
+    setTearProgress(0);
     setTearMessage("");
     suppressPointerClick.current = false;
   }, [jobKey, request, saved]);
@@ -156,9 +158,8 @@ export function PrintingPress({
     setDetached(true);
     setPulling(false);
     setPullPixels(0);
-    setTearMessage(
-      "Your current dinner plan is on the table. This was a visual tear only; nothing was saved again, downloaded, or sent.",
-    );
+    setTearProgress(0);
+    setTearMessage("Torn free. Your dinner plan is on the table.");
     playInteractionSound("page");
   }
   function beginPull(event: ReactPointerEvent<HTMLButtonElement>) {
@@ -180,6 +181,7 @@ export function PrintingPress({
     };
     suppressPointerClick.current = false;
     setPulling(true);
+    setTearProgress(0);
     setTearMessage("");
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -190,6 +192,7 @@ export function PrintingPress({
     held.moved ||= Math.abs(event.clientY - held.startY) > 4;
     const resisted = 72 * (1 - Math.exp(-held.distance / 100));
     setPullPixels(Math.min(70, resisted));
+    setTearProgress(Math.min(1, held.distance / 96));
   }
   function finishPull(
     event: ReactPointerEvent<HTMLButtonElement>,
@@ -203,6 +206,7 @@ export function PrintingPress({
       event.currentTarget.releasePointerCapture(event.pointerId);
     setPulling(false);
     setPullPixels(0);
+    setTearProgress(0);
     if (!cancel && held.distance >= 96) detachReceipt();
     else if (held.moved || cancel)
       setTearMessage(
@@ -218,6 +222,7 @@ export function PrintingPress({
     suppressPointerClick.current = true;
     setPulling(false);
     setPullPixels(0);
+    setTearProgress(0);
     if (tearHandle.current?.hasPointerCapture(held.pointerId))
       tearHandle.current.releasePointerCapture(held.pointerId);
     setTearMessage("Pull cancelled. The current receipt stays attached.");
@@ -229,6 +234,14 @@ export function PrintingPress({
       className={`printing-press ${lowPower || reducedMotion ? "pp-still" : ""}`}
       data-phase={phase}
       data-paper={detached ? "detached" : pulling ? "pulling" : "attached"}
+      data-tear-progress={detached ? 1 : Math.round(tearProgress * 100) / 100}
+      style={
+        {
+          "--pp-tear-progress": detached ? 1 : tearProgress,
+          "--pp-tear-reveal": `${(detached ? 1 : tearProgress) * 100}%`,
+          "--pp-tension": `${pullPixels}px`,
+        } as CSSProperties
+      }
       role="group"
       aria-label="Dinner plan printing press"
     >
@@ -238,6 +251,13 @@ export function PrintingPress({
       </div>
       <p className="pp-operating-instruction" id="press-operating-instruction">
         Pull the brass lever to press this plan.
+        {saved && (
+          <span className="pp-tear-instruction">
+            {detached
+              ? "Torn free. Reprint for a fresh attached copy."
+              : "Then pull the paper tab down, tap it, or press Enter to tear. Short pulls spring back."}
+          </span>
+        )}
       </p>
       <div className="pp-machine">
         <div className="pp-stock" aria-hidden="true">
@@ -301,10 +321,34 @@ export function PrintingPress({
         </div>
       </div>
       <div className="pp-receipt-feed">
+        {saved && (
+          <div className="pp-perforation-anchor" aria-hidden="true">
+            <span className="pp-fibre-bridge" />
+            <i className="pp-tear-front" />
+          </div>
+        )}
         <div
           className="pp-live-sheet"
           style={{ "--pp-pull-y": `${pullPixels}px` } as CSSProperties}
         >
+          {saved && (
+            <svg
+              className="pp-ragged-edge"
+              viewBox="0 0 500 14"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M0 10L11 7L20 11L27 5L36 9L47 6L56 10L69 8L75 12L86 5L95 9L107 6L119 11L128 5L139 8L148 6L157 10L169 7L181 11L190 6L201 9L210 5L222 10L234 7L244 12L255 6L267 9L278 5L287 10L299 7L310 11L323 6L332 9L342 5L353 11L363 7L373 9L385 5L394 10L405 6L417 11L427 7L438 10L450 5L461 9L471 6L482 11L492 7L500 9V14H0Z"
+                fill="#fbf7eb"
+              />
+              <path
+                d="M8 8L6 4M34 8L31 3M73 10L70 5M115 9L112 3M154 9L151 4M194 8L192 3M241 10L237 4M284 9L282 3M329 8L325 2M369 8L367 3M414 10L410 4M456 8L453 2M486 10L483 4"
+                stroke="#f7f0d9"
+                strokeWidth="1"
+              />
+            </svg>
+          )}
           {saved && (
             <div className="pp-tear-perforation">
               <div className="pp-tear-rule" aria-hidden="true" />
@@ -339,12 +383,17 @@ export function PrintingPress({
                   detachReceipt();
                 }}
               >
+                <span className="pp-tab-fold" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
                 {detached ? "Dinner plan detached" : "Tear off dinner plan"}
               </button>
-              <span id="press-tear-instruction" className="pp-tear-instruction">
+              <span id="press-tear-instruction" className="pp-grip-instruction">
                 {detached
-                  ? "On the table. Reprint for a fresh attached copy."
-                  : "Pull down, click, or press Enter. Short pulls spring back."}
+                  ? "Torn free · Reprint for another"
+                  : "Drag down · Tap · Enter"}
               </span>
             </div>
           )}
