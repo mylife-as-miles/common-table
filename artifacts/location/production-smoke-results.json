@@ -1,0 +1,9 @@
+{
+  "applicationStatus": 200,
+  "geocodeStatus": 200,
+  "source": "photon",
+  "selectedArea": "Paris, Île-de-France, France",
+  "retiredWeatherStatus": 404,
+  "retiredConfigStatus": 404,
+  "apiKeyRequired": false
+}

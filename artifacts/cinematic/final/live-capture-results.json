@@ -1,0 +1,12 @@
+{
+  "source": "production application; actual OpenFreeMap geography; fictional dining demo clearly labelled",
+  "errors": [],
+  "desktop": {
+    "width": 1440,
+    "height": 1080
+  },
+  "mobile": {
+    "width": 390,
+    "height": 844
+  }
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "mobile": false,
+    "screenshot": "01-desktop.png",
+    "status": 200,
+    "source": "mock",
+    "errors": []
+  },
+  {
+    "mobile": true,
+    "screenshot": "02-mobile.png",
+    "status": 200,
+    "source": "mock",
+    "errors": [],
+    "returnFocus": true
+  }
+]

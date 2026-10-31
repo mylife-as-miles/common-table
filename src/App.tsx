@@ -1,0 +1,706 @@
+import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  BookOpen,
+  Check,
+  Leaf,
+  Map,
+  MapPin,
+  Plus,
+  ChevronLeft,
+  BellRing,
+  Utensils,
+  X,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { useCommonTable, venues } from "./domain";
+import MenuBook from "./components/MenuBook";
+import { SharedTable } from "./components/SharedTable";
+import { DinnerPlan } from "./components/DinnerPlan";
+import { ImmersiveMap } from "./components/ImmersiveMap";
+import { Waiter } from "./components/Waiter";
+import { LocationAtlas } from "./components/LocationAtlas";
+import { useLocationContext } from "./location/useLocationContext";
+import { EveningRoom } from "./components/EveningRoom";
+import {
+  disposeInteractionSound,
+  playInteractionSound,
+  setInteractionSoundEnabled,
+} from "./experience/interactionSound";
+
+type View = "explore" | "table" | "plan";
+const viewFromHash = (): View =>
+  location.hash === "#table"
+    ? "table"
+    : location.hash === "#plan"
+      ? "plan"
+      : "explore";
+const modeFromHash = () =>
+  location.hash === "#menu"
+    ? ("book" as const)
+    : location.hash === "#explore"
+      ? ("map" as const)
+      : ("real" as const);
+export default function App() {
+  const { state, dispatch, ranked, selectedVenue, storageAvailable } =
+    useCommonTable();
+  const [view, setView] = useState<View>(viewFromHash);
+  const [mode, setMode] = useState<"book" | "map" | "real">(modeFromHash);
+  const locationContext = useLocationContext(
+    view === "explore" && mode === "real",
+  );
+  const [lowPower, setLowPower] = useState(() => {
+    try {
+      return localStorage.getItem("common-table-low-power") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [waiterOpen, setWaiterOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [about, setAbout] = useState(false);
+  const [sound, setSound] = useState(false);
+  const [soundBusy, setSoundBusy] = useState(false);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const stage = useRef<HTMLElement>(null);
+  const room = useRef<HTMLDivElement>(null);
+  const lightFrame = useRef<number | null>(null);
+  const aboutRef = useRef<HTMLDialogElement>(null);
+  const transition = useRef<ViewTransition | null>(null);
+  const modeIntent = useRef<"map" | "book" | "real">(modeFromHash());
+  useEffect(() => {
+    const change = () => {
+      const nextView = viewFromHash();
+      setView(nextView);
+      if (nextView === "explore" && modeIntent.current !== modeFromHash()) {
+        modeIntent.current = modeFromHash();
+        transition.current?.skipTransition();
+        setMode(modeFromHash());
+      }
+      setWaiterOpen(false);
+      requestAnimationFrame(() => heading.current?.focus());
+    };
+    window.addEventListener("hashchange", change);
+    return () => window.removeEventListener("hashchange", change);
+  }, []);
+  useEffect(() => {
+    if (about) aboutRef.current?.showModal();
+    else aboutRef.current?.close();
+  }, [about]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 4500);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  useEffect(() => {
+    if (lowPower) transition.current?.skipTransition();
+  }, [lowPower]);
+  useEffect(() => () => transition.current?.skipTransition(), []);
+  useEffect(
+    () => () => {
+      disposeInteractionSound();
+      if (lightFrame.current !== null) cancelAnimationFrame(lightFrame.current);
+    },
+    [],
+  );
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const active = stage.current;
+    if (!active || lowPower || preference.matches) return;
+    const entrance = active.animate(
+      [
+        { opacity: 0.2, transform: "translateY(10px) scale(.996)" },
+        { opacity: 1, transform: "translateY(0) scale(1)" },
+      ],
+      { duration: 460, easing: "cubic-bezier(.18,.7,.24,1)" },
+    );
+    const stop = () => {
+      if (preference.matches) entrance.cancel();
+    };
+    preference.addEventListener("change", stop);
+    return () => {
+      entrance.cancel();
+      preference.removeEventListener("change", stop);
+    };
+  }, [view, mode, lowPower]);
+  const switchMode = (next: "map" | "book" | "real") => {
+    if (modeIntent.current === next) return;
+    modeIntent.current = next;
+    transition.current?.skipTransition();
+    const update = () => flushSync(() => setMode(modeIntent.current));
+    if (
+      lowPower ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !document.startViewTransition
+    ) {
+      update();
+      return;
+    }
+    const active = document.startViewTransition(update);
+    transition.current = active;
+    active.ready.catch(() => {});
+    active.finished
+      .catch(() => {})
+      .finally(() => {
+        if (transition.current === active) transition.current = null;
+      });
+  };
+  const navigate = (next: View) => {
+    if (next !== view || modeIntent.current !== mode)
+      playInteractionSound("scene");
+    setView(next);
+    location.hash =
+      next === "explore"
+        ? modeIntent.current === "book"
+          ? "menu"
+          : modeIntent.current === "real"
+            ? "nearby"
+            : "explore"
+        : next;
+    setWaiterOpen(false);
+    requestAnimationFrame(() => heading.current?.focus());
+  };
+  const openMenu = () => {
+    switchMode("book");
+    navigate("explore");
+  };
+  const openRealMap = () => {
+    switchMode("real");
+    navigate("explore");
+  };
+  const openMap = () => {
+    switchMode("map");
+    navigate("explore");
+  };
+  const shortlistSelected = () => {
+    dispatch({ type: "shortlist", venueId: selectedVenue.id });
+    setNotice(
+      state.shortlist.includes(selectedVenue.id)
+        ? "Removed from your shortlist."
+        : "Kept on your shortlist.",
+    );
+  };
+  const move = (direction: number) => {
+    if (!ranked.length) return;
+    const idx = ranked.findIndex((x) => x.venue.id === selectedVenue.id);
+    dispatch({
+      type: "select",
+      venueId:
+        ranked[(idx + direction + ranked.length) % ranked.length].venue.id,
+    });
+  };
+  const adjacentVenue = (direction: number) => {
+    if (!ranked.length) return undefined;
+    const idx = ranked.findIndex((x) => x.venue.id === selectedVenue.id);
+    return ranked[(idx + direction + ranked.length) % ranked.length]?.venue;
+  };
+  const choose = () => {
+    dispatch({ type: "choose-plan", venueId: selectedVenue.id });
+    navigate("table");
+    setNotice(`${selectedVenue.name} is on your dinner plan.`);
+  };
+  const reason =
+    ranked.find((x) => x.venue.id === selectedVenue.id)?.reasons.join(" · ") ??
+    "Adjust your table’s tastes to find a fit.";
+  const togglePower = () => {
+    setLowPower(!lowPower);
+    try {
+      localStorage.setItem("common-table-low-power", String(!lowPower));
+    } catch {
+      /* Optional preference */
+    }
+  };
+  return (
+    <div
+      ref={room}
+      className={`app cinematic ${lowPower ? "low-power" : ""}`}
+      data-view={view}
+      data-mode={mode}
+      onPointerMove={(event) => {
+        if (
+          lowPower ||
+          event.pointerType !== "mouse" ||
+          !window.matchMedia(
+            "(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference)",
+          ).matches
+        )
+          return;
+        const x = Math.max(
+          10,
+          Math.min(90, (event.clientX / window.innerWidth) * 100),
+        );
+        if (lightFrame.current !== null)
+          cancelAnimationFrame(lightFrame.current);
+        lightFrame.current = requestAnimationFrame(() => {
+          room.current?.style.setProperty("--room-light-x", `${x}%`);
+          lightFrame.current = null;
+        });
+      }}
+    >
+      <EveningRoom />
+      <a
+        href="#main"
+        className="skip-link"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
+        Skip to content
+      </a>
+      <header className="site-header">
+        <a
+          className="brand"
+          href="#nearby"
+          aria-label="Common Table home"
+          onClick={openRealMap}
+        >
+          <span className="brand-icon">
+            <Utensils size={23} strokeWidth={1.35} />
+            <Leaf size={13} />
+          </span>
+          <span>
+            common table<span className="brand-period">.</span>
+          </span>
+        </a>
+        <nav aria-label="Main navigation">
+          {(["explore", "table", "plan"] as View[]).map((item, i) => (
+            <button
+              key={item}
+              aria-current={view === item ? "page" : undefined}
+              onClick={() =>
+                item === "explore" ? openRealMap() : navigate(item)
+              }
+            >
+              <span className="nav-number">0{i + 1}</span>
+              {item === "explore"
+                ? "Explore"
+                : item === "table"
+                  ? "Your table"
+                  : "Dinner plan"}
+              {item === "table" && (
+                <span className="nav-count">{state.participants.length}</span>
+              )}
+              {item === "plan" && state.plan.saved && <Check size={13} />}
+            </button>
+          ))}
+        </nav>
+        <div className="header-tools">
+          <button
+            className="sound-toggle"
+            aria-label={sound ? "Sound on" : "Sound off"}
+            aria-pressed={sound}
+            disabled={soundBusy}
+            onClick={async () => {
+              setSoundBusy(true);
+              const enabled = await setInteractionSoundEnabled(!sound);
+              setSound(enabled);
+              setSoundBusy(false);
+              if (!enabled && !sound)
+                setNotice(
+                  "Sound could not start in this browser. Your evening still works silently.",
+                );
+            }}
+          >
+            {sound ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            <span>{sound ? "Sound on" : "Sound off"}</span>
+          </button>
+          <button className="demo-pill" onClick={() => setAbout(true)}>
+            <span className="status-dot" /> A little demo{" "}
+            <ArrowUpRight size={13} />
+          </button>
+        </div>
+      </header>
+      <main ref={stage} id="main" tabIndex={-1}>
+        <section className="intro">
+          <div>
+            <div className="eyebrow">
+              <span /> FIND YOUR COMMON GROUND
+            </div>
+            <h1 tabIndex={-1} ref={heading}>
+              {view === "explore" ? (
+                <>
+                  Good food.<em> Better company.</em>
+                </>
+              ) : view === "table" ? (
+                <>
+                  Different tastes.<em> One table.</em>
+                </>
+              ) : (
+                <>
+                  An evening<em> worth keeping.</em>
+                </>
+              )}
+            </h1>
+            <p>
+              {view === "explore"
+                ? "A place you’ll love. A meal you’ll remember. Let’s find it together."
+                : view === "table"
+                  ? "A little of what everyone loves. Room for what everyone needs."
+                  : "From “where should we eat?” to “see you there.”"}
+            </p>
+          </div>
+          <div className="intro-actions">
+            {view === "explore" ? (
+              <>
+                <span className="location-label">
+                  <MapPin size={15} />{" "}
+                  {mode === "real"
+                    ? locationContext.location.label
+                    : "Brooklyn, New York"}{" "}
+                  <span className="tiny-demo">
+                    {mode === "real" ? "REAL MAP" : "DEMO"}
+                  </span>
+                </span>
+                <button
+                  className="primary-button"
+                  onClick={() => navigate("table")}
+                >
+                  Set your table <ArrowUpRight size={16} />
+                </button>
+              </>
+            ) : (
+              <button className="text-button" onClick={openMap}>
+                Back to the neighborhood <ArrowRight size={16} />
+              </button>
+            )}
+          </div>
+        </section>
+        {view === "explore" ? (
+          mode === "real" ? (
+            <LocationAtlas
+              context={locationContext}
+              lowPower={lowPower}
+              onDemo={openMap}
+              onWaiter={() => setWaiterOpen(true)}
+            />
+          ) : mode === "map" && ranked.length > 0 ? (
+            <ImmersiveMap
+              venues={ranked.map((item) => item.venue)}
+              selected={selectedVenue}
+              participants={state.participants}
+              shortlist={state.shortlist}
+              plannedVenueId={state.plan.venueId}
+              onSelect={(id) => dispatch({ type: "select", venueId: id })}
+              onOpenMenu={openMenu}
+              onShortlist={shortlistSelected}
+              onTable={() => navigate("table")}
+              onAskWaiter={() => setWaiterOpen(true)}
+              lowPower={lowPower}
+            />
+          ) : (
+            <section
+              className="explore-layout book-world"
+              aria-label="Restaurant discovery"
+            >
+              <aside className="discovery-sidebar book-journey-rail">
+                <span className="eyebrow">THE EVENING IS UNFOLDING</span>
+                <button className="atlas-return" onClick={openMap}>
+                  <span className="folded-atlas" aria-hidden="true">
+                    <Map size={33} strokeWidth={1} />
+                  </span>
+                  <span>
+                    Back to the
+                    <br />
+                    <em>neighborhood.</em>
+                    <small>
+                      <ChevronLeft size={12} /> Unfold your map
+                    </small>
+                  </span>
+                </button>
+                <div className="rail-place-note">
+                  <span className="eyebrow">YOU’RE READING</span>
+                  <h2>{selectedVenue.name}</h2>
+                  <p>
+                    {selectedVenue.neighborhood}
+                    <br />
+                    {selectedVenue.cuisine}
+                  </p>
+                </div>
+                <button
+                  className="taste-button"
+                  onClick={() => navigate("table")}
+                >
+                  <span className="rail-people" aria-hidden="true">
+                    {state.participants.slice(0, 3).map((person) => (
+                      <i key={person.id} style={{ background: person.color }}>
+                        {person.name[0]}
+                      </i>
+                    ))}
+                  </span>
+                  <span>
+                    <b>
+                      {state.participants.length === 1
+                        ? "A table just for you"
+                        : `${state.participants.length} tastes, one table`}
+                    </b>
+                    <small>Every preference comes with you</small>
+                  </span>
+                  <ArrowUpRight size={14} />
+                </button>
+                <div className="discovery-note">
+                  <Leaf size={19} strokeWidth={1.2} />
+                  <p>
+                    From a place on the map
+                    <br />
+                    to a story at the table.
+                  </p>
+                </div>
+                <button
+                  className="rail-service"
+                  onClick={() => setWaiterOpen(true)}
+                >
+                  <BellRing size={18} strokeWidth={1.2} />
+                  <span>
+                    A word with
+                    <br />
+                    <b>The Waiter</b>
+                  </span>
+                  <ArrowUpRight size={14} />
+                </button>
+              </aside>
+              <div className="discovery-main">
+                <button className="mobile-neighborhood" onClick={openMap}>
+                  <MapPin size={17} />
+                  <span>
+                    Brooklyn, a little closer
+                    <small>{ranked.length} places around your table</small>
+                  </span>
+                  <b>
+                    {mode === "book" ? "Open map" : "Open menu"}{" "}
+                    <ArrowUpRight size={13} />
+                  </b>
+                </button>
+                <div className="book-toolbar">
+                  <span>
+                    <span className="status-dot" /> {ranked.length} places to
+                    find common ground
+                  </span>
+                  <div className="view-switch" aria-label="Discovery view">
+                    <button aria-pressed={mode === "book"} onClick={openMenu}>
+                      <BookOpen size={14} /> Menu
+                    </button>
+                    <button aria-pressed={mode === "map"} onClick={openMap}>
+                      <Map size={14} /> Map
+                    </button>
+                  </div>
+                </div>
+                {!ranked.length ? (
+                  <div className="empty-discovery">
+                    <Leaf size={40} />
+                    <h2>Let’s make a little room.</h2>
+                    <p>
+                      No demo restaurant meets every budget and dietary need.
+                      Adjust your table, or revisit a place you passed.
+                    </p>
+                    <button
+                      className="primary-button"
+                      onClick={() => navigate("table")}
+                    >
+                      Review your table <ArrowRight size={16} />
+                    </button>
+                    {state.vetoes.map((id) => (
+                      <button
+                        className="text-button"
+                        key={id}
+                        onClick={() =>
+                          dispatch({ type: "undo-veto", venueId: id })
+                        }
+                      >
+                        Reconsider {venues.find((v) => v.id === id)?.name}{" "}
+                        <Plus size={14} />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <MenuBook
+                    chosen={state.plan.venueId === selectedVenue.id}
+                    venue={selectedVenue}
+                    nextVenue={adjacentVenue(1)}
+                    previousVenue={adjacentVenue(-1)}
+                    shortlisted={state.shortlist.includes(selectedVenue.id)}
+                    onShortlist={() => {
+                      dispatch({
+                        type: "shortlist",
+                        venueId: selectedVenue.id,
+                      });
+                      setNotice(
+                        state.shortlist.includes(selectedVenue.id)
+                          ? "Removed from your shortlist."
+                          : "Kept on your shortlist.",
+                      );
+                    }}
+                    onVeto={() => {
+                      dispatch({ type: "veto", venueId: selectedVenue.id });
+                      setNotice(
+                        `Passed on ${selectedVenue.name}. Your suggestions have been revised.`,
+                      );
+                    }}
+                    onNext={() => move(1)}
+                    onPrevious={() => move(-1)}
+                    onChoose={choose}
+                    index={Math.max(
+                      0,
+                      ranked.findIndex((x) => x.venue.id === selectedVenue.id),
+                    )}
+                    total={ranked.length}
+                    reason={reason}
+                    lowPower={lowPower}
+                  />
+                )}
+                <div className="under-book">
+                  <span>FICTIONAL PLACES. REAL POSSIBILITIES.</span>
+                  <p>
+                    {mode === "book"
+                      ? "Turn a page. Find a feeling."
+                      : "Choose a pin. Meet your next favorite."}{" "}
+                    <span>✳</span>
+                  </p>
+                  <span>THE BROOKLYN EDITION · VOL. 01</span>
+                </div>
+              </div>
+            </section>
+          )
+        ) : view === "table" ? (
+          <SharedTable
+            lowPower={lowPower}
+            state={state}
+            dispatch={dispatch}
+            onExplore={openMenu}
+            onPlan={() => navigate("plan")}
+          />
+        ) : (
+          <DinnerPlan
+            lowPower={lowPower}
+            storageAvailable={storageAvailable}
+            state={state}
+            dispatch={dispatch}
+            onExplore={openMenu}
+            onTable={() => navigate("table")}
+          />
+        )}
+        {state.vetoes.length > 0 && view === "explore" && ranked.length > 0 && (
+          <div className="passed-places">
+            <span>Passed for now</span>
+            {state.vetoes.map((id) => (
+              <button
+                key={id}
+                onClick={() => dispatch({ type: "undo-veto", venueId: id })}
+              >
+                {venues.find((v) => v.id === id)?.name}
+                <Plus size={12} />
+                <span className="sr-only">Undo pass</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </main>
+      <Waiter
+        state={state}
+        dispatch={dispatch}
+        view={view}
+        mode={mode}
+        realLocation={
+          mode === "real" ? locationContext.location.label : undefined
+        }
+        realPoint={mode === "real" ? locationContext.selectedPoint : null}
+        realPointKept={Boolean(
+          locationContext.selectedPoint &&
+          locationContext.savedPoints.some(
+            (point) => point.id === locationContext.selectedPoint?.id,
+          ),
+        )}
+        onKeepRealPoint={() => {
+          if (locationContext.selectedPoint)
+            locationContext.toggleSavedPoint(locationContext.selectedPoint);
+        }}
+        lowPower={lowPower}
+        storageAvailable={storageAvailable}
+        open={waiterOpen}
+        onOpenChange={setWaiterOpen}
+        onNavigate={(next) =>
+          next === "explore" ? openRealMap() : navigate(next)
+        }
+        onOpenMenu={openMenu}
+        onSelectVenue={(id) => dispatch({ type: "select", venueId: id })}
+      />
+      <footer className="site-footer">
+        <span>Made for the moments between bites.</span>
+        <div>
+          <button onClick={togglePower} aria-pressed={lowPower}>
+            <span className={`power-dot ${lowPower ? "on" : ""}`} />
+            {lowPower ? "Low-power view on" : "Low-power view"}
+          </button>
+          <button onClick={() => setAbout(true)}>
+            About this demo <ArrowUpRight size={11} />
+          </button>
+        </div>
+        <span>
+          {storageAvailable
+            ? "Your table stays in this browser."
+            : "Browser storage is unavailable; this session is temporary."}
+        </span>
+      </footer>
+      <div
+        role="status"
+        aria-live="polite"
+        className={`toast ${notice ? "visible" : ""}`}
+      >
+        {notice && (
+          <>
+            <Check size={16} />
+            {notice}
+          </>
+        )}
+      </div>
+      <dialog
+        ref={aboutRef}
+        className="about-dialog"
+        aria-labelledby="demo-heading"
+        onCancel={() => setAbout(false)}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setAbout(false);
+        }}
+      >
+        <button
+          className="dialog-close"
+          aria-label="Close about this demo"
+          onClick={() => setAbout(false)}
+        >
+          <X size={20} />
+        </button>
+        <span className="eyebrow">WELCOME TO COMMON TABLE</span>
+        <h2 id="demo-heading">
+          A taste of
+          <br />
+          <em>what’s to come.</em>
+        </h2>
+        <p>
+          The real map uses OpenStreetMap-based geography. Device location is
+          requested only after you choose Use my location; map and place-search
+          providers receive the chosen area. Dining features remain an
+          interactive demo with fictional Brooklyn restaurants, illustrative
+          menus, prices, dietary options, ratings, walking times, and
+          photography.
+        </p>
+        <p>
+          Recommendations use a local taste, budget, and dietary filter.{" "}
+          <b>Qloo is not connected.</b> Demo guests are saved in this browser;
+          real invitations and shared live tables are not available.
+        </p>
+        <p>
+          Plans can be saved on this device and exported as text. Nothing is
+          booked, sent, or shared automatically. No location is automatically
+          collected or shared with guests. Always confirm dietary needs directly
+          with a restaurant.
+        </p>
+        <button className="primary-button" onClick={() => setAbout(false)}>
+          Pull up a chair <ArrowRight size={16} />
+        </button>
+      </dialog>
+    </div>
+  );
+}

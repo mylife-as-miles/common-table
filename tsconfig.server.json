@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "server/**/*.ts",
+    "tests/location-api.test.ts",
+    "tests/claude*.test.ts",
+    "tests/waiter-api.test.ts",
+    "scripts/claude-*.ts"
+  ]
+}

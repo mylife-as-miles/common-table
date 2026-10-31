@@ -1,0 +1,10 @@
+{
+  "synthetic_build_canary_leaked": false,
+  "client_artifacts_scanned": 15,
+  "mocked_claude_tests": 30,
+  "all_unit_tests": 72,
+  "live_generation_calls": 0,
+  "actual_credits_spent_usd": 0,
+  "live_api_access_verified": false,
+  "billing_and_scope_verified": false
+}
