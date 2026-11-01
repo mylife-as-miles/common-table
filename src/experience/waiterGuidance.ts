@@ -18,7 +18,7 @@ interface Reply {
 }
 
 /** The browser sends a bounded question, never credentials, coordinates or names. */
-export function useWaiterClaude(
+export function useWaiterGuidance(
   open: boolean,
   context: WaiterContext,
   scope: string,
@@ -135,7 +135,7 @@ export function useWaiterClaude(
       )
         throw new Error("unavailable");
       const replyText = body.source === "mock"
-        ? body.text.replace(/^Offline demo · Claude not called\.\s*/, "")
+        ? body.text.replace(/^Offline demo · sample guidance\.\s*/, "")
         : body.text;
       if (!replyText.trim()) throw new Error("unavailable");
       if (isCurrent())

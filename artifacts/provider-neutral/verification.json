@@ -1,0 +1,15 @@
+{
+  "frontend_branding_hits": 0,
+  "frontend_files_scanned": 39,
+  "client_artifacts_scanned": 26,
+  "client_branding_hits": 0,
+  "hosted_browser_cases_passed": 8,
+  "github_waiter_http_cases_passed": 15,
+  "hosted_http_worker_cases_passed": 28,
+  "desktop_mobile_automated_accessibility_violations": 0,
+  "live_provider_calls": 0,
+  "sites_version": 11,
+  "sites_source_commit": "0be8c6e5c04f30fada05ff27d69f731a874fb6fb",
+  "deployment_status": "succeeded",
+  "url": "https://common-table-design-20261029.myles4miles.chatgpt.site"
+}

@@ -1,12 +1,12 @@
 # Claude Sonnet 5.5: Waiter adapter and bounded tests
 
-Common Table's Waiter now has local tips and an optional Claude service option connected to a server adapter. The browser path currently returns clearly labelled, contextual **offline demo answers**. It never calls Claude, even when the server is configured for live CLI testing. No Kitchen Studio source has been modified or copied.
+Common Table's Waiter now has local tips and an optional Thoughtful guidance option connected to a server adapter. The browser path currently returns clearly labelled, contextual **offline demo answers**. It never calls Claude, even when the server is configured for live CLI testing. No Kitchen Studio source has been modified or copied.
 
 No real API key, organization preflight or paid generation has been tested. All provider responses used by tests are mocked. No credits have been spent, billing settings changed, top-up requested, public push made or deployment performed. Revoke any key disclosed in chat and configure its replacement through the private editor or secret store.
 
 ## Waiter browser flow
 
-Open The Waiter, select **Claude · offline demo**, enter a small request and submit. A source stamp explicitly says **OFFLINE DEMO · CLAUDE NOT CALLED**. Local tips keep the existing deterministic actions; generated/sample answers never dispatch venue, table or plan changes.
+Open The Waiter, select **Thoughtful guidance · offline demo**, enter a small request and submit. A source stamp explicitly says **OFFLINE DEMO · SAMPLE GUIDANCE**. Local tips keep the existing deterministic actions; generated/sample answers never dispatch venue, table or plan changes.
 
 `GET /api/waiter/status` reports only availability. `POST /api/waiter/reply` requires same-origin JSON with a custom request header and a bounded, allowlisted context. The browser supplies the selected fictional venue ID, seat count, minimum budget, listed dietary needs, pad view and whether the plan was saved. Guest names, real map names/coordinates, plan notes and dates are excluded from that context. Free text remains user supplied, so do not include secrets in a question.
 

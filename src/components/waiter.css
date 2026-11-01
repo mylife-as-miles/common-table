@@ -590,7 +590,7 @@
   border: 1px solid #c8a58b;
   margin: 10px 0 0;
 }
-.cw-claude-result {
+.cw-guidance-result {
   margin: 17px 0 0;
   padding: 14px;
   color: #425537;
@@ -599,7 +599,7 @@
   box-shadow: 1px 3px 3px #3a4a2010;
   overflow-wrap: anywhere;
 }
-.cw-claude-label {
+.cw-guidance-label {
   display: block;
   font-size: 9px;
   font-weight: 600;
@@ -607,7 +607,7 @@
   line-height: 1.7;
   color: #556243;
 }
-.cw-claude-result > p {
+.cw-guidance-result > p {
   font-size: 12px;
   line-height: 1.8;
   white-space: pre-wrap;
