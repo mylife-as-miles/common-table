@@ -1,0 +1,82 @@
+{
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "checkedAt": "2026-11-01T21:55:31.646Z",
+  "phase": "waiter",
+  "requestsMocked": false,
+  "credentialsUsed": false,
+  "paidProviderCalls": 0,
+  "passed": 8,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Published application",
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "passed": true,
+      "durationMs": 965
+    },
+    {
+      "name": "Waiter service classification",
+      "method": "GET",
+      "path": "/api/waiter/status",
+      "status": 200,
+      "passed": true,
+      "durationMs": 93,
+      "mode": "mock",
+      "liveModelVerified": false
+    },
+    {
+      "name": "Actual Waiter demo reply",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 200,
+      "passed": true,
+      "durationMs": 81,
+      "source": "mock",
+      "demoLabelPresent": true,
+      "code": null,
+      "liveModelVerified": false
+    },
+    {
+      "name": "Foreign-origin reply is rejected",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 403,
+      "passed": true,
+      "durationMs": 106
+    },
+    {
+      "name": "Missing request header is rejected",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 403,
+      "passed": true,
+      "durationMs": 145
+    },
+    {
+      "name": "Wrong reply method is rejected",
+      "method": "GET",
+      "path": "/api/waiter/reply",
+      "status": 405,
+      "passed": true,
+      "durationMs": 292
+    },
+    {
+      "name": "Extra private context is rejected",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 400,
+      "passed": true,
+      "durationMs": 161
+    },
+    {
+      "name": "Oversized request is rejected",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 413,
+      "passed": true,
+      "durationMs": 60
+    }
+  ]
+}

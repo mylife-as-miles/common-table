@@ -469,7 +469,8 @@ export function Waiter({
       requestInput.current?.focus();
       return;
     }
-    if (mode === "real") {
+    // Deep-linked plans may retain real-map browsing mode after reload.
+    if (mode === "real" && course === "place") {
       setCourse("place");
       if (
         /reserv|booking|book a|invite|send|location shar|where am i/.test(text)

@@ -1,0 +1,13 @@
+{
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "checkedAt": "2026-11-01T22:07:12.342Z",
+  "requestsMocked": false,
+  "query": "Paris, France",
+  "passed": true,
+  "status": 200,
+  "source": "photon",
+  "resultCount": 5,
+  "selectedArea": "Paris, Île-de-France, France",
+  "renderer": "maplibre",
+  "pageErrors": []
+}

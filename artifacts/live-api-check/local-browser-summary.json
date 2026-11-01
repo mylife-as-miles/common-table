@@ -1,0 +1,12 @@
+{
+  "target": "http://127.0.0.1:4175",
+  "summary": {
+    "passedSteps": 26,
+    "failedSteps": 0,
+    "pageErrors": 0,
+    "failedSiteResponses": 0,
+    "providerRequests": 0
+  },
+  "requestsMocked": false,
+  "note": "Local production Worker build with actual public map assets. Live deployment checks are recorded separately."
+}

@@ -1,0 +1,71 @@
+{
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "checkedAt": "2026-11-01T21:50:36.830Z",
+  "phase": "mapping",
+  "requestsMocked": false,
+  "credentialsUsed": false,
+  "paidProviderCalls": 0,
+  "passed": 4,
+  "failed": 2,
+  "results": [
+    {
+      "name": "Published application",
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "passed": true,
+      "durationMs": 1223
+    },
+    {
+      "name": "Waiter service classification",
+      "method": "GET",
+      "path": "/api/waiter/status",
+      "status": 200,
+      "passed": true,
+      "durationMs": 102,
+      "mode": "mock",
+      "liveModelVerified": false
+    },
+    {
+      "name": "Actual city search: Paris, France",
+      "method": "GET",
+      "path": "/api/geocode?q=Paris%2C%20France",
+      "status": 503,
+      "passed": false,
+      "durationMs": 244,
+      "source": null,
+      "resultCount": 0,
+      "firstLabel": null,
+      "code": "upstream_unavailable"
+    },
+    {
+      "name": "Actual city search: Lagos, Nigeria",
+      "method": "GET",
+      "path": "/api/geocode?q=Lagos%2C%20Nigeria",
+      "status": 503,
+      "passed": false,
+      "durationMs": 216,
+      "source": null,
+      "resultCount": 0,
+      "firstLabel": null,
+      "code": "upstream_unavailable"
+    },
+    {
+      "name": "Invalid city query is rejected",
+      "method": "GET",
+      "path": "/api/geocode?q=x",
+      "status": 400,
+      "passed": true,
+      "durationMs": 468
+    },
+    {
+      "name": "Unknown API is rejected",
+      "method": "GET",
+      "path": "/api/unknown-smoke-check",
+      "status": 404,
+      "passed": true,
+      "durationMs": 77
+    }
+  ],
+  "diagnosis": "The deployed Worker received upstream HTTP 521 from Photon; the application returned its documented 503 response. An independent request from this workspace reached Photon with HTTP 200, so the failure is specific to the observed production request path."
+}

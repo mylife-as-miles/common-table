@@ -1,0 +1,115 @@
+{
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "checkedAt": "2026-11-01T22:04:44.513Z",
+  "phase": "waiter",
+  "requestsMocked": false,
+  "credentialsUsed": false,
+  "paidProviderCalls": 0,
+  "passed": 11,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Published application",
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "passed": true,
+      "durationMs": 1309
+    },
+    {
+      "name": "Waiter service classification",
+      "method": "GET",
+      "path": "/api/waiter/status",
+      "status": 200,
+      "passed": true,
+      "durationMs": 554,
+      "mode": "mock",
+      "liveModelVerified": false
+    },
+    {
+      "name": "Actual Waiter demo reply",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 200,
+      "passed": true,
+      "durationMs": 121,
+      "source": "mock",
+      "demoLabelPresent": true,
+      "code": null,
+      "liveModelVerified": false
+    },
+    {
+      "name": "Saved-plan context survives real-map reload",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 200,
+      "passed": true,
+      "durationMs": 90,
+      "source": "mock",
+      "focusedContextCorrect": true,
+      "code": null
+    },
+    {
+      "name": "Plan budget uses planned venue rather than browsed venue",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 200,
+      "passed": true,
+      "durationMs": 81,
+      "source": "mock",
+      "focusedContextCorrect": true,
+      "code": null
+    },
+    {
+      "name": "Table pad keeps demo group context",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 200,
+      "passed": true,
+      "durationMs": 97,
+      "source": "mock",
+      "focusedContextCorrect": true,
+      "code": null
+    },
+    {
+      "name": "Foreign-origin reply is rejected",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 403,
+      "passed": true,
+      "durationMs": 542
+    },
+    {
+      "name": "Missing request header is rejected",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 403,
+      "passed": true,
+      "durationMs": 95
+    },
+    {
+      "name": "Wrong reply method is rejected",
+      "method": "GET",
+      "path": "/api/waiter/reply",
+      "status": 405,
+      "passed": true,
+      "durationMs": 71
+    },
+    {
+      "name": "Extra private context is rejected",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 400,
+      "passed": true,
+      "durationMs": 385
+    },
+    {
+      "name": "Oversized request is rejected",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "status": 413,
+      "passed": true,
+      "durationMs": 94
+    }
+  ]
+}

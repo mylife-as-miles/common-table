@@ -84,11 +84,14 @@ export function trustedWaiterContext(context: WaiterContext): string {
 
 /** Deliberately deterministic, contextual and offline; this is not a model reply. */
 export function mockWaiterReply(message: string, context: WaiterContext): string {
-  const selected = demoVenues.find((venue) => venue.id === context.venueId)!;
+  // A saved plan can differ from the venue currently being browsed.
+  const focusedVenueId = context.view === "plan" && context.planVenueId ? context.planVenueId : context.venueId;
+  const selected = demoVenues.find((venue) => venue.id === focusedVenueId)!;
   const planned = demoVenues.find((venue) => venue.id === context.planVenueId);
   const query = message.toLocaleLowerCase("en-US");
   let reply: string;
-  if (context.mode === "real") {
+  // Real-map browsing must not override the explicit table/plan pad.
+  if (context.mode === "real" && context.view === "explore") {
     reply = "The real map shows OpenStreetMap places, but their menus, prices, hours and dietary suitability are not verified here. Open a mapped place to inspect its available details. Your fictional demo table and dinner plan stay separate.";
   } else if (/allerg|diet|vegan|vegetarian|gluten|nut|restriction/.test(query)) {
     const listed = context.restrictions.length ? context.restrictions.join(", ") : "none";

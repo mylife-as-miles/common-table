@@ -327,6 +327,43 @@ test("real map replies cannot pass off fictional demo restaurants as mapped fact
     assert.ok(!body.text.includes(name));
 });
 
+test("reloaded real-map mode follows the active saved-plan or table context while explore stays geographic", async (t) => {
+  const f = await mount(t);
+  const ask = async (message: string, view = "plan") => {
+    const response = await f.post(payload({
+      message,
+      context: context({
+        mode: "real", view, venueId: "juniper", planVenueId: "casa",
+        planSaved: true, participantCount: 3, budget: 35, restrictions: ["Vegan"],
+      }),
+    }));
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.source, "mock");
+    return body.text as string;
+  };
+  const plan = await ask("Help me finish this plan");
+  assert.match(plan, /saved fictional dinner plan at Casa Nopal/);
+  assert.doesNotMatch(plan, /Juniper|OpenStreetMap/);
+  const budget = await ask("Does the budget work?");
+  assert.match(budget, /Casa Nopal.*\$32-per-person/);
+  assert.match(budget, /within.*\$35/);
+  assert.doesNotMatch(budget, /Juniper|\$48|OpenStreetMap/);
+  const dietary = await ask("What about vegan dietary needs?");
+  assert.match(dietary, /Vegan/);
+  assert.match(dietary, /Casa Nopal.*with those listed demo labels/);
+  assert.doesNotMatch(dietary, /Juniper|missing these demo labels|OpenStreetMap/);
+  const table = await ask("What should we do next?", "table");
+  assert.match(table, /demo table has 3 seats/);
+  assert.match(table, /\$35 per-person budget/);
+  assert.doesNotMatch(table, /OpenStreetMap/);
+  const explore = await ask("Help me finish this plan", "explore");
+  assert.match(explore, /OpenStreetMap/);
+  assert.match(explore, /not verified/);
+  assert.doesNotMatch(explore, /Casa Nopal|Juniper|\$32|\$48/);
+  await noLedger(f.config.ledgerPath);
+});
+
 test("foreign/missing origins, forged proxy headers and browser navigation cannot bypass the CSRF boundary", async (t) => {
   let calls = 0;
   const f = await mount(t, {
