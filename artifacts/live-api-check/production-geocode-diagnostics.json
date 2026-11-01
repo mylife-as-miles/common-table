@@ -1,0 +1,22 @@
+{
+  "source": "Read-only Sites production logs",
+  "siteVersion": 11,
+  "records": [
+    {
+      "checkedAt": "2026-11-01T21:50:36.272Z",
+      "route": "GET /api/geocode",
+      "requestId": "a844c65ce10e35c981a30a38a2d4192f",
+      "diagnostic": "upstream_http",
+      "upstreamStatus": 521,
+      "applicationStatus": 503
+    },
+    {
+      "checkedAt": "2026-11-01T21:50:34.854Z",
+      "route": "GET /api/geocode",
+      "requestId": "6c12178d1ab0ee6eaa46d4d096ca5be9",
+      "diagnostic": "upstream_http",
+      "upstreamStatus": 521,
+      "applicationStatus": 503
+    }
+  ]
+}

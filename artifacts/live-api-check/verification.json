@@ -1,0 +1,49 @@
+{
+  "siteVersion": 12,
+  "siteSourceCommit": "1b2d4bb51c324cac868d6294d3582c1408730e7d",
+  "deploymentStatus": "succeeded",
+  "localProductionBrowser": {
+    "passedSteps": 26,
+    "failedSteps": 0,
+    "pageErrors": 0,
+    "failedSiteResponses": 0,
+    "providerRequests": 0
+  },
+  "liveBrowser": {
+    "passedSteps": 26,
+    "failedSteps": 0,
+    "pageErrors": 0,
+    "failedSiteResponses": 0,
+    "providerRequests": 0
+  },
+  "liveWaiter": {
+    "passed": 11,
+    "failed": 0,
+    "mode": "mock"
+  },
+  "liveMapping": {
+    "passed": 6,
+    "failed": 0
+  },
+  "regressions": {
+    "githubHttpPassed": 16,
+    "hostedHttpWorkerPassed": 30,
+    "failedBeforeFix": 3
+  },
+  "paidProviderCalls": 0,
+  "remainingIntegrations": [
+    "live AI",
+    "Qloo retrieval/ranking",
+    "real invitations/collaboration",
+    "hosted shared plans",
+    "bookings"
+  ],
+  "liveBrowserCitySearch": {
+    "passed": true,
+    "status": 200,
+    "source": "photon",
+    "selectedArea": "Paris, \u00cele-de-France, France",
+    "renderer": "maplibre",
+    "pageErrors": []
+  }
+}

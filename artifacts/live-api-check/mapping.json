@@ -1,0 +1,70 @@
+{
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "checkedAt": "2026-11-01T22:05:10.038Z",
+  "phase": "mapping",
+  "requestsMocked": false,
+  "credentialsUsed": false,
+  "paidProviderCalls": 0,
+  "passed": 6,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Published application",
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "passed": true,
+      "durationMs": 283
+    },
+    {
+      "name": "Waiter service classification",
+      "method": "GET",
+      "path": "/api/waiter/status",
+      "status": 200,
+      "passed": true,
+      "durationMs": 89,
+      "mode": "mock",
+      "liveModelVerified": false
+    },
+    {
+      "name": "Actual city search: Paris, France",
+      "method": "GET",
+      "path": "/api/geocode?q=Paris%2C%20France",
+      "status": 200,
+      "passed": true,
+      "durationMs": 861,
+      "source": "photon",
+      "resultCount": 5,
+      "firstLabel": "Paris, Île-de-France, France",
+      "code": null
+    },
+    {
+      "name": "Actual city search: Lagos, Nigeria",
+      "method": "GET",
+      "path": "/api/geocode?q=Lagos%2C%20Nigeria",
+      "status": 200,
+      "passed": true,
+      "durationMs": 633,
+      "source": "photon",
+      "resultCount": 5,
+      "firstLabel": "Lagos, Nigeria",
+      "code": null
+    },
+    {
+      "name": "Invalid city query is rejected",
+      "method": "GET",
+      "path": "/api/geocode?q=x",
+      "status": 400,
+      "passed": true,
+      "durationMs": 72
+    },
+    {
+      "name": "Unknown API is rejected",
+      "method": "GET",
+      "path": "/api/unknown-smoke-check",
+      "status": 404,
+      "passed": true,
+      "durationMs": 103
+    }
+  ]
+}

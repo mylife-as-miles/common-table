@@ -1,0 +1,823 @@
+{
+  "target": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "startedAt": "2026-11-01T21:55:44.668Z",
+  "transport": "Chromium through inherited HTTPS_PROXY; normal TLS verification",
+  "interventions": [
+    "Only tile.openstreetmap.org raster requests are blocked.",
+    "Desktop transport latency is temporarily set to600ms to exercise native cancellation and repeated submission; no response is mocked."
+  ],
+  "scope": "Public deployment, actual assets and mock Waiter HTTP. Synthetic local demo state only.",
+  "scenarios": [
+    {
+      "id": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "steps": [
+        {
+          "name": "load_actual_deployment",
+          "status": "pass",
+          "elapsedMs": 446,
+          "details": {
+            "documentStatus": 200,
+            "title": "Common Table — A shared evening"
+          }
+        },
+        {
+          "name": "actual_vector_map_and_mapped_place",
+          "status": "pass",
+          "elapsedMs": 5327,
+          "details": {
+            "renderer": "maplibre",
+            "status": "ready",
+            "poiCount": "12",
+            "clickedLabel": "Explore Luv n Oven Pizza",
+            "mappedName": "Luv n Oven Pizza",
+            "noGeocodeOrDeviceLocationRequested": true
+          }
+        },
+        {
+          "name": "native_map_to_demo_book",
+          "status": "pass",
+          "elapsedMs": 1315
+        },
+        {
+          "name": "choose_initial_demo_venue",
+          "status": "pass",
+          "elapsedMs": 1538
+        },
+        {
+          "name": "guest_budget_restrictions_update_table",
+          "status": "pass",
+          "elapsedMs": 2064,
+          "details": {
+            "syntheticGuest": "Demo Casey desktop",
+            "budget": 40,
+            "restrictions": [
+              "Vegan",
+              "Gluten-free"
+            ],
+            "fitCount": 1,
+            "tableRender": {
+              "complete": true,
+              "width": 1100,
+              "height": 1100
+            },
+            "invitationsSent": false
+          }
+        },
+        {
+          "name": "revised_eligible_menu_and_shared_plan",
+          "status": "pass",
+          "elapsedMs": 1236
+        },
+        {
+          "name": "approve_save_and_actual_finite_press",
+          "status": "pass",
+          "elapsedMs": 2923,
+          "details": {
+            "venueId": "casa",
+            "savedInThisBrowser": true,
+            "approvals": 2,
+            "observedPrintMs": 2333,
+            "staticReducedMotion": false
+          }
+        },
+        {
+          "name": "tear_and_reprint_are_visual_only",
+          "status": "pass",
+          "elapsedMs": 623,
+          "details": {
+            "receiptArticles": 1,
+            "domainStateChanged": false,
+            "automaticExports": false
+          }
+        },
+        {
+          "name": "reload_preserves_local_plan_and_explicit_export",
+          "status": "pass",
+          "elapsedMs": 1803,
+          "details": {
+            "suggestedFilename": "common-table-dinner-plan.txt",
+            "artifact": "desktop-dinner-plan.txt",
+            "bytes": 382,
+            "persistedLocally": true,
+            "serverSharedPlanVerified": false
+          }
+        },
+        {
+          "name": "actual_waiter_mock_api_and_generic_labels",
+          "status": "pass",
+          "elapsedMs": 2778,
+          "details": {
+            "statusStatus": 200,
+            "statusMode": "mock",
+            "replyStatus": 200,
+            "replySource": "mock",
+            "genericLabel": true,
+            "noLiveModelCall": true
+          }
+        },
+        {
+          "name": "waiter_still_describes_current_plan_after_reload",
+          "status": "fail",
+          "elapsedMs": 2,
+          "error": "expect(received).toContain(expected) // indexOf\n\nExpected substring: \"Casa Nopal\"\nReceived string:    \"Offline demo · sample guidance.·\nThe real map shows OpenStreetMap places, but their menus, prices, hours and dietary suitability are not verified here. Open a mapped place to inspect its available details. Your fictional demo table and dinner plan stay separate.\""
+        },
+        {
+          "name": "native_waiter_exit_back_and_focus",
+          "status": "pass",
+          "elapsedMs": 260
+        },
+        {
+          "name": "editing_invalidates_approvals_then_explicit_resave_works",
+          "status": "pass",
+          "elapsedMs": 2543
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/waiter/reply",
+          "error": "net::ERR_ABORTED",
+          "expectedCancellation": true
+        }
+      ],
+      "badSiteResponses": [],
+      "siteAssetResponses": [
+        {
+          "path": "/",
+          "status": 200,
+          "type": "document"
+        },
+        {
+          "path": "/_next/static/css/index.1GtXUv4l.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/_next/static/chunks/page-I0iRU3e-.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/layout-segment-context-CoTczQ2V.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/index-CmTeYmpZ.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/framework-D_rUT4EX.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/fonts/font-5.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-2.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/_next/static/chunks/App-lCVNgO10.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/css/App.vJuTlD9h.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/fonts/font-3.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-4.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-6.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/_next/static/chunks/maplibre-gl-49ettL-S.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/css/maplibre-gl.D7DNNUwi.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/fonts/font-0.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/_next/static/chunks/maplibre-gl-worker-CIBWxaY5.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/maplibre-gl-worker--qvJKRdM.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/fonts/font-7.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/images/restaurant.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/fonts/font-1.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/images/photo-1555396273-367ea4eb4db5.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/images/photo-1514933651103-005eec06c04b.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/images/photo-1552566626-52f8b828add9.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/images/photo-1516211697506-8360dbcfe9a4.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/images/photo-1414235077428-338989a2e8c0.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/fonts/font-8.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/images/table/table-1.webp",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/images/table/table-2.webp",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/",
+          "status": 200,
+          "type": "document"
+        },
+        {
+          "path": "/_next/static/css/index.1GtXUv4l.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/_next/static/chunks/page-I0iRU3e-.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/index-CmTeYmpZ.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/layout-segment-context-CoTczQ2V.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/framework-D_rUT4EX.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/fonts/font-2.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-5.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/css/App.vJuTlD9h.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/_next/static/chunks/App-lCVNgO10.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/images/photo-1552566626-52f8b828add9.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/fonts/font-4.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-6.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-0.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-8.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-7.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/images/table/table-2.webp",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/fonts/font-3.woff2",
+          "status": 200,
+          "type": "font"
+        }
+      ],
+      "apiResponses": [
+        {
+          "path": "/api/waiter/status",
+          "status": 200,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/waiter/reply",
+          "status": 200,
+          "type": "fetch"
+        }
+      ],
+      "externalHosts": {
+        "tiles.openfreemap.org": {
+          "responses": 20,
+          "badStatuses": []
+        }
+      },
+      "rasterBlocked": 0,
+      "providerRequests": 0,
+      "screenshots": [
+        "desktop-01-actual-vector-map.png",
+        "desktop-02-demo-menu.png",
+        "desktop-03-synthetic-table.png",
+        "desktop-04-saved-pressed-plan.png",
+        "desktop-05-torn-plan.png",
+        "desktop-06-reloaded-local-plan.png",
+        "desktop-07-actual-waiter-response.png",
+        "desktop-waiter-still-describes-current-plan-after-reload-failed.png"
+      ],
+      "mapObserved": {
+        "renderer": "maplibre",
+        "status": "ready",
+        "poiCount": "12"
+      },
+      "waiterCancellation": {
+        "nativeCancel": true,
+        "focusRestored": true,
+        "responseMocked": false,
+        "serverCompletionUnknown": true
+      },
+      "waiter": {
+        "status": 200,
+        "source": "mock",
+        "text": "Offline demo · sample guidance.\n\nThe real map shows OpenStreetMap places, but their menus, prices, hours and dietary suitability are not verified here. Open a mapped place to inspect its available details. Your fictional demo table and dinner plan stay separate.",
+        "submittedContext": {
+          "view": "plan",
+          "mode": "real",
+          "venueId": "casa",
+          "participantCount": 2,
+          "budget": 40,
+          "restrictions": [
+            "Vegan",
+            "Gluten-free"
+          ],
+          "planVenueId": "casa",
+          "planSaved": true
+        },
+        "repeatedSubmitsProducedPosts": 1
+      },
+      "providerRequestsExpectedZero": true,
+      "finishedAt": "2026-11-01T21:56:08.337Z"
+    },
+    {
+      "id": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "steps": [
+        {
+          "name": "load_actual_deployment",
+          "status": "pass",
+          "elapsedMs": 335,
+          "details": {
+            "documentStatus": 200,
+            "title": "Common Table — A shared evening"
+          }
+        },
+        {
+          "name": "choose_initial_demo_venue",
+          "status": "pass",
+          "elapsedMs": 1595
+        },
+        {
+          "name": "guest_budget_restrictions_update_table",
+          "status": "pass",
+          "elapsedMs": 465,
+          "details": {
+            "syntheticGuest": "Demo Casey mobile",
+            "budget": 40,
+            "restrictions": [
+              "Vegan",
+              "Gluten-free"
+            ],
+            "fitCount": 1,
+            "tableRender": {
+              "complete": true,
+              "width": 1100,
+              "height": 1100
+            },
+            "invitationsSent": false
+          }
+        },
+        {
+          "name": "revised_eligible_menu_and_shared_plan",
+          "status": "pass",
+          "elapsedMs": 230
+        },
+        {
+          "name": "approve_save_and_actual_finite_press",
+          "status": "pass",
+          "elapsedMs": 296,
+          "details": {
+            "venueId": "casa",
+            "savedInThisBrowser": true,
+            "approvals": 2,
+            "observedPrintMs": 169,
+            "staticReducedMotion": true
+          }
+        },
+        {
+          "name": "tear_and_reprint_are_visual_only",
+          "status": "pass",
+          "elapsedMs": 227,
+          "details": {
+            "receiptArticles": 1,
+            "domainStateChanged": false,
+            "automaticExports": false
+          }
+        },
+        {
+          "name": "reload_preserves_local_plan_and_explicit_export",
+          "status": "pass",
+          "elapsedMs": 1297,
+          "details": {
+            "suggestedFilename": "common-table-dinner-plan.txt",
+            "artifact": "mobile-dinner-plan.txt",
+            "bytes": 380,
+            "persistedLocally": true,
+            "serverSharedPlanVerified": false
+          }
+        },
+        {
+          "name": "actual_waiter_mock_api_and_generic_labels",
+          "status": "pass",
+          "elapsedMs": 390,
+          "details": {
+            "statusStatus": 200,
+            "statusMode": "mock",
+            "replyStatus": 200,
+            "replySource": "mock",
+            "genericLabel": true,
+            "noLiveModelCall": true
+          }
+        },
+        {
+          "name": "waiter_still_describes_current_plan_after_reload",
+          "status": "fail",
+          "elapsedMs": 1,
+          "error": "expect(received).toContain(expected) // indexOf\n\nExpected substring: \"Casa Nopal\"\nReceived string:    \"Offline demo · sample guidance.·\nThe real map shows OpenStreetMap places, but their menus, prices, hours and dietary suitability are not verified here. Open a mapped place to inspect its available details. Your fictional demo table and dinner plan stay separate.\""
+        },
+        {
+          "name": "native_waiter_exit_back_and_focus",
+          "status": "pass",
+          "elapsedMs": 210
+        },
+        {
+          "name": "editing_invalidates_approvals_then_explicit_resave_works",
+          "status": "pass",
+          "elapsedMs": 204
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "badSiteResponses": [],
+      "siteAssetResponses": [
+        {
+          "path": "/",
+          "status": 200,
+          "type": "document"
+        },
+        {
+          "path": "/_next/static/css/index.1GtXUv4l.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/_next/static/chunks/page-I0iRU3e-.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/index-CmTeYmpZ.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/layout-segment-context-CoTczQ2V.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/fonts/font-2.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/_next/static/chunks/framework-D_rUT4EX.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/fonts/font-5.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/_next/static/chunks/App-lCVNgO10.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/css/App.vJuTlD9h.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/images/restaurant.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/fonts/font-4.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-0.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-7.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-3.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-6.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/images/table/table-1.webp",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/images/table/table-2.webp",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/images/photo-1552566626-52f8b828add9.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/fonts/font-8.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/",
+          "status": 200,
+          "type": "document"
+        },
+        {
+          "path": "/_next/static/css/index.1GtXUv4l.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/layout-segment-context-CoTczQ2V.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/index-CmTeYmpZ.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/framework-D_rUT4EX.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/fonts/font-2.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-5.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/_next/static/chunks/page-I0iRU3e-.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/chunks/App-lCVNgO10.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "path": "/_next/static/css/App.vJuTlD9h.css",
+          "status": 200,
+          "type": "stylesheet"
+        },
+        {
+          "path": "/images/photo-1552566626-52f8b828add9.jpg",
+          "status": 200,
+          "type": "image"
+        },
+        {
+          "path": "/fonts/font-6.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-8.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-4.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-7.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/fonts/font-0.woff2",
+          "status": 200,
+          "type": "font"
+        },
+        {
+          "path": "/images/table/table-2.webp",
+          "status": 200,
+          "type": "image"
+        }
+      ],
+      "apiResponses": [
+        {
+          "path": "/api/waiter/status",
+          "status": 200,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/waiter/reply",
+          "status": 200,
+          "type": "fetch"
+        }
+      ],
+      "externalHosts": {},
+      "rasterBlocked": 0,
+      "providerRequests": 0,
+      "screenshots": [
+        "mobile-02-demo-menu.png",
+        "mobile-03-synthetic-table.png",
+        "mobile-04-saved-pressed-plan.png",
+        "mobile-05-torn-plan.png",
+        "mobile-06-reloaded-local-plan.png",
+        "mobile-07-actual-waiter-response.png",
+        "mobile-waiter-still-describes-current-plan-after-reload-failed.png"
+      ],
+      "waiter": {
+        "status": 200,
+        "source": "mock",
+        "text": "Offline demo · sample guidance.\n\nThe real map shows OpenStreetMap places, but their menus, prices, hours and dietary suitability are not verified here. Open a mapped place to inspect its available details. Your fictional demo table and dinner plan stay separate.",
+        "submittedContext": {
+          "view": "plan",
+          "mode": "real",
+          "venueId": "casa",
+          "participantCount": 2,
+          "budget": 40,
+          "restrictions": [
+            "Vegan",
+            "Gluten-free"
+          ],
+          "planVenueId": "casa",
+          "planSaved": true
+        },
+        "repeatedSubmitsProducedPosts": 1
+      },
+      "providerRequestsExpectedZero": true,
+      "finishedAt": "2026-11-01T21:56:14.957Z"
+    }
+  ],
+  "finishedAt": "2026-11-01T21:56:15.062Z",
+  "summary": {
+    "passedSteps": 22,
+    "failedSteps": 2,
+    "pageErrors": 0,
+    "failedSiteResponses": 0,
+    "providerRequests": 0
+  }
+}
