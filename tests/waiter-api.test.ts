@@ -182,7 +182,8 @@ test("real standalone routing serves only an explicit offline reply and exposes 
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.source, "mock");
-  assert.match(body.text, /^Offline demo · Claude not called\./);
+  assert.match(body.text, /^Offline demo · sample guidance\./);
+  assert.doesNotMatch(body.text, /claude|anthropic|sonnet/i);
   assert.match(body.text, /Juniper & Rye/);
   assert.match(body.text, /\$48/);
   assert.match(body.text, /\$35/);

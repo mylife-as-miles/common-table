@@ -7,21 +7,48 @@ const launcher = (page: Page) =>
   page.getByRole("button", { name: "A little guidance", exact: true });
 const input = (page: Page) =>
   dialog(page).getByLabel("Or leave a small request");
-const answer = (page: Page) => dialog(page).locator(".cw-claude-result");
+const answer = (page: Page) => dialog(page).locator(".cw-guidance-result");
 const alert = (page: Page) => dialog(page).locator(".cw-request-error");
 const submit = (page: Page) =>
   dialog(page).getByRole("button", { name: "Ask The Waiter", exact: true });
+const providerNames = /claude|anthropic|sonnet/i;
+async function noProviderReferences(page: Page) {
+  const body = page.locator("body");
+  expect(await body.innerText()).not.toMatch(providerNames);
+  expect(await body.ariaSnapshot()).not.toMatch(providerNames);
+  const labels = await body
+    .locator("[aria-label],[aria-description],[title],[alt]")
+    .evaluateAll((elements) =>
+      elements
+        .filter(
+          (element) =>
+            element.getClientRects().length > 0 &&
+            getComputedStyle(element).visibility !== "hidden",
+        )
+        .flatMap((element) =>
+          ["aria-label", "aria-description", "title", "alt"].map(
+            (attribute) => element.getAttribute(attribute) ?? "",
+          ),
+        ),
+    );
+  expect(labels.join("\n")).not.toMatch(providerNames);
+}
 async function open(page: Page) {
   await launcher(page).click();
   await expect(dialog(page)).toBeVisible();
+  await noProviderReferences(page);
 }
-async function chooseClaude(page: Page) {
-  const radio = dialog(page).getByRole("radio", { name: /^Claude\b/ });
+async function chooseGuidance(page: Page) {
+  const radio = dialog(page).getByRole("radio", {
+    name: /^Thoughtful guidance\b/,
+  });
   await expect(radio).toHaveAccessibleName(/offline demo/);
   await radio.check();
   await expect(dialog(page).locator(".cw-provider-note")).toContainText(
-    "not called",
+    "Try a sample answer. No live AI service is called.",
   );
+  await expect(radio).toHaveAttribute("value", "guidance");
+  await noProviderReferences(page);
 }
 async function ask(page: Page, text = "Help us compare this budget.") {
   await input(page).fill(text);
@@ -85,6 +112,11 @@ test("the real default adapter is explicitly selected, accurately labelled offli
         headers: request.headers(),
       });
   });
+  for (const hash of ["nearby", "explore", "menu", "table", "plan"]) {
+    await page.goto(`/#${hash}`);
+    await expect(page.getByRole("main")).toBeVisible();
+    await noProviderReferences(page);
+  }
   await page.goto("/#menu");
   expect(requests).toEqual([]);
   await open(page);
@@ -99,19 +131,20 @@ test("the real default adapter is explicitly selected, accurately labelled offli
   const before = await page.evaluate(() =>
     localStorage.getItem("common-table.demo.v1"),
   );
-  await chooseClaude(page);
+  await chooseGuidance(page);
   expect(requests.filter((call) => call.path.endsWith("/reply"))).toHaveLength(
     0,
   );
   await ask(page, "What about the budget?");
   await expect(answer(page)).toBeVisible();
-  await expect(answer(page).locator(".cw-claude-label")).toHaveText(
-    "OFFLINE DEMO · CLAUDE NOT CALLED",
+  await expect(answer(page).locator(".cw-guidance-label")).toHaveText(
+    "OFFLINE DEMO · SAMPLE GUIDANCE",
   );
   await expect(answer(page).locator("p")).toContainText("$48");
   await expect(answer(page).locator("p")).not.toContainText(
-    "Offline demo · Claude not called.",
+    "Offline demo · sample guidance.",
   );
+  await noProviderReferences(page);
   const posts = requests.filter((call) => call.path.endsWith("/reply"));
   expect(posts).toHaveLength(1);
   expect(posts[0].headers["x-common-table-request"]).toBe("waiter");
@@ -150,7 +183,7 @@ test("repeated Enter sends one pending request, Cancel restores input focus, and
   const calls = await heldApi(page);
   await page.goto("/#menu");
   await open(page);
-  await chooseClaude(page);
+  await chooseGuidance(page);
   await input(page).fill("One request, please.");
   await input(page).press("Enter");
   await input(page).press("Enter");
@@ -160,6 +193,7 @@ test("repeated Enter sends one pending request, Cancel restores input focus, and
   await expect(dialog(page).locator(".cw-request-pending")).toContainText(
     "Preparing a little guidance",
   );
+  await noProviderReferences(page);
   await dialog(page)
     .getByRole("button", { name: "Cancel request", exact: true })
     .click();
@@ -171,6 +205,7 @@ test("repeated Enter sends one pending request, Cancel restores input focus, and
   await expect.poll(() => calls.length).toBe(2);
   await response(calls[1].route, "A fresh answer for this table.");
   await expect(answer(page)).toContainText("A fresh answer for this table.");
+  await noProviderReferences(page);
   expect(calls).toHaveLength(2);
 });
 
@@ -180,7 +215,7 @@ test("course and venue changes clear old answers and discard a pending answer fo
   const calls = await heldApi(page);
   await page.goto("/#menu");
   await open(page);
-  await chooseClaude(page);
+  await chooseGuidance(page);
   await ask(page);
   await expect.poll(() => calls.length).toBe(1);
   await response(calls[0].route, "ANSWER FOR FIRST PLACE");
@@ -230,7 +265,7 @@ test("closing cancels the request, restores the opener and sends fresh aggregate
   await budget.focus();
   await page.keyboard.press("Home");
   await open(page);
-  await chooseClaude(page);
+  await chooseGuidance(page);
   await ask(page, "Help with our table.");
   await expect.poll(() => calls.length).toBe(1);
   await page.keyboard.press("Escape");
@@ -245,7 +280,7 @@ test("closing cancels the request, restores the opener and sends fresh aggregate
   ).toBeChecked();
   await expect(answer(page)).toHaveCount(0);
   expect(calls).toHaveLength(1);
-  await chooseClaude(page);
+  await chooseGuidance(page);
   await ask(page, "Help with the revised table.");
   await expect.poll(() => calls.length).toBe(2);
   const before = calls[0].body.context as { budget: number },
@@ -275,7 +310,7 @@ test("reply text stays literal, failed/mislabeled responses are sanitized, and e
   const calls = await heldApi(page);
   await page.goto("/#menu");
   await open(page);
-  await chooseClaude(page);
+  await chooseGuidance(page);
   await ask(page);
   await expect.poll(() => calls.length).toBe(1);
   const html =
@@ -289,18 +324,26 @@ test("reply text stays literal, failed/mislabeled responses are sanitized, and e
   await calls[1].route.fulfill({
     status: 502,
     contentType: "application/json",
-    body: JSON.stringify({ error: "PRIVATE_PROVIDER_ERROR_CANARY" }),
+    body: JSON.stringify({
+      error: "PRIVATE_PROVIDER_ERROR_CANARY · Claude Anthropic Sonnet",
+    }),
   });
   await expect(alert(page)).toContainText("Local tips are still available");
   await expect(dialog(page)).not.toContainText("PRIVATE_PROVIDER_ERROR_CANARY");
   await expect(answer(page)).toHaveCount(0);
   expect(calls).toHaveLength(2);
+  await noProviderReferences(page);
   await ask(page, "Reject a false source label.");
   await expect.poll(() => calls.length).toBe(3);
-  await response(calls[2].route, "UNVERIFIED LIVE CLAIM", "anthropic");
+  await response(
+    calls[2].route,
+    "UNVERIFIED LIVE CLAIM · Claude Sonnet",
+    "anthropic",
+  );
   await expect(alert(page)).toBeVisible();
   await expect(answer(page)).toHaveCount(0);
   expect(calls).toHaveLength(3);
+  await noProviderReferences(page);
   await ask(page, "A busy answer.");
   await expect.poll(() => calls.length).toBe(4);
   await calls[3].route.fulfill({
@@ -311,22 +354,24 @@ test("reply text stays literal, failed/mislabeled responses are sanitized, and e
   await expect(alert(page)).toContainText("finishing a request");
   await expect(dialog(page)).not.toContainText("PRIVATE_RATE_CANARY");
   expect(calls).toHaveLength(4);
+  await noProviderReferences(page);
 });
 
-test("disabled browser Claude cannot submit and local guidance remains useful", async ({
+test("disabled thoughtful guidance cannot submit and local guidance remains useful", async ({
   page,
 }) => {
   const calls = await heldApi(page, "disabled");
   await page.goto("/#menu");
   await open(page);
   await dialog(page)
-    .getByRole("radio", { name: /^Claude\b/ })
+    .getByRole("radio", { name: /^Thoughtful guidance\b/ })
     .check();
   await input(page).fill("A question.");
   await expect(submit(page)).toBeDisabled();
   await expect(dialog(page).locator(".cw-provider-note")).toContainText(
     "not available",
   );
+  await noProviderReferences(page);
   expect(calls).toHaveLength(0);
   await dialog(page)
     .getByRole("radio", { name: "Local tips", exact: true })
@@ -344,7 +389,7 @@ for (const mobile of [false, true]) {
     const calls = await heldApi(page);
     await page.goto("/#menu");
     await open(page);
-    await chooseClaude(page);
+    await chooseGuidance(page);
     await ask(page);
     await expect.poll(() => calls.length).toBe(1);
     await response(
@@ -354,6 +399,7 @@ for (const mobile of [false, true]) {
       ),
     );
     await expect(answer(page)).toBeVisible();
+    await noProviderReferences(page);
     await page.evaluate(() => document.fonts.ready);
     const scan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])

@@ -10,7 +10,7 @@ const demoVenues = [
 
 export const WAITER_VENUE_IDS = demoVenues.map((venue) => venue.id);
 export const WAITER_RESTRICTIONS = ["Vegetarian", "Vegan", "Gluten-free", "Nut-free"] as const;
-export const OFFLINE_WAITER_LABEL = "Offline demo · Claude not called.";
+export const OFFLINE_WAITER_LABEL = "Offline demo · sample guidance.";
 
 export interface WaiterContext {
   view: "explore" | "table" | "plan";
