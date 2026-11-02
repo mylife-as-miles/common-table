@@ -234,17 +234,19 @@ async function runScenario(mobile) {
       await launcher().click(); await expect(waiter()).toBeVisible();
       const response = await availabilityPromise; const body = await response.json();
       const serviceUnavailable = response.status() === 503 && body?.code === "unavailable";
-      if (!serviceUnavailable) { expect(response.status()).toBe(200); expect(["disabled", "sign_in"]).toContain(body.mode); }
+      if (!serviceUnavailable) { expect(response.status()).toBe(200); expect(["disabled", "live"]).toContain(body.mode); expect(body.canEnable).toBe(false); }
+      const liveAvailable = !serviceUnavailable && body.mode === "live";
       const thoughtful = waiter().getByRole("radio", { name: /^Thoughtful guidance\b/ }); await thoughtful.check();
       const field = waiter().getByLabel("Or leave a small request"); await field.fill("Check this local fictional plan");
-      await expect(waiter().getByRole("button", { name: "Ask The Waiter", exact: true })).toBeDisabled();
-      await waiter().getByRole("radio", { name: "Local tips", exact: true }).check();
+      const askButton = waiter().getByRole("button", { name: "Ask The Waiter", exact: true });
+      if (liveAvailable) await expect(askButton).toBeEnabled(); else await expect(askButton).toBeDisabled();
+      const localTips = waiter().getByRole("radio", { name: "Local tips", exact: true }); await localTips.check(); await expect(localTips).toBeChecked();
       await field.fill("help finish tonight"); await waiter().getByRole("button", { name: "Ask The Waiter", exact: true }).click();
       await expect(waiter().locator(".cw-response")).toContainText("Juniper & Rye");
       await expect(waiter().locator(".cw-guidance-result")).toHaveCount(0);
       expect(await page.locator("body").innerText()).not.toMatch(/claude|anthropic|qloo/i);
       await waiter().locator(".cw-request").scrollIntoViewIfNeeded(); await shot("06-local-waiter");
-      return { observedAvailability: body.mode ?? "unavailable", notVerified: serviceUnavailable, unavailableGuidanceCannotSubmit: true, localTipsVerified: true, liveModelVerified: false, paidQuestionSubmitted: false };
+      return { observedAvailability: body.mode ?? "unavailable", notVerified: serviceUnavailable, liveGuidanceAvailable: liveAvailable, liveGuidanceEnabledWithoutSubmission: liveAvailable, unavailableGuidanceCannotSubmit: !liveAvailable, localTipsVerified: true, liveModelVerified: false, paidQuestionSubmitted: false };
     });
     await step("waiter_exit_browser_back_and_keyboard_focus", async () => {
       await waiter().getByRole("button", { name: "Back to the evening", exact: true }).click(); await expect(waiter()).not.toBeVisible(); await expect(launcher()).toBeFocused();

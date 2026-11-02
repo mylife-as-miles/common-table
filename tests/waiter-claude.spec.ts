@@ -68,13 +68,14 @@ type Held = {
   route: Route;
   body: Record<string, unknown>;
   csrf: string | undefined;
+  headers: Record<string, string>;
 };
 async function heldApi(page: Page, mode = "live") {
   const calls: Held[] = [];
   await page.route("**/api/waiter/status", (route) =>
     route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ mode }),
+      body: JSON.stringify({ mode, canEnable: false }),
     }),
   );
   await page.route("**/api/waiter/reply", (route) => {
@@ -82,6 +83,7 @@ async function heldApi(page: Page, mode = "live") {
       route,
       body: route.request().postDataJSON(),
       csrf: route.request().headers()["x-common-table-request"],
+      headers: route.request().headers(),
     });
   });
   return calls;
@@ -132,22 +134,18 @@ test("the actual anonymous service is honest, sends no paid request and leaves l
   expect(status.status()).toBe(200);
   const availability = await status.json();
   expect(Object.keys(availability).sort()).toEqual(["canEnable", "mode"]);
-  expect(["disabled", "sign_in"]).toContain(availability.mode);
+  expect(["disabled", "live"]).toContain(availability.mode);
   expect(availability.canEnable).toBe(false);
-  if (availability.mode === "sign_in") {
-    await expect(
-      dialog(page).getByRole("link", {
-        name: "Sign in for guidance",
-        exact: true,
-      }),
-    ).toHaveAttribute("target", "_top");
-  }
+  await expect(dialog(page).getByRole("link", { name: /Sign in/ })).toHaveCount(
+    0,
+  );
   const guidance = dialog(page).getByRole("radio", {
     name: /^Thoughtful guidance\b/,
   });
   await expect(guidance).toBeChecked();
   await input(page).fill("A question about this place.");
-  await expect(submit(page)).toBeDisabled();
+  if (availability.mode === "live") await expect(submit(page)).toBeEnabled();
+  else await expect(submit(page)).toBeDisabled();
   await expect(
     dialog(page).getByRole("button", { name: "Enable guidance", exact: true }),
   ).toHaveCount(0);
@@ -162,13 +160,25 @@ test("the actual anonymous service is honest, sends no paid request and leaves l
   await noProviderReferences(page);
 });
 
-test("repeated Enter sends one pending request, Cancel restores input focus, and a later explicit request works", async ({
+test("an anonymous visitor can ask once, cancel duplicate submission and receive live guidance without sign-in", async ({
   page,
 }) => {
   const calls = await heldApi(page);
+  await page.route("**/api/shared-tables/session", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ identity: null, available: true }),
+    }),
+  );
   await page.goto("/#menu");
   await open(page);
   await chooseGuidance(page);
+  await expect(dialog(page).getByRole("link", { name: /Sign in/ })).toHaveCount(
+    0,
+  );
+  await expect(
+    dialog(page).getByRole("button", { name: "Enable guidance", exact: true }),
+  ).toHaveCount(0);
   const before = await readSerializedApp(page);
   await input(page).fill("One request, please.");
   await input(page).press("Enter");
@@ -176,6 +186,12 @@ test("repeated Enter sends one pending request, Cancel restores input focus, and
   await input(page).press("Enter");
   await expect.poll(() => calls.length).toBe(1);
   expect(calls[0].csrf).toBe("waiter");
+  expect(calls[0].headers.authorization).toBeUndefined();
+  expect(
+    Object.keys(calls[0].headers).some((key) =>
+      /oai-authenticated|api-key|anthropic/i.test(key),
+    ),
+  ).toBe(false);
   expect(Object.keys(calls[0].body).sort()).toEqual(["context", "message"]);
   expect(calls[0].body.context).toEqual({
     view: "explore",
@@ -353,8 +369,18 @@ test("reply text stays literal, failed/mislabeled responses are sanitized, and e
     contentType: "application/json",
     body: '{"message":"PRIVATE_RATE_CANARY"}',
   });
-  await expect(alert(page)).toContainText("finishing a request");
+  await expect(alert(page)).toContainText("current limit");
+  await expect(alert(page)).toContainText("Local tips are still available");
   await expect(dialog(page)).not.toContainText("PRIVATE_RATE_CANARY");
+  expect(calls).toHaveLength(4);
+  await expect(dialog(page).getByRole("link", { name: /Sign in/ })).toHaveCount(
+    0,
+  );
+  await dialog(page)
+    .getByRole("radio", { name: "Local tips", exact: true })
+    .check();
+  await ask(page, "why this place?");
+  await expect(dialog(page).locator(".cw-reasons")).toBeVisible();
   expect(calls).toHaveLength(4);
   await noProviderReferences(page);
 });
@@ -383,7 +409,7 @@ test("disabled thoughtful guidance cannot submit and local guidance remains usef
   expect(calls).toHaveLength(0);
 });
 
-test("anonymous guidance offers a safe top-level sign-in link without enabling a paid request", async ({
+test("an obsolete auth-only availability response fails closed without a sign-in wall", async ({
   page,
 }) => {
   const calls = await heldApi(page, "sign_in");
@@ -394,16 +420,12 @@ test("anonymous guidance offers a safe top-level sign-in link without enabling a
     .check();
   await input(page).fill("Help with this table.");
   await expect(submit(page)).toBeDisabled();
-  const signIn = dialog(page).getByRole("link", {
-    name: "Sign in for guidance",
-    exact: true,
-  });
-  await expect(signIn).toHaveAttribute("target", "_top");
-  const href = await signIn.getAttribute("href");
-  expect(href).toMatch(/^\/signin-with-chatgpt\?/);
-  expect(
-    new URL(href!, "https://fixture.example").searchParams.get("return_to"),
-  ).toBe("/#table");
+  await expect(dialog(page).getByRole("link", { name: /Sign in/ })).toHaveCount(
+    0,
+  );
+  await expect(dialog(page).locator(".cw-provider-note")).toContainText(
+    "Local tips are ready to help",
+  );
   await expect(
     dialog(page).getByRole("button", { name: "Enable guidance", exact: true }),
   ).toHaveCount(0);

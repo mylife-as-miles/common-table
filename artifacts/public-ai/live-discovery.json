@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-11-02T06:09:38.873Z",
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "signedIn": false,
+  "authorizationHeaderSent": false,
+  "status": {
+    "httpStatus": 200,
+    "mode": "live",
+    "canEnable": false,
+    "cookieIssued": true,
+    "httpOnly": true,
+    "secure": true
+  },
+  "validDiscoveryRequests": 1,
+  "discovery": {
+    "httpStatus": 200,
+    "source": "osm",
+    "venueCount": 8,
+    "orderedIds": [
+      "osm:node:9528668470",
+      "osm:node:4871640124",
+      "osm:node:5768346318",
+      "osm:node:6465763264",
+      "osm:node:6391739434",
+      "osm:node:12480632412",
+      "osm:node:5866582854",
+      "osm:way:248156367"
+    ],
+    "venues": [
+      {
+        "id": "osm:node:9528668470",
+        "name": "Lele's Roman",
+        "priceKnown": false
+      },
+      {
+        "id": "osm:node:4871640124",
+        "name": "Bacchus",
+        "priceKnown": false
+      },
+      {
+        "id": "osm:node:5768346318",
+        "name": "Café Paulette",
+        "priceKnown": false
+      },
+      {
+        "id": "osm:node:6465763264",
+        "name": "Atti",
+        "priceKnown": false
+      },
+      {
+        "id": "osm:node:6391739434",
+        "name": "Grand Canyon Bistro",
+        "priceKnown": false
+      },
+      {
+        "id": "osm:node:12480632412",
+        "name": "Fogo de Chão",
+        "priceKnown": false
+      },
+      {
+        "id": "osm:node:5866582854",
+        "name": "Tacombi",
+        "priceKnown": false
+      },
+      {
+        "id": "osm:way:248156367",
+        "name": "Junior's",
+        "priceKnown": false
+      }
+    ]
+  }
+}

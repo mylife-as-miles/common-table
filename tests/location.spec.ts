@@ -1274,6 +1274,161 @@ test("a restaurant response enters the map, book and saved plan without inventin
   await expect(receipt).toContainText("Fixture Real Restaurant");
 });
 
+test("anonymous restaurant discovery handles fair-use, obsolete auth and redirects while preserving a saved plan", async ({
+  page,
+}) => {
+  test.info().annotations.push({
+    type: "service-fixture",
+    description:
+      "Anonymous discovery responses are synthetic; no provider or paid request is made.",
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await installFixture(page);
+  await page.route("**/api/shared-tables/session", (route) =>
+    json(route, { identity: null, available: true }),
+  );
+  const calls: {
+    route: Route;
+    body: Record<string, unknown>;
+    headers: Record<string, string>;
+  }[] = [];
+  let redirectedRequests = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).hostname === "unexpected-redirect.example")
+      redirectedRequests++;
+  });
+  await page.route("**/api/recommendations", (route) => {
+    calls.push({
+      route,
+      body: route.request().postDataJSON(),
+      headers: route.request().headers(),
+    });
+  });
+  await page.goto("/#menu");
+  await page
+    .getByRole("button", { name: "Bring this to the table", exact: true })
+    .click();
+  const nav = (name: RegExp) =>
+    page
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("button", { name });
+  await nav(/Dinner plan/).click();
+  await page
+    .getByRole("checkbox", { name: "Works for me", exact: true })
+    .check();
+  await page
+    .getByRole("button", { name: "Save this dinner plan", exact: true })
+    .click();
+  await expect
+    .poll(async () => (await persistedState(page)).plan.saved)
+    .toBe(true);
+  const savedPlan = (await persistedState(page)).plan;
+  await nav(/Explore/).click();
+  await ready(page);
+  expect(calls).toHaveLength(0);
+  await page
+    .getByRole("button", { name: "Find real restaurants", exact: true })
+    .click();
+  await expect.poll(() => calls.length).toBe(1);
+  expect(calls[0].headers["x-common-table-request"]).toBe("recommendations");
+  expect(calls[0].headers.authorization).toBeUndefined();
+  expect(Object.keys(calls[0].body).sort()).toEqual([
+    "latitude",
+    "longitude",
+    "participants",
+    "seedVenueIds",
+    "vetoes",
+  ]);
+  await calls[0].route.fulfill({
+    status: 429,
+    contentType: "application/json",
+    headers: { "Retry-After": "86400" },
+    body: JSON.stringify({
+      error: {
+        code: "rate_limited",
+        message: "PRIVATE_LIMIT_CANARY · Claude Anthropic Sonnet",
+      },
+    }),
+  });
+  await expect(page.locator(".discovery-status")).toContainText(
+    "current limit",
+  );
+  await expect(page.locator(".discovery-status")).toContainText(
+    "Local tips and saved plans are still available",
+  );
+  await expect(page.locator(".discovery-status")).not.toContainText(
+    /Sign in|minute|second|PRIVATE_|Claude|Anthropic|Sonnet/i,
+  );
+  expect((await persistedState(page)).plan).toEqual(savedPlan);
+  expect(calls).toHaveLength(1);
+  await page
+    .getByRole("button", { name: "Find real restaurants", exact: true })
+    .click();
+  await expect.poll(() => calls.length).toBe(2);
+  await json(calls[1].route, {
+    source: "osm",
+    venues: [],
+    orderedIds: [],
+    rationales: {},
+    retrievedAt: new Date().toISOString(),
+  });
+  await expect(page.locator(".discovery-status")).toContainText(
+    "No places matched this search",
+  );
+  expect((await persistedState(page)).plan).toEqual(savedPlan);
+  await page
+    .getByRole("button", { name: "Refresh places", exact: true })
+    .click();
+  await expect.poll(() => calls.length).toBe(3);
+  await json(
+    calls[2].route,
+    {
+      error: {
+        code: "authentication_required",
+        message: "Sign in · PRIVATE_AUTH_CANARY",
+      },
+    },
+    401,
+  );
+  await expect(page.locator(".discovery-status")).toContainText(
+    "We couldn’t find places right now",
+  );
+  await expect(
+    page.getByRole("link", {
+      name: "Sign in to discover restaurants",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Refresh places", exact: true })
+    .click();
+  await expect.poll(() => calls.length).toBe(4);
+  await calls[3].route.fulfill({
+    status: 302,
+    headers: {
+      Location:
+        "https://unexpected-redirect.example/should-not-receive-preferences",
+    },
+    body: "",
+  });
+  await expect(page.locator(".discovery-status")).toContainText(
+    "Your current table and plan are safe",
+  );
+  expect(redirectedRequests).toBe(0);
+  expect(calls).toHaveLength(4);
+  expect((await persistedState(page)).plan).toEqual(savedPlan);
+  await expect(page.locator("body")).not.toContainText(
+    /PRIVATE_|Claude|Anthropic|Sonnet|Qloo/,
+  );
+  await nav(/Dinner plan/).click();
+  await expect(
+    page.getByRole("article", { name: "Dinner plan summary" }),
+  ).toContainText("Juniper & Rye");
+  await expect(
+    page.getByRole("button", { name: "Saved for a good evening", exact: true }),
+  ).toBeVisible();
+});
+
 test("a historical saved restaurant remains a private saved plan and is excluded from new discovery seeds", async ({
   page,
 }) => {

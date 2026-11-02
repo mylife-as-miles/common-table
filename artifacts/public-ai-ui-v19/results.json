@@ -1,0 +1,107 @@
+{
+  "target": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "deployment": "v19",
+  "startedAt": "2026-11-02T06:11:36.427Z",
+  "scope": "One actual public Waiter question from a fresh signed-out browser. No API response fixtures or storage seeding.",
+  "transport": "Inherited HTTPS proxy with normal TLS verification",
+  "requestsMocked": false,
+  "interventions": [
+    "Public OSM raster tiles blocked.",
+    "Safety guard allows at most one Waiter reply POST; other generation/shared mutations are blocked."
+  ],
+  "pageErrors": [],
+  "badSiteAssets": [],
+  "apiResponses": [
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/weather",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/waiter/status",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/waiter/reply",
+      "status": 200,
+      "method": "POST"
+    }
+  ],
+  "waiterPosts": 1,
+  "blockedMutations": [],
+  "directProviderRequests": 0,
+  "rasterBlocked": 0,
+  "geolocationCalls": 0,
+  "checks": [
+    "Fresh signed-out native session confirmed; default sample book loaded.",
+    "Public live guidance enabled without sign-in; secure HttpOnly quota cookie accepted and hidden from JavaScript.",
+    "Exactly one actual public reply returned200/source:live and rendered as plain text without provider labels."
+  ],
+  "paidCallOutcome": "confirmed_live_response_rendered",
+  "actualSharedWrites": 0,
+  "actualBookings": 0,
+  "externalInvitations": 0,
+  "session": {
+    "status": 200,
+    "anonymous": true
+  },
+  "availability": {
+    "status": 200,
+    "mode": "live",
+    "canEnable": false
+  },
+  "quotaCookie": {
+    "name": "__Host-ct-ai",
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax",
+    "path": "/"
+  },
+  "quotaCookieVisibleToJavaScript": false,
+  "submission": {
+    "contextKeys": [
+      "budget",
+      "mode",
+      "participantCount",
+      "planSaved",
+      "restrictions",
+      "tastes",
+      "venueId",
+      "view"
+    ],
+    "venueId": "juniper",
+    "participantCount": 1,
+    "budget": 65,
+    "tastes": [
+      "Italian",
+      "Seasonal"
+    ],
+    "restrictions": [],
+    "mode": "book",
+    "view": "explore",
+    "planSaved": false,
+    "authorizationHeaderPresent": false,
+    "providerKeyHeaderPresent": false,
+    "browserQuotaCookieSent": true
+  },
+  "reply": {
+    "status": 200,
+    "source": "live",
+    "text": "Juniper & Rye is a fictional sample, so its $48 per-person price and Vegetarian and Gluten-free labels are illustrative only. Still, it lines up nicely with your Italian and seasonal tastes, and the $48 sits under your $65 minimum budget, which is a handy way to see how a comparison would look.\n\nOne useful next step: use the app's save-plan control to keep this sample as a draft dinner plan. A saved plan is just a record, not a reservation, and nothing gets booked or sent. If you later look at real restaurants, refresh discovery so you're working from current candidates, and confirm any dietary needs and actual costs directly with the restaurant.",
+    "characters": 654
+  },
+  "screenshot": "public-waiter-mobile.png",
+  "status": "pass",
+  "finishedAt": "2026-11-02T06:11:43.102Z"
+}

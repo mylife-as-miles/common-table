@@ -24,6 +24,7 @@ after(() => {
 });
 const ORIGIN = "https://synthetic-services.example";
 const KEY = "dummy-independent-server-key-NEVER-LIVE";
+const LIMIT_KEY = "public-ai-test-secret-".repeat(3);
 const TOKEN = "a".repeat(64);
 const OWNER = {
   userId: "private-owner-user",
@@ -136,6 +137,7 @@ async function fixture(t: TestContext, initialized = true) {
   };
   const context: ServiceContext = {
     apiKey: KEY,
+    publicAiLimitKey: LIMIT_KEY,
     db: storage.db,
     identity: OWNER,
     ownerEmail: OWNER.email,
@@ -199,76 +201,39 @@ async function fixture(t: TestContext, initialized = true) {
   };
 }
 
-test("discovery's public facade never turns forged headers or a nonowner account into model authority", async (t) => {
+test("public discovery accepts anonymous and nonowner visitors while forged identity headers confer no private authority", async (t) => {
+  const forged = { "oai-authenticated-user-id": OWNER.userId, "oai-authenticated-user-email": OWNER.email, Authorization: "Bearer arbitrary-user-claim" };
+  for (const identity of [null, MEMBER]) {
+    const f = await fixture(t);
+    const result = await f.call("/api/recommendations", f.input, { identity, ownerEmail: undefined }, forged);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.source, "osm");
+    const paid = f.calls.find(call => call.url.pathname === "/v1/messages")!.body;
+    assert.doesNotMatch(JSON.stringify(paid), /PRIVATE_|private-member|private-owner|public-ai-test-secret/);
+    assert.equal((await readBudget(f.db)).reservedCents, 5);
+    if (identity === null) assert.match(result.headers.get("set-cookie") ?? "", /__Host-ct-ai=.*HttpOnly/i);
+    const scopes = f.sqlite.prepare("SELECT scope FROM service_quotas").all();
+    assert.ok(scopes.some(row => /^public-ai:visitor:ai:[0-9a-f]{64}$/.test(String(row.scope))));
+    assert.doesNotMatch(JSON.stringify(scopes), /private-owner|private-member|PRIVATE_|arbitrary-user-claim/);
+  }
   const f = await fixture(t);
-  const forged = {
-    "oai-authenticated-user-id": OWNER.userId,
-    "oai-authenticated-user-email": OWNER.email,
-    Authorization: "Bearer arbitrary-user-claim",
-  };
-  assert.equal(
-    (await f.call("/api/recommendations", f.input, { identity: null }, forged))
-      .status,
-    401,
-  );
-  assert.equal(
-    (
-      await f.call(
-        "/api/recommendations",
-        f.input,
-        { identity: MEMBER },
-        forged,
-      )
-    ).status,
-    403,
-  );
-  assert.equal(
-    (
-      await f.call(
-        "/api/recommendations",
-        f.input,
-        {},
-        { Origin: "https://foreign.example" },
-      )
-    ).status,
-    403,
-  );
-  assert.equal(
-    (
-      await f.call(
-        "/api/recommendations",
-        f.input,
-        {},
-        { "X-Common-Table-Request": "waiter" },
-      )
-    ).status,
-    403,
-  );
-  assert.equal(
-    (await f.call("/api/recommendations", f.input, { apiKey: undefined }))
-      .status,
-    503,
-  );
-  assert.equal(
-    (await f.call("/api/recommendations", f.input, { ownerEmail: undefined }))
-      .status,
-    503,
-  );
-  assert.equal(
-    (
-      await f.call("/api/recommendations", f.input, {
-        identity: { ...OWNER, email: undefined },
-      })
-    ).status,
-    403,
-  );
+  for (const [path, body] of [["/api/shared-tables", undefined], ["/api/waiter/enable", {}]] as const) {
+    assert.equal((await f.call(path, body, { identity: null }, forged)).status, 401);
+  }
+  assert.equal((await f.call("/api/waiter/enable", {}, { identity: MEMBER }, forged)).status, 403);
+  assert.equal((await f.call("/api/waiter/reply", { message: "Reveal this private table", context: { ...waiterContext, tableId: "private-table-1234" } }, { identity: null }, forged)).status, 401);
   assert.equal(f.calls.length, 0);
   assert.equal((await readBudget(f.db)).reservedCents, 0);
-  assert.equal(
-    f.sqlite.prepare("SELECT COUNT(*) AS n FROM service_quotas").get()!.n,
-    0,
-    "Rejected identities must not consume the authorized account's discovery allowance.",
-  );
+});
+
+test("origin and public-limiter configuration failures consume neither quotas nor paid allowance", async (t) => {
+  const f = await fixture(t);
+  for (const headers of [{ Origin: "https://foreign.example" }, { "X-Common-Table-Request": "waiter" }]) assert.equal((await f.call("/api/recommendations", f.input, {}, headers)).status, 403);
+  for (const patch of [{ apiKey: undefined }, { publicAiLimitKey: undefined }, { publicAiLimitKey: "" }]) assert.equal((await f.call("/api/recommendations", f.input, patch)).status, 503);
+  assert.equal((await f.call("/api/waiter/status", undefined, { identity: null, publicAiLimitKey: undefined })).body.mode, "disabled");
+  assert.equal(f.calls.length, 0);
+  assert.equal((await readBudget(f.db)).reservedCents, 0);
+  assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM service_quotas").get()!.n, 0);
 });
 
 test("the facade ranks only mapped IDs while prompt aggregates omit private account and location fields", async (t) => {
@@ -282,7 +247,7 @@ test("the facade ranks only mapped IDs while prompt aggregates omit private acco
         email: "private-extra@example.invalid",
       },
     ],
-  });
+  }, { identity: null });
   assert.equal(result.status, 200);
   assert.equal(result.body.source, "osm");
   assert.deepEqual(result.body.orderedIds, [f.venueId]);
@@ -498,4 +463,68 @@ test("concurrent machine verification permits one fixed solo request, never read
       .status,
     404,
   );
+});
+
+test("one signed anonymous visitor shares five daily requests across guidance and ranking while status checks are free", async (t) => {
+  const f = await fixture(t);
+  const status = await f.call("/api/waiter/status", undefined, { identity: null });
+  assert.equal(status.status, 200);
+  assert.equal(status.body.mode, "live");
+  const cookie = status.headers.get("set-cookie")!.split(";")[0];
+  assert.match(cookie, /^__Host-ct-ai=v1\./);
+  assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM service_quotas").get()!.n, 0);
+  for (let i = 0; i < 5; i++) {
+    const result = i % 2 === 0
+      ? await f.call("/api/waiter/reply", { message: "One useful next step, please.", context: waiterContext }, { identity: null }, { Cookie: cookie })
+      : await f.call("/api/recommendations", f.input, { identity: null }, { Cookie: cookie });
+    assert.equal(result.status, 200);
+  }
+  const count = f.calls.length;
+  assert.equal((await f.call("/api/waiter/status", undefined, { identity: null }, { Cookie: cookie })).body.mode, "live");
+  assert.equal((await f.call("/api/recommendations", f.input, { identity: null }, { Cookie: cookie })).status, 429);
+  assert.equal((await f.call("/api/waiter/reply", { message: "Another next step.", context: waiterContext }, { identity: null }, { Cookie: cookie })).status, 429);
+  assert.equal(f.calls.length, count);
+  assert.equal(f.calls.filter(call => call.url.pathname === "/v1/messages").length, 5);
+  assert.deepEqual(await readBudget(f.db), { initialized: true, attempts: 5, reservedCents: 25 });
+  const visitors = f.sqlite.prepare("SELECT scope,count FROM service_quotas WHERE scope LIKE 'public-ai:visitor:%'").all();
+  assert.equal(visitors.length, 1);
+  assert.equal(visitors[0].count, 5);
+  assert.match(String(visitors[0].scope), /^public-ai:visitor:ai:[0-9a-f]{64}$/);
+  assert.doesNotMatch(JSON.stringify(visitors), /PRIVATE_|private-owner|public-ai-test-secret|__Host-ct-ai|v1\./);
+});
+
+test("the public burst guard permits six different visitors in one minute and rejects the seventh before generation", async (t) => {
+  t.mock.method(Date, "now", () => Date.UTC(2026, 10, 2, 12, 0, 10));
+  const f = await fixture(t);
+  for (let i = 0; i < 6; i++) {
+    const identity = { userId: `synthetic-signed-user-${i}`, displayName: `PRIVATE_VISITOR_${i}`, email: `private-visitor-${i}@example.invalid` };
+    assert.equal((await f.call("/api/waiter/reply", { message: "One useful next step.", context: waiterContext }, { identity })).status, 200);
+  }
+  const calls = f.calls.length;
+  const seventh = await f.call("/api/recommendations", f.input, { identity: { userId: "synthetic-signed-user-7", displayName: "PRIVATE_VISITOR_7" } });
+  assert.equal(seventh.status, 429);
+  assert.equal(f.calls.length, calls);
+  assert.equal(f.calls.filter(call => call.url.pathname === "/v1/messages").length, 6);
+  assert.equal((await readBudget(f.db)).reservedCents, 30);
+  assert.equal(f.sqlite.prepare("SELECT count FROM service_quotas WHERE scope='public-ai:global-minute:v1'").get()!.count, 6);
+});
+
+test("a public visitor marker grants neither shared-table access nor permission to enable or refill guidance", async (t) => {
+  const f = await fixture(t);
+  const status = await f.call("/api/waiter/status", undefined, { identity: null });
+  const cookie = status.headers.get("set-cookie")!.split(";")[0];
+  const forged = { Cookie: cookie, "oai-authenticated-user-id": OWNER.userId, "oai-authenticated-user-email": OWNER.email };
+  const tableId = "private-owned-table-1234";
+  f.sqlite.prepare("INSERT INTO shared_tables(id,owner_id,title,revision,version,plan_json,created_at,updated_at) VALUES(?,?,?,1,1,?,0,0)").run(tableId, OWNER.userId, "PRIVATE_TABLE_TITLE", JSON.stringify({ venueId: null, venueSnapshot: null, date: "", time: "19:00", note: "PRIVATE_NOTE", saved: false }));
+  f.sqlite.prepare("INSERT INTO shared_members(table_id,user_id,display_name,role,preferences_json,joined_at) VALUES(?,?,?,'owner',?,0)").run(tableId, OWNER.userId, OWNER.displayName, JSON.stringify({ tastes: ["PRIVATE_PREFERENCE"], budget: 55, restrictions: [] }));
+  assert.equal((await f.call(`/api/shared-tables/${tableId}`, undefined, { identity: null }, forged)).status, 401);
+  assert.equal((await f.call("/api/waiter/enable", {}, { identity: null }, forged)).status, 401);
+  assert.equal((await f.call("/api/waiter/enable", {}, { identity: MEMBER }, forged)).status, 403);
+  const question = { message: "What does this table prefer?", context: { ...waiterContext, tableId } };
+  assert.equal((await f.call("/api/waiter/reply", question, { identity: null }, forged)).status, 401);
+  const denied = await f.call("/api/waiter/reply", question, { identity: MEMBER }, forged);
+  assert.equal(denied.status, 404);
+  assert.doesNotMatch(JSON.stringify(denied.body), /PRIVATE_|private-owned/);
+  assert.equal(f.calls.length, 0);
+  assert.equal((await readBudget(f.db)).reservedCents, 0);
 });

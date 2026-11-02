@@ -13,7 +13,7 @@ export interface WaiterContext {
   tableId?: string;
 }
 
-type Mode = "checking" | "live" | "sign_in" | "disabled" | "unavailable";
+type Mode = "checking" | "live" | "disabled" | "unavailable";
 interface Reply {
   source: "live";
   text: string;
@@ -59,6 +59,7 @@ export function useWaiterGuidance(
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5_000);
     setMode("checking");
+    setCanEnable(false);
     void (async () => {
       try {
         const response = await fetch("/api/waiter/status", {
@@ -74,10 +75,17 @@ export function useWaiterGuidance(
           !body ||
           typeof body !== "object" ||
           !("mode" in body) ||
-          !["live", "sign_in", "disabled", "unavailable"].includes(String(body.mode))
+          !["live", "disabled", "unavailable"].includes(String(body.mode))
         )
           throw new Error("Unavailable");
-        if (current && !controller.signal.aborted) {setMode(body.mode as Mode);setCanEnable("canEnable" in body && body.canEnable === true);}
+        if (current && !controller.signal.aborted) {
+          setMode(body.mode as Mode);
+          setCanEnable(
+            body.mode === "disabled" &&
+              "canEnable" in body &&
+              body.canEnable === true,
+          );
+        }
       } catch {
         if (current) setMode("unavailable");
       } finally {
@@ -89,7 +97,7 @@ export function useWaiterGuidance(
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [open,statusRevision]);
+  }, [open, statusRevision]);
 
   async function ask(message: string) {
     if (active.current || !open || mode !== "live") return;
@@ -123,7 +131,7 @@ export function useWaiterGuidance(
       });
       if (!response.ok) {
         // Provider details and arbitrary error bodies are never shown to users.
-        throw new Error(response.status === 429 ? "busy" : "unavailable");
+        throw new Error(response.status === 429 ? "limit" : "unavailable");
       }
       const body: unknown = await response.json();
       if (
@@ -153,8 +161,8 @@ export function useWaiterGuidance(
         setError(
           timedOut
             ? "The answer took too long. You can try again when you’re ready."
-            : cause instanceof Error && cause.message === "busy"
-              ? "The Waiter is finishing a request. Please wait a moment."
+            : cause instanceof Error && cause.message === "limit"
+              ? "Live guidance has reached its current limit. Local tips are still available."
               : "The answer couldn’t be brought to your table. Local tips are still available.",
         );
     } finally {
@@ -168,13 +176,42 @@ export function useWaiterGuidance(
 
   async function enable() {
     if (!canEnable || active.current) return;
-    const controller=new AbortController();active.current=controller;setBusy(true);setError("");
+    const controller = new AbortController();
+    active.current = controller;
+    setBusy(true);
+    setError("");
     try {
-      const response=await fetch("/api/waiter/enable",{method:"POST",credentials:"same-origin",signal:AbortSignal.any([controller.signal,AbortSignal.timeout(10000)]),headers:{"Content-Type":"application/json","X-Common-Table-Request":"waiter"},body:"{}"});
+      const response = await fetch("/api/waiter/enable", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        redirect: "error",
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(10000),
+        ]),
+        headers: {
+          "Content-Type": "application/json",
+          "X-Common-Table-Request": "waiter",
+        },
+        body: "{}",
+      });
       if (!response.ok) throw new Error("Unavailable");
-      if (!controller.signal.aborted) {setCanEnable(false);setStatusRevision(value=>value+1);}
-    } catch {if(!controller.signal.aborted)setError("Guidance could not be enabled. Your current table is unchanged.");}
-    finally {if(active.current===controller){active.current=null;setBusy(false);}}
+      if (!controller.signal.aborted) {
+        setCanEnable(false);
+        setStatusRevision((value) => value + 1);
+      }
+    } catch {
+      if (!controller.signal.aborted)
+        setError(
+          "Guidance could not be enabled. Your current table is unchanged.",
+        );
+    } finally {
+      if (active.current === controller) {
+        active.current = null;
+        setBusy(false);
+      }
+    }
   }
-  return { mode, reply, error, busy, ask, clear,canEnable,enable };
+  return { mode, reply, error, busy, ask, clear, canEnable, enable };
 }

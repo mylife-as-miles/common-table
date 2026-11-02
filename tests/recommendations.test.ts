@@ -11,6 +11,7 @@ import { rankVenues } from '../src/domain/ranking.ts';
 const realFetch=globalThis.fetch;
 globalThis.fetch=async()=>{throw new Error('Live network is forbidden in recommendation tests.');};after(()=>{globalThis.fetch=realFetch;});
 const KEY='dummy-model-secret-never-live';
+const LIMIT_KEY='public-ai-test-secret-'.repeat(3);
 const OWNER={userId:'private-owner-id',displayName:'PRIVATE_OWNER_NAME',email:'owner@example.test'};
 const ORIGIN='https://app.example';
 let sequence=0;
@@ -43,7 +44,7 @@ async function fixture(t:{after:(fn:()=>void)=>void},override?:(call:Call)=>Resp
     }
     throw new Error('Unexpected mocked endpoint');
   };
-  const options:RecommendationRequestOptions={apiKey:KEY,db:db.db,identity:OWNER,ownerEmail:OWNER.email,fetcher,now:()=>new Date('2026-11-02T12:00:00Z')};
+  const options:RecommendationRequestOptions={apiKey:KEY,publicAiLimitKey:LIMIT_KEY,db:db.db,identity:OWNER,ownerEmail:OWNER.email,fetcher,now:()=>new Date('2026-11-02T12:00:00Z')};
   return {...db,input,elements,calls,fetcher,options,base};
 }
 
@@ -61,10 +62,21 @@ test('real map records supply dining facts and the model alone orders the exact 
   assert.equal(paid.body?.max_tokens,MAX_OUTPUT_TOKENS);assert.ok(!('tools' in paid.body!));assert.equal((await readBudget(f.db)).reservedCents,5);
 });
 
-test('discovery requires the configured owner and an explicitly enabled original allowance before any source or model call',async t=>{
-  const f=await fixture(t,undefined,false);
-  for(const [changes,status] of [[{identity:null},401],[{identity:{...OWNER,email:'guest@example.test'}},403],[{apiKey:undefined},503],[{db:null},503],[{ownerEmail:undefined},503],[{},503]] as const){assert.equal((await handleRecommendations(request(f.input),{...f.options,...changes})).status,status);}
-  assert.equal(f.calls.length,0);
+test('configured anonymous visitors and nonowner accounts can rank real candidates without disclosing identity',async t=>{
+  for(const identity of [null,{userId:'private-guest-id',displayName:'PRIVATE_GUEST_NAME',email:'private-guest@example.test'}]){
+    const f=await fixture(t);
+    const response=await handleRecommendations(request(f.input),{...f.options,identity,ownerEmail:undefined});assert.equal(response.status,200);assert.equal((await response.json()).source,'osm');
+    const paid=JSON.stringify(f.calls.find(c=>c.url.pathname==='/v1/messages')!.body);assert.doesNotMatch(paid,/PRIVATE_|private-guest|private-owner|owner@example|public-ai-test-secret/);
+    if(identity===null){const cookie=response.headers.get('set-cookie')!;assert.match(cookie,/__Host-ct-ai=/);assert.match(cookie,/HttpOnly/i);assert.match(cookie,/Secure/i);assert.match(cookie,/SameSite=Lax/i);}
+    assert.equal((await readBudget(f.db)).reservedCents,5);
+  }
+});
+
+test('missing public limiter configuration and an uninitialized allowance fail closed before quotas, facts or generation',async t=>{
+  const disabled=await fixture(t,undefined,false);assert.equal((await handleRecommendations(request(disabled.input),disabled.options)).status,503);assert.equal(disabled.calls.length,0);
+  for(const changes of [{apiKey:undefined},{db:null},{publicAiLimitKey:undefined},{publicAiLimitKey:''},{publicAiLimitKey:'  '}]){
+    const f=await fixture(t);assert.equal((await handleRecommendations(request(f.input),{...f.options,...changes})).status,503);assert.equal(f.calls.length,0);assert.equal((await readBudget(f.db)).reservedCents,0);assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM service_quotas').get()!.n,0);
+  }
 });
 
 test('empty map candidates and all-vetoed candidates do not generate or reserve new credit',async t=>{
