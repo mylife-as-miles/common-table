@@ -5,8 +5,9 @@ export interface MenuItem {
 }
 
 export interface Venue {
-  source?: "demo" | "qloo" | "osm";
-  providerEntityId?: string;
+  source?: "demo" | "osm" | "saved";
+  osmElementType?: "node" | "way" | "relation";
+  osmElementId?: string;
   latitude?: number;
   longitude?: number;
   websiteUrl?: string;
@@ -60,6 +61,7 @@ export interface AppState {
   catalog?: Venue[];
   recommendationIds?: string[];
   recommendationsRetrievedAt?: string;
+  recommendationRationales?: Record<string, string>;
   participants: Participant[];
   shortlist: string[];
   vetoes: string[];
@@ -68,7 +70,7 @@ export interface AppState {
 }
 
 export type AppAction =
-  | { type: "receive-recommendations"; venues: Venue[]; orderedIds: string[]; retrievedAt: string }
+  | { type: "receive-recommendations"; venues: Venue[]; orderedIds: string[]; retrievedAt: string; rationales?: Record<string, string> }
   | { type: "browse-sample" }
   | { type: "acknowledge-details"; acknowledged: boolean }
   | { type: "select"; venueId: string }
@@ -97,8 +99,8 @@ export interface RankedVenue {
   reasons: string[];
 }
 
-/** A future server-side Qloo adapter must return candidates with source evidence. */
+/** Remote intelligence orders sourced candidates; Venue.source records the facts' origin. */
 export interface RecommendationProvider {
-  readonly source: "demo" | "qloo";
+  readonly source: "demo" | "claude";
   retrieve(state: AppState): Promise<RankedVenue[]>;
 }

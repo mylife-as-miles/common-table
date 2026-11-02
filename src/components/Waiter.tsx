@@ -403,8 +403,8 @@ export function Waiter({
           : [
               sample ? `A little service, gladly. ${selected.name} is ${selectedMatch ? "within the sample table’s current budget and listed dietary needs" : "outside the table’s current needs"}.` : `${selected.name} is a real possibility for the table. Confirm menu, cost and dietary needs before agreeing.`,
               alternatives.length
-                ? `${alternatives.length} other ${alternatives.length === 1 ? "place fits" : "places fit"} this table. Ask for another possibility and we’ll turn a fresh page.`
-                : "This is the only current fit. A budget or preference change can open up a few more doors.",
+                ? sample ? `${alternatives.length} other ${alternatives.length === 1 ? "place fits" : "places fit"} this sample table. Ask for another possibility and we’ll turn a fresh page.` : `${alternatives.length} other possibilities are ready to compare. Confirm costs and dietary needs before deciding.`
+                : sample ? "This is the only current sample fit. A budget or preference change can open up a few more doors." : "This is the only current suggestion. Refresh discovery to explore more places.",
               sample ? "These sample venue notes illustrate the flow. Confirm dietary details with a restaurant." : "These places were discovered for the table’s tastes. Menus, exact cost and dietary details still need restaurant confirmation.",
             ];
     setResponse(
@@ -430,7 +430,7 @@ export function Waiter({
     if (candidate) seenVenues.current.add(candidate.venue.id);
     if (!candidate) {
       setResponse(
-        "This is the only demo place that fits every seat. Adjust the table’s tastes or budget to open up more possibilities.",
+        sample ? "This is the only demo place that fits every seat. Adjust the table’s tastes or budget to open up more possibilities." : "There are no other current suggestions. Refresh discovery for the table’s latest preferences.",
       );
       return;
     }
@@ -438,7 +438,7 @@ export function Waiter({
     setCourse("place");
     setWhy(false);
     setResponse(
-      `${candidate.venue.name} is now your browsing choice.${planned ? ` Your dinner plan at ${planned.name} stays as it was.` : " It fits every current budget and listed dietary need."}`,
+      `${candidate.venue.name} is now your browsing choice.${planned ? ` Your dinner plan at ${planned.name} stays as it was.` : isDemoVenue(candidate.venue) ? " It fits the sample table’s current budget and listed dietary needs." : " Confirm its menu, cost and dietary suitability with the restaurant."}`,
     );
   }
   function keepPlace() {
@@ -782,7 +782,7 @@ export function Waiter({
                   <span className="cw-note-corner" aria-hidden="true" />
                 </div>
                 <p className="cw-guidance">
-                  {selectedMatch
+                  {!sample ? "“A real place to consider. Confirm its menu, cost and dietary suitability directly with the restaurant before agreeing.”" : selectedMatch
                     ? `“${selected.name} fits ${state.participants.length === 1 ? "your" : "everyone’s"} budget${dietaryNeeds.length ? " and listed dietary needs" : ""}. ${selected.tags.slice(0, 2).join(" and ")} sounds like a lovely place to start.”`
                     : "“This place needs another look. It doesn’t fit every current budget and dietary need, or the table has passed on it.”"}
                 </p>
@@ -877,7 +877,7 @@ export function Waiter({
                   ))}
                 </div>
                 <p className="cw-guidance">
-                  {mappedPlaceMode
+                  {!sample ? "“Different tastes can make a better evening. Let’s compare possibilities, then confirm the restaurant’s menu, cost and dietary suitability together.”" : mappedPlaceMode
                     ? "“These are the tastes in your separate fictional demo table. Real mapped places haven’t been checked against these budgets or dietary needs.”"
                     : state.participants.length === 1
                       ? "“A table just for you is a very good table. Start with what you love; make room for company if you feel like it.”"
@@ -892,7 +892,7 @@ export function Waiter({
                     </dd>
                   </div>
                   <div>
-                    <dt>Places that fit</dt>
+                    <dt>{sample ? "Places that fit" : "Places to consider"}</dt>
                     <dd>
                       {ranked.length}
                       <small>{sample ? " sample venues" : " real places · confirm details"}</small>

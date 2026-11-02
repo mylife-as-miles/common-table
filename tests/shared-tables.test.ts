@@ -116,9 +116,9 @@ test("saving cannot bypass a demo budget mismatch and budget schema keeps the fi
   assert.throws(() => f.sqlite.prepare("INSERT INTO ai_test_attempts(id,scope,attempt,reservation_cents,created_at) VALUES('wrong','global-test-v1',1,100,0)").run());
 });
 
-test("real shared plans accept the trusted placeholder, restore provider identity and require missing-detail acknowledgment", async t => {
+test("real shared plans accept the trusted placeholder, restore mapped identity and require missing-detail acknowledgment", async t => {
   const f = fixture(t);
-  const venue = sanitizeVenueSnapshot({ id: "qloo:11111111-1111-4111-8111-111111111111", providerEntityId: "11111111-1111-4111-8111-111111111111", source: "qloo", name: "A real candidate", latitude: 40.7, longitude: -74, description: "x".repeat(1800), neighborhood: "n".repeat(180) })!;
+  const venue = sanitizeVenueSnapshot({ id: "osm:node:12345", source: "osm", name: "A real candidate", latitude: 40.7, longitude: -74, description: "x".repeat(1800), neighborhood: "n".repeat(180) })!;
   assert.equal(venue.image, "/venue-placeholder.svg");
   const created = await f.call("/api/shared-tables", alice, { title: "Real dinner", preferences: prefs, plan: { ...plan, venueId: venue.id, venueSnapshot: venue } }); assert.equal(created.status, 200);
   let table = (await f.call(`/api/shared-tables/${created.body.table.id}`)).body.table;
@@ -128,6 +128,24 @@ test("real shared plans accept the trusted placeholder, restore provider identit
   table = (await f.call(`/api/shared-tables/${table.id}/plan`, alice, { version: table.version, plan: { ...table.plan, detailsAcknowledged: true } })).body.table;
   table = (await f.call(`/api/shared-tables/${table.id}/approval`, alice, { version: table.version, approved: true })).body.table;
   assert.equal((await f.call(`/api/shared-tables/${table.id}/save`, alice, { version: table.version })).body.table.plan.saved, true);
+});
+
+test("legacy private plans restore as saved facts without DB rewrites, while new archived selections are rejected", async t => {
+  const f = fixture(t); const original = await f.create();
+  const id = "qloo:11111111-1111-4111-8111-111111111111";
+  const oldVenue = { id, source: "qloo", providerEntityId: "11111111-1111-4111-8111-111111111111", name: "An older dinner place", latitude: 40.7, longitude: -74, cuisine: "Italian", neighborhood: "Old neighborhood", price: 0, menu: [], dietary: [], tags: [], image: "/venue-placeholder.svg" };
+  const oldPlan = { ...plan, venueId: id, venueSnapshot: oldVenue, saved: true, detailsAcknowledged: true };
+  const raw = JSON.stringify(oldPlan);
+  f.sqlite.prepare("UPDATE shared_tables SET plan_json=? WHERE id=?").run(raw, original.id);
+  f.sqlite.prepare("UPDATE shared_members SET approved_revision=1 WHERE table_id=?").run(original.id);
+  const restored = (await f.call(`/api/shared-tables/${original.id}`)).body.table;
+  assert.equal(restored.plan.venueId, id); assert.equal(restored.plan.venueSnapshot.source, "saved"); assert.equal(restored.plan.saved, true); assert.equal(restored.revision, 1); assert.equal(restored.members[0].approvedRevision, 1);
+  assert.equal(f.sqlite.prepare("SELECT plan_json FROM shared_tables WHERE id=?").get(original.id)?.plan_json, raw);
+  assert.equal((await f.call("/api/shared-tables", alice, { title: "New archive copy", preferences: prefs, plan: restored.plan })).status, 400);
+  const newTable = await f.create();
+  assert.equal((await f.call(`/api/shared-tables/${newTable.id}/plan`, alice, { version: newTable.version, plan: restored.plan })).status, 400);
+  const changed = await f.call(`/api/shared-tables/${original.id}/plan`, alice, { version: restored.version, plan: { ...restored.plan, note: "Updated evening", venueSnapshot: { ...restored.plan.venueSnapshot, name: "Forged replacement", latitude: 0 } } });
+  assert.equal(changed.status, 200); assert.equal(changed.body.table.plan.note, "Updated evening"); assert.equal(changed.body.table.plan.venueSnapshot.name, "An older dinner place"); assert.equal(changed.body.table.plan.venueSnapshot.latitude, 40.7);
 });
 
 test("approval and save intents bind the displayed version and cannot consent to an unseen polled update", async t => {

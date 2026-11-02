@@ -16,7 +16,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { getVenue, getVenueCatalog, isDemoVenue } from "./domain";
+import { getVenue, getVenueCatalog, isDemoVenue, isSavedVenue } from "./domain";
 import { useTableExperience } from "./collaboration/useTableExperience";
 import { SharedTablePanel } from "./collaboration";
 import { useBooleanSetting } from "./storage/settings";
@@ -210,6 +210,7 @@ export default function App() {
     return ranked[(idx + direction + ranked.length) % ranked.length]?.venue;
   };
   const choose = async () => {
+    if (isSavedVenue(selectedVenue)) {setNotice("This is an archived place. Refresh restaurant discovery before choosing it for a new plan.");return;}
     if (shared.table) {
       if (shared.table.ownerId !== shared.table.viewerId) {setNotice("The host chooses the dinner plan. Keep this place on your shortlist.");return;}
       if (editor.draft) {setNotice("Apply or discard your table edits before choosing a new place.");return;}

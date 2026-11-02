@@ -3,13 +3,15 @@ import { handleWeatherRequest } from './weather.ts';
 import { handleSharedTablesRequest, type SharedDatabase } from './shared-tables/index.ts';
 import { handleRecommendations } from './recommendations/handler.ts';
 import { handleGuidance } from './guidance/index.ts';
+import { handleVerification } from './verification.ts';
 
 export interface ServiceContext {
   db?: SharedDatabase | null;
   identity: {userId:string;displayName:string;email?:string}|null;
   apiKey?: string;
-  qlooApiKey?: string;
   ownerEmail?: string;
+  fetcher?: typeof fetch;
+  verificationSecret?: string;
 }
 const error=(status:number,code:string,message:string)=>Response.json({code,message},{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 
@@ -29,16 +31,19 @@ export async function handleServices(request:Request,context:ServiceContext):Pro
   try{
     if(path==='/api/geocode')return handleMapRequest(request);
     if(path==='/api/weather')return handleWeatherRequest(request);
+    if(path==='/api/internal/verification')return handleVerification(request,context);
     if(path==='/api/waiter/status'||path==='/api/waiter/reply'||path==='/api/waiter/enable')return handleGuidance(request,context);
     if(path==='/api/shared-tables'||path.startsWith('/api/shared-tables/'))return handleSharedTablesRequest(request,{db:context.db,identity:context.identity});
     if(path==='/api/recommendations'){
       if(request.method!=='POST')return error(405,'method_not_allowed','Use restaurant discovery from your table.');
       if(url.search||request.headers.get('origin')!==url.origin||request.headers.get('x-common-table-request')!=='recommendations'||!['same-origin','none',null].includes(request.headers.get('sec-fetch-site')))return error(403,'forbidden','Open discovery from Common Table.');
-      if(!context.qlooApiKey||!context.db)return error(503,'unavailable','Restaurant discovery is not available yet.');
+      if(!context.apiKey||!context.db)return error(503,'unavailable','Restaurant discovery is not available yet.');
       if(!context.identity)return error(401,'authentication_required','Sign in to find places for your table.');
+      if(!context.ownerEmail?.trim())return error(503,'unavailable','Restaurant discovery is not available yet.');
+      if(context.identity.email?.trim().toLowerCase()!==context.ownerEmail.trim().toLowerCase())return error(403,'forbidden','Discovery is not enabled for this account.');
       if(!/^application\/json(?:\s*;\s*charset=utf-8)?\s*$/i.test(request.headers.get('content-type')??'')||request.headers.has('content-encoding'))return error(415,'invalid_request','Check the table details and try again.');
       if(!await reserveDiscoveryQuota(context.db,context.identity.userId))return error(429,'rate_limited','Discovery is busy. Please try again later.');
-      return handleRecommendations(request,{apiKey:context.qlooApiKey});
+      return handleRecommendations(request,{apiKey:context.apiKey,db:context.db,identity:context.identity,ownerEmail:context.ownerEmail,fetcher:context.fetcher});
     }
     return error(404,'not_found','This service is unavailable.');
   }catch{return error(503,'unavailable','This service is temporarily unavailable. Your saved work is unchanged.');}

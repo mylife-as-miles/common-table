@@ -1,15 +1,20 @@
 {
-  "scope": "Frozen production build at http://127.0.0.1:4175; desktop/mobile native UI and fixture-labelled optional service integration.",
-  "completedAt": "2026-11-02T03:18:24.246Z",
+  "scope": "One complete production-preview batch on the retained current build, after OSM catalog migration, archive guards and real-place Local tips fixes.",
+  "completedAt": "2026-11-02T04:45:03.703Z",
   "browser": {
-    "total": 93,
-    "passed": 93,
+    "scope": "One complete production-preview batch on the retained current build, after OSM catalog migration, archive guards and real-place Local tips fixes.",
+    "baseCommit": "cba326a",
+    "total": 96,
+    "passed": 96,
     "failed": 0,
     "skipped": 0,
     "flaky": 0,
-    "durationMs": 317461.62,
-    "automatedWcagAandAAScans": 25,
-    "retriesConfigured": 0
+    "durationMs": 342908.76,
+    "retriesConfigured": 0,
+    "automatedWcagAandAAScans": 26,
+    "report": "browser-osm-complete.json",
+    "externalPaidRequestsByQA": 0,
+    "productionSharedWritesByQA": 0
   },
   "independentSharedProtocol": {
     "passed": 4,
@@ -33,11 +38,10 @@
     "Shared authorization, per-member approval, stale versions, idempotency, concurrent edits and single-use invites in isolated D1-compatible fixtures"
   ],
   "limits": [
-    "Optional recommendation/live guidance/weather success responses in browser tests were test fixtures, not credentialed provider calls.",
-    "No paid provider requests, external invitations, email delivery, location sharing to others or bookings were performed.",
-    "Authenticated shared UI was verified with one native development fixture; multi-user protocol behavior used isolated synthetic trusted identities.",
-    "Production native authentication and reserved-header stripping require the deployed-edge probe; these local tests cannot prove that boundary.",
-    "Browser report applies to the frozen production build tested; any later CSS changes require focused layout/accessibility validation."
+    "Optional model/ranking/weather success responses in the browser suite are explicit fixtures; the root agent owns separate actual public API verification.",
+    "This QA made no paid model calls, external invitations, bookings, production shared writes or location sharing to others.",
+    "Authenticated multi-user protocol tests use isolated trusted synthetic identities; production authentication requires separate deployed-edge evidence.",
+    "Server-only factual-retrieval fallback changes made after the retained preview build require their own mocked/live verification and do not change this frontend batch."
   ],
   "authoritativeBrowserReport": "browser-final.json",
   "historicalBaseline": "browser-regression.json is the superseded DEV baseline (77/91), not the final result.",
@@ -64,5 +68,19 @@
     "automatedWcagAandAAScans": 2,
     "report": "browser-weather-guidance-final.json",
     "limits": "Weather and live guidance success are explicit browser response fixtures; no paid provider was called. This focused follow-up does not claim a new full94 run."
+  },
+  "osmMigrationReport": "osm-summary.json",
+  "independentServiceChecks": {
+    "passed": 27,
+    "failed": 0,
+    "report": "osm-service-final.tap",
+    "boundaries": [
+      "All outbound fetches are synthetic and unexpected network is blocked.",
+      "Only dummy keys/capabilities and isolated SQLite generated migrations are used.",
+      "Owner authorization occurs before quota mutation.",
+      "Waiter, restaurant ranking and temporary verification share one irrevocable500c/100-attempt cap.",
+      "Missing/expired/wrong capabilities, invalid Bearer forms, operation arrays, arbitrary prompt/location/shared-table fields and operation replay reject.",
+      "Temporary fixed-solo verification never reads shared records."
+    ]
   }
 }

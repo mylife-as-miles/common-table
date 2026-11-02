@@ -1,0 +1,36 @@
+✔ booking prefers the supplied public reservation URL without inventing request parameters (2.291332ms)
+✔ invalid booking links fall back to a valid restaurant website (0.256978ms)
+✔ sample, historical or missing venues never gain real reservation capabilities (0.36422ms)
+✔ booking URL sanitization rejects credentials, non-HTTPS, IPs and local/private host forms (0.505765ms)
+✔ booking plan details validate calendar/time/group size and do not imply a confirmed booking (22.185977ms)
+✔ discovery's public facade never turns forged headers or a nonowner account into model authority (35.14162ms)
+✔ the facade ranks only mapped IDs while prompt aggregates omit private account and location fields (31.867474ms)
+✔ an invented ranked ID is rejected after one irrevocable reservation and cannot acquire restaurant facts (6.432607ms)
+✔ Waiter, discovery and temporary verification share one durable cap that enable never refills (61.267189ms)
+✔ temporary verification is absent without an unexpired configured capability and requires the exact Bearer scheme (7.232767ms)
+✔ verification accepts no arbitrary question, shared table, location or payload and cannot consume its operation on invalid input (31.010749ms)
+✔ concurrent machine verification permits one fixed solo request, never reads shared records and becomes absent after secret removal (9.951504ms)
+Common Table guidance unavailable { step: 'generation', reason: 'upstream_http', status: 500 }
+✔ status requires server configuration, owner identity and explicit setup, without any provider call (70.616153ms)
+✔ only the configured owner can explicitly enable, and repeated enable never resets spending (23.809701ms)
+✔ live reply verifies the authorized organization and exact model before one bounded paid call (4.392306ms)
+✔ organization and model mismatches make no paid call and consume no reservation (6.577256ms)
+✔ paid failures retain their reservation, discard upstream detail and never retry (4.921926ms)
+✔ keys, unsupported tool blocks and malformed usage never enter a successful reply (16.702053ms)
+✔ origin, CSRF, content type, unknown context, personal fields and size checks happen before transport (13.762361ms)
+✔ timeout before preflight makes no reservation; timeout during paid output keeps the reservation (27.098489ms)
+✔ a shared-table reference requires membership and uses private-data-free server aggregates (5.91067ms)
+✔ real venue context is re-resolved on the server and omits its coordinates, neighborhood and website (5.232114ms)
+✔ a retained historical ID is described as unverified and never contacts a retired resolver (4.431716ms)
+✔ streamed body overflow is rejected even without a declared content length (3.36903ms)
+✔ an aborted stalled request body is cancelled promptly before any paid or setup operation (3.101496ms)
+✔ oversized streamed output is cancelled with no successful reply and no released reservation (4.272324ms)
+✔ generated provider and infrastructure labels are replaced before appearing in product text (3.623995ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 661.612986

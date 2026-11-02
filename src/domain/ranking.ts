@@ -1,4 +1,4 @@
-import { getVenueCatalog, isDemoVenue, venueVerificationWarnings } from "./catalog";
+import { getVenueCatalog, isDemoVenue, isOsmVenue, isSavedVenue, venueVerificationWarnings } from "./catalog";
 import type {
   AppState,
   RankedVenue,
@@ -36,21 +36,23 @@ export function eligibilityReasons(venue: Venue, state: AppState): string[] {
   return problems;
 }
 
-/** Honest, deterministic local ranking. No Qloo requests or inferred taste profiles. */
+/** Samples use local metadata. Real candidates preserve the server's intelligence order. */
 export function rankVenues(state: AppState): RankedVenue[] {
   const budget = Math.min(...state.participants.map((person) => person.budget));
   const catalog = getVenueCatalog(state);
   const live = state.discoveryMode === "live" || state.discoveryMode === undefined && state.recommendationIds !== undefined;
-  const liveIds = state.recommendationIds ?? catalog.filter(v => !isDemoVenue(v)).map(v => v.id);
+  const liveIds = (state.recommendationIds ?? catalog.filter(isOsmVenue).map(v => v.id)).filter(id => catalog.some(v => v.id === id && isOsmVenue(v)));
+  const selectedSaved = catalog.find(v => v.id === state.selectedVenueId && isSavedVenue(v));
+  const browseIds = selectedSaved ? [...liveIds, selectedSaved.id] : liveIds;
   const candidates = live
-    ? liveIds.map(id => catalog.find(v => v.id === id)).filter((v): v is Venue => Boolean(v) && !isDemoVenue(v!))
+    ? browseIds.map(id => catalog.find(v => v.id === id)).filter((v): v is Venue => Boolean(v) && !isDemoVenue(v!))
     : catalog.filter(isDemoVenue);
   return candidates
     .filter((venue) => eligibilityReasons(venue, state).length === 0)
-    .map((venue, position) => {
+    .map((venue) => {
       if (!isDemoVenue(venue)) {
-        return { venue, score: venue.affinity === undefined ? Math.max(0, 100-position) : venue.affinity * 100,
-          reasons: ["Selected for your table’s tastes near this location", ...venueVerificationWarnings(venue, state)] };
+        return { venue, score: 0,
+          reasons: [isSavedVenue(venue) ? "Retained from a previous plan; this is not a new recommendation." : state.recommendationRationales?.[venue.id] ?? "From your last restaurant search", ...venueVerificationWarnings(venue, state)] };
       }
       const haystack = [venue.cuisine, ...venue.tags].map(normalize).join(" ");
       const preferences = state.participants.flatMap((person) => person.tastes);
@@ -86,13 +88,13 @@ export function rankVenues(state: AppState): RankedVenue[] {
       return { venue, score: Math.max(0, Math.min(99, score)), reasons };
     })
     .sort((a, b) => live
-      ? liveIds.indexOf(a.venue.id) - liveIds.indexOf(b.venue.id)
+      ? browseIds.indexOf(a.venue.id) - browseIds.indexOf(b.venue.id)
       : b.score - a.score || a.venue.id.localeCompare(b.venue.id));
 }
 
 export const demoRecommendationProvider: RecommendationProvider = {
   source: "demo",
   async retrieve(state) {
-    return rankVenues(state);
+    return rankVenues({ ...state, discoveryMode: "sample" });
   },
 };

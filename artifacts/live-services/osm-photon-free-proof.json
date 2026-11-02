@@ -1,0 +1,69 @@
+{
+  "checkedAt": "2026-11-02T04:41:07.452Z",
+  "paidCalls": 0,
+  "source": "osm",
+  "point": {
+    "latitude": 40.69,
+    "longitude": -73.98
+  },
+  "coldCache": true,
+  "requests": [
+    {
+      "host": "api.openstreetmap.org",
+      "path": "/api/0.6/node/5521624421.json",
+      "status": 200,
+      "elapsedMs": 566
+    },
+    {
+      "host": "api.openstreetmap.org",
+      "path": "/api/0.6/way/248156367/full.json",
+      "status": 200,
+      "elapsedMs": 178
+    },
+    {
+      "host": "photon.komoot.io",
+      "path": "/reverse",
+      "status": 200,
+      "elapsedMs": 995
+    }
+  ],
+  "node": {
+    "id": "osm:node:5521624421",
+    "name": "Hungry Ghost",
+    "latitude": 40.6897579,
+    "longitude": -73.98015
+  },
+  "way": {
+    "id": "osm:way:248156367",
+    "name": "Junior's",
+    "latitude": 40.69019255,
+    "longitude": -73.9819662
+  },
+  "candidateCount": 40,
+  "sample": [
+    {
+      "id": "osm:node:5521624421",
+      "name": "Hungry Ghost",
+      "cuisine": "Café",
+      "latitude": 40.6897579,
+      "longitude": -73.98015,
+      "source": "osm"
+    },
+    {
+      "id": "osm:node:5538367714",
+      "name": "Starbucks",
+      "cuisine": "Café",
+      "latitude": 40.6893231,
+      "longitude": -73.9809019,
+      "source": "osm"
+    },
+    {
+      "id": "osm:way:248156367",
+      "name": "Junior's",
+      "cuisine": "Restaurant",
+      "latitude": 40.6901455,
+      "longitude": -73.9819887,
+      "source": "osm"
+    }
+  ]
+}

@@ -108,7 +108,7 @@ test.afterEach(async ({ page }) => {
   expect(errors.get(page)).toEqual([]);
 });
 
-test("the actual unconfigured service is honest, sends no paid request and leaves local planning useful", async ({
+test("the actual anonymous service is honest, sends no paid request and leaves local planning useful", async ({
   page,
 }) => {
   const requests: string[] = [];
@@ -130,7 +130,18 @@ test("the actual unconfigured service is honest, sends no paid request and leave
   await open(page);
   const status = await statusPromise;
   expect(status.status()).toBe(200);
-  expect(await status.json()).toEqual({ mode: "disabled", canEnable: false });
+  const availability = await status.json();
+  expect(Object.keys(availability).sort()).toEqual(["canEnable", "mode"]);
+  expect(["disabled", "sign_in"]).toContain(availability.mode);
+  expect(availability.canEnable).toBe(false);
+  if (availability.mode === "sign_in") {
+    await expect(
+      dialog(page).getByRole("link", {
+        name: "Sign in for guidance",
+        exact: true,
+      }),
+    ).toHaveAttribute("target", "_top");
+  }
   const guidance = dialog(page).getByRole("radio", {
     name: /^Thoughtful guidance\b/,
   });

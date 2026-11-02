@@ -1,6 +1,11 @@
 import { test, expect, type Page, type Route } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { persistedState, readDeviceRecord } from "./helpers/device-storage.ts";
+import {
+  LEGACY_APP_KEY,
+  persistedState,
+  readDeviceRecord,
+} from "./helpers/device-storage.ts";
+import { createInitialState } from "../src/domain/state.ts";
 
 // These are browser integration fixtures, not evidence of a live provider response.
 // All map styles, tiles and glyphs are served by this test: no tile-server traffic.
@@ -1093,23 +1098,31 @@ test("a restaurant response enters the map, book and saved plan without inventin
       "Recommendation response is synthetic; no discovery provider was called.",
   });
   await installFixture(page);
-  const providerEntityId = "11111111-1111-4111-8111-111111111111";
-  const venueId = `qloo:${providerEntityId}`;
+  const osmElementId = "11111111";
+  const venueId = `osm:node:${osmElementId}`;
+  let invalidOrder = false;
+  let requests = 0;
   let submitted: Record<string, unknown> | undefined;
   await page.route("**/api/recommendations", async (route) => {
+    requests++;
     submitted = route.request().postDataJSON();
     expect(route.request().headers()["x-common-table-request"]).toBe(
       "recommendations",
     );
     return json(route, {
-      source: "qloo",
+      source: "osm",
       retrievedAt: new Date().toISOString(),
-      orderedIds: [venueId],
+      orderedIds: invalidOrder ? ["osm:node:99999999"] : [venueId],
+      rationales: {
+        [venueId]:
+          "An Italian restaurant to compare; confirm practical details directly.",
+      },
       venues: [
         {
           id: venueId,
-          source: "qloo",
-          providerEntityId,
+          source: "osm",
+          osmElementType: "node",
+          osmElementId,
           name: "Fixture Real Restaurant",
           latitude: 40.692,
           longitude: -73.98,
@@ -1118,6 +1131,7 @@ test("a restaurant response enters the map, book and saved plan without inventin
           description:
             "A synthetic restaurant response for this integration test.",
           websiteUrl: "https://example.com/",
+          bookingUrl: "javascript:alert('not-a-booking')",
           price: 1,
           dietary: ["Nut-free"],
           menu: [{ name: "Invented fixture dish", price: 1 }],
@@ -1172,6 +1186,18 @@ test("a restaurant response enters the map, book and saved plan without inventin
     .click();
   const receipt = page.getByRole("article", { name: "Dinner plan summary" });
   await expect(receipt).toContainText("Fixture Real Restaurant");
+  const booking = page.getByRole("region", {
+    name: "Restaurant reservations for Fixture Real Restaurant",
+  });
+  await expect(
+    booking.getByRole("link", {
+      name: "Visit restaurant (opens a new tab)",
+      exact: true,
+    }),
+  ).toHaveAttribute("href", "https://example.com/");
+  await expect(
+    booking.getByRole("link", { name: /^Check reservations\b/ }),
+  ).toHaveCount(0);
   await page
     .getByRole("checkbox", { name: "Works for me", exact: true })
     .check();
@@ -1204,6 +1230,8 @@ test("a restaurant response enters the map, book and saved plan without inventin
   expect(snapshot?.menu).toEqual([]);
   expect(snapshot?.dietary).toEqual([]);
   expect(snapshot?.priceKnown).toBe(false);
+  expect(snapshot?.source).toBe("osm");
+  expect(snapshot?.bookingUrl).toBeUndefined();
   await page.reload();
   await expect(receipt).toContainText("Fixture Real Restaurant");
   await expect(page.locator(".printing-press")).toHaveAttribute(
@@ -1217,6 +1245,305 @@ test("a restaurant response enters the map, book and saved plan without inventin
     }),
   ).toBeChecked();
   expect(await geoCalls(page)).toBe(0);
+  invalidOrder = true;
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: /Explore/ })
+    .click();
+  await ready(page);
+  await pin.click();
+  await expect(page).toHaveURL(/#menu$/);
+  await page
+    .getByText("Make room for a new favorite.", { exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Refresh places", exact: true })
+    .click();
+  await expect.poll(() => requests).toBe(2);
+  await expect(page.locator(".discovery-status")).toContainText(
+    "Your current table and plan are safe.",
+  );
+  expect((await persistedState(page)).plan).toMatchObject({
+    venueId,
+    saved: true,
+  });
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: /Dinner plan/ })
+    .click();
+  await expect(receipt).toContainText("Fixture Real Restaurant");
+});
+
+test("a historical saved restaurant remains a private saved plan and is excluded from new discovery seeds", async ({
+  page,
+}) => {
+  await installFixture(page);
+  const legacyId = "qloo:11111111-1111-4111-8111-111111111111";
+  const oldState = {
+    ...createInitialState(),
+    discoveryMode: "live",
+    selectedVenueId: legacyId,
+    shortlist: [legacyId],
+    recommendationIds: [legacyId],
+    catalog: [
+      {
+        id: legacyId,
+        source: "qloo",
+        providerEntityId: legacyId.slice(5),
+        name: "Historical Saved Restaurant",
+        latitude: 40.692,
+        longitude: -73.98,
+        cuisine: "Italian",
+        price: 1,
+        priceKnown: true,
+        dietary: ["Nut-free"],
+        menu: [{ name: "Unverified historical dish", price: 1 }],
+        walkMinutes: 1,
+      },
+    ],
+    plan: {
+      venueId: legacyId,
+      date: "2099-04-12",
+      time: "19:00",
+      note: "A historical saved plan.",
+      approvals: ["you"],
+      detailsAcknowledged: true,
+      saved: true,
+    },
+  };
+  await page.goto("/api/waiter/status");
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: LEGACY_APP_KEY,
+    value: JSON.stringify({ version: 1, state: oldState }),
+  });
+  await page.goto("/#plan");
+  const receipt = page.getByRole("article", { name: "Dinner plan summary" });
+  await expect(receipt).toContainText("Historical Saved Restaurant");
+  await expect(
+    page.getByRole("button", { name: "Saved for a good evening", exact: true }),
+  ).toBeVisible();
+  await page.goto("/#menu");
+  await expect(page.locator(".book-match-note")).toContainText(
+    "Retained from a previous plan",
+  );
+  await expect(page.locator(".menu-book")).toContainText("Confirm price");
+  await expect(
+    page.getByText("Unverified historical dish", { exact: true }),
+  ).toHaveCount(0);
+  // Read-time normalization preserves the archival JSON until a genuine local edit commits it.
+  await page
+    .getByRole("button", {
+      name: "Remove Historical Saved Restaurant from shortlist",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Save Historical Saved Restaurant to shortlist",
+      exact: true,
+    })
+    .click();
+  await expect
+    .poll(
+      async () =>
+        (await persistedState(page)).catalog?.find(
+          (venue) => venue.id === legacyId,
+        )?.source,
+    )
+    .toBe("saved");
+  await expect
+    .poll(async () => (await persistedState(page)).shortlist)
+    .toEqual([legacyId]);
+  const migrated = await persistedState(page);
+  expect(migrated.plan).toMatchObject({
+    venueId: legacyId,
+    saved: true,
+    approvals: ["you"],
+  });
+  expect(migrated.recommendationIds ?? []).not.toContain(legacyId);
+  expect(
+    migrated.catalog?.find((venue) => venue.id === legacyId),
+  ).toMatchObject({
+    menu: [],
+    dietary: [],
+    priceKnown: false,
+    walkKnown: false,
+  });
+  await expect(page.locator("body")).not.toContainText(/Qloo|Claude|Anthropic/);
+  let request: Record<string, unknown> | undefined;
+  await page.route("**/api/recommendations", async (route) => {
+    request = route.request().postDataJSON();
+    return json(
+      route,
+      { error: { code: "unavailable", message: "Discovery is unavailable." } },
+      503,
+    );
+  });
+  await page.goto("/#menu");
+  await expect(page.locator(".book-restaurant-title")).toContainText(
+    "Historical Saved Restaurant",
+  );
+  await expect(
+    page.getByText("Unverified historical dish", { exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByText("Make room for a new favorite.", { exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: /^(Find real restaurants|Refresh places)$/ })
+    .click();
+  await expect.poll(() => request).toBeDefined();
+  expect(request?.seedVenueIds).toEqual([]);
+  expect((await persistedState(page)).plan.venueId).toBe(legacyId);
+  await page.goto("/#plan");
+  await expect(receipt).toContainText("Historical Saved Restaurant");
+  await expect(
+    page.getByRole("button", { name: "Saved for a good evening", exact: true }),
+  ).toBeVisible();
+});
+
+test("an archived choice cannot replace a saved plan and real group tips never guarantee budget or dietary fit", async ({
+  page,
+}) => {
+  test.info().annotations.push({
+    type: "device-state-fixture",
+    description:
+      "Synthetic archived and mapped catalog records; no provider request or real restaurant verification.",
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await installFixture(page);
+  const legacyId = "qloo:22222222-2222-4222-8222-222222222222";
+  const osmId = "osm:node:22222222";
+  const base = createInitialState();
+  const record = {
+    ...base,
+    discoveryMode: "live",
+    selectedVenueId: legacyId,
+    participants: [
+      ...base.participants,
+      {
+        id: "guest-synthetic",
+        name: "Local synthetic guest",
+        color: "#497f86",
+        tastes: ["Japanese"],
+        budget: 35,
+        restrictions: ["Vegan"],
+      },
+    ],
+    recommendationIds: [osmId],
+    catalog: [
+      {
+        id: legacyId,
+        source: "qloo",
+        name: "Archived Synthetic Restaurant",
+        latitude: 40.692,
+        longitude: -73.98,
+        cuisine: "Italian",
+      },
+      {
+        id: osmId,
+        source: "osm",
+        osmElementType: "node",
+        osmElementId: "22222222",
+        name: "Mapped Synthetic Restaurant",
+        latitude: 40.692,
+        longitude: -73.98,
+        cuisine: "Italian",
+      },
+    ],
+    plan: {
+      ...base.plan,
+      venueId: "casa",
+      date: "2099-04-12",
+      note: "An existing approved sample plan.",
+      approvals: ["you", "guest-synthetic"],
+      saved: true,
+    },
+  };
+  await page.goto("/api/waiter/status");
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: LEGACY_APP_KEY,
+    value: JSON.stringify({ version: 1, state: record }),
+  });
+  let submissions = 0;
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      /^\/api\/(?:recommendations|waiter\/(?:reply|enable))$/.test(
+        new URL(request.url()).pathname,
+      )
+    )
+      submissions++;
+  });
+  await page.goto("/#menu");
+  await expect(page.locator(".book-restaurant-title")).toContainText(
+    "Archived Synthetic Restaurant",
+  );
+  await page
+    .getByRole("button", { name: "Bring this to the table", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#menu$/);
+  await expect(page.locator(".toast")).toContainText(
+    "Refresh restaurant discovery before choosing it for a new plan.",
+  );
+  await expect(page.locator(".toast")).not.toContainText(
+    "is on your dinner plan",
+  );
+  await page
+    .getByRole("button", { name: "Next restaurant", exact: true })
+    .click();
+  await expect(page.locator(".book-restaurant-title")).toContainText(
+    "Mapped Synthetic Restaurant",
+  );
+  const launcher = page.getByRole("button", {
+    name: "A little guidance",
+    exact: true,
+  });
+  await launcher.click();
+  const waiter = page.getByRole("dialog", {
+    name: "The Waiter, at your service",
+  });
+  await waiter.getByRole("radio", { name: "Local tips", exact: true }).check();
+  await waiter.getByRole("button", { name: "Our table", exact: true }).click();
+  await expect(waiter.locator(".cw-guidance")).toContainText(
+    "confirm the restaurant’s menu, cost and dietary suitability",
+  );
+  await expect(waiter.locator(".cw-guidance")).not.toContainText(
+    /only show places within|listed dietary needs/,
+  );
+  await expect(waiter.locator(".cw-table-notes")).toContainText(
+    "Places to consider",
+  );
+  await expect(waiter.locator(".cw-table-notes")).toContainText("$35");
+  await expect(waiter.locator(".cw-table-notes")).toContainText("Vegan");
+  await waiter.getByLabel("Or leave a small request").fill("budget");
+  await waiter
+    .getByRole("button", { name: "Ask The Waiter", exact: true })
+    .click();
+  await expect(waiter.locator(".cw-response")).toContainText("$35 per person");
+  await expect(waiter.locator(".cw-response")).toContainText(
+    "Real restaurant costs need confirmation",
+  );
+  await expect(waiter.locator(".cw-response")).not.toContainText(
+    /fit everyone|allergy.safe|Vegan options/,
+  );
+  await assertAccessible(page);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await waiter
+    .getByRole("button", { name: "Back to the evening", exact: true })
+    .click();
+  await expect(launcher).toBeFocused();
+  expect((await persistedState(page)).plan).toMatchObject({
+    venueId: "casa",
+    saved: true,
+    approvals: ["you", "guest-synthetic"],
+  });
+  expect(submissions).toBe(0);
 });
 
 for (const unknownValues of [false, true])
