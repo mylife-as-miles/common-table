@@ -19,6 +19,8 @@ import type {
 } from "maplibre-gl";
 import type { Map as RasterMap, Marker as RasterMarker } from "leaflet";
 import "./geographic-map.css";
+import "./recommended-map.css";
+import type { Venue } from "../domain/types";
 
 export interface MapPoint {
   id: string;
@@ -28,6 +30,13 @@ export interface MapPoint {
   longitude: number;
 }
 
+export type GeographicVenue = Venue & { latitude: number; longitude: number };
+/** Real markers require real source coordinates; authored demo x/y are never projected. */
+export function geographicVenueCandidates(venues: Venue[]): GeographicVenue[] {
+  return [...new Map(venues.filter((venue): venue is GeographicVenue =>
+    (venue.source === "qloo" || venue.source === "osm") && typeof venue.latitude === "number" && typeof venue.longitude === "number" && Number.isFinite(venue.latitude) && Number.isFinite(venue.longitude) && Math.abs(venue.latitude) <= 85 && Math.abs(venue.longitude) <= 180,
+  ).map(venue => [venue.id, venue])).values()].slice(0, 20);
+}
 export interface GeographicMapProps {
   location: { latitude: number; longitude: number; label: string };
   lowPower: boolean;
@@ -37,6 +46,9 @@ export interface GeographicMapProps {
   onPointSelect?: (point: MapPoint) => void;
   onPointsChange?: (points: MapPoint[]) => void;
   showAreaLabel?: boolean;
+  discoveredVenues?: Venue[];
+  onOpenVenue?: (id: string) => void;
+  selectedVenueId?: string;
   onCameraChange?: (coords: { latitude: number; longitude: number }) => void;
 }
 
@@ -295,11 +307,18 @@ export default function GeographicMap({
   onPointsChange,
   onCameraChange,
   showAreaLabel = true,
+  discoveredVenues = [],
+  onOpenVenue,
+  selectedVenueId,
 }: GeographicMapProps) {
   const container = useRef<HTMLDivElement>(null);
   const engine = useRef<Engine | null>(null);
   const rasterLibrary = useRef<typeof import("leaflet") | null>(null);
   const rememberedMarker = useRef<RasterMarker | null>(null);
+  const discoveredRef = useRef<GeographicVenue[]>([]);
+  discoveredRef.current = geographicVenueCandidates(discoveredVenues);
+  const openVenueRef = useRef(onOpenVenue); openVenueRef.current = onOpenVenue;
+  const discoveredSignature = JSON.stringify(discoveredRef.current.map(venue => [venue.id, venue.name, venue.latitude, venue.longitude, venue.image]));
   const latestLocation = useRef(location);
   const onCameraChangeRef = useRef(onCameraChange);
   latestLocation.current = location;
@@ -607,10 +626,17 @@ export default function GeographicMap({
       const gl = await import("maplibre-gl");
       await import("maplibre-gl/dist/maplibre-gl.css");
       if (disposed) return;
-      const worker = await import(
-        "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"
-      );
-      gl.setWorkerUrl(worker.default);
+      if (import.meta.env.DEV) {
+        // The vendor worker is already standalone. Vite's dev import analysis
+        // otherwise injects its window-bound HMR client into dynamic imports.
+        const source = await import("maplibre-gl/dist/maplibre-gl-worker.mjs?raw");
+        const workerUrl = URL.createObjectURL(new Blob([source.default], { type: "text/javascript" }));
+        gl.setWorkerUrl(workerUrl);
+        cleanups.push(() => URL.revokeObjectURL(workerUrl));
+      } else {
+        const worker = await import("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url");
+        gl.setWorkerUrl(worker.default);
+      }
       const response = await fetch(STYLE_URL, { signal: abort.signal });
       if (!response.ok)
         throw new Error("The vector style could not be loaded.");
@@ -733,7 +759,9 @@ export default function GeographicMap({
           );
         });
         const visible: MapPoint[] = [];
-        const positions: { x: number; y: number }[] = [];
+        const positions: { x: number; y: number }[] = discoveredRef.current
+          .filter(venue => lensRef.current === "all" || lensRef.current === (/coffee|caf[eé]/i.test(venue.cuisine) ? "coffee" : "food"))
+          .map(venue => map.project([venue.longitude, venue.latitude]));
         for (const point of ordered) {
           const screen = map.project([point.longitude, point.latitude]);
           if (
@@ -1034,6 +1062,42 @@ export default function GeographicMap({
     }
   }, [selectedPoint]);
 
+  useEffect(() => {
+    const active = engine.current;
+    if (!active || !onOpenVenue) return;
+    let disposed = false;
+    const markers: (GLMarker | RasterMarker)[] = [];
+    const candidates = discoveredRef.current.filter(venue => lens === "all" || lens === (/coffee|caf[eé]/i.test(venue.cuisine) ? "coffee" : "food"));
+    void (async () => {
+      const GL = active.kind === "maplibre" ? await import("maplibre-gl") : null;
+      if (disposed || engine.current !== active) return;
+      for (const venue of candidates) {
+        const button = document.createElement("button");
+        button.type = "button"; button.className = "geo-recommended-marker";
+        button.dataset.venueId = venue.id;
+        button.setAttribute("aria-label", `${venue.name} — Open menu book`);
+        button.setAttribute("aria-pressed", String(venue.id === selectedVenueId));
+        const card = document.createElement("span"); card.className = "geo-recommendation-card";
+        if (venue.image) { const image = document.createElement("img"); image.src = venue.image; image.alt = ""; image.loading = "lazy"; image.referrerPolicy = "no-referrer"; card.append(image); }
+        else { const icon = document.createElement("span"); icon.className = "geo-recommendation-icon"; icon.innerHTML = POINT_ICONS.food; icon.setAttribute("aria-hidden", "true"); card.append(icon); }
+        const name = document.createElement("strong"); name.textContent = venue.name;
+        const arrow = document.createElement("span"); arrow.textContent = "↗"; arrow.setAttribute("aria-hidden", "true");
+        card.append(name, arrow); button.append(card);
+        button.addEventListener("click", event => { event.stopPropagation(); cancelLookAround(); openVenueRef.current?.(venue.id); });
+        button.addEventListener("mousedown", event => event.stopPropagation());
+        button.addEventListener("pointerdown", event => event.stopPropagation());
+        if (active.kind === "maplibre" && GL) markers.push(new GL.Marker({ element: button, anchor: "bottom", pitchAlignment: "viewport", rotationAlignment: "viewport" }).setLngLat([venue.longitude, venue.latitude]).addTo(active.map));
+        else if (active.kind === "leaflet" && rasterLibrary.current) {
+          const L = rasterLibrary.current;
+          L.DomEvent.disableClickPropagation(button);
+          markers.push(L.marker([venue.latitude, venue.longitude], { icon: L.divIcon({ className: "geo-recommendation-shell", html: button, iconSize: [154, 79], iconAnchor: [77, 79] }), keyboard: false, title: venue.name }).addTo(active.map));
+        }
+      }
+      refreshPoints.current();
+    })();
+    return () => { disposed = true; for (const marker of markers) { try { marker.remove(); } catch { /* Map teardown may already have removed its markers. */ } } };
+  }, [renderer, discoveredSignature, lens, selectedVenueId, Boolean(onOpenVenue)]);
+
   const changeZoom = (delta: number) => {
     cancelLookAround();
     const active = engine.current;
@@ -1092,6 +1156,7 @@ export default function GeographicMap({
       data-atmosphere={atmosphere}
       data-lens={lens}
       data-poi-count={pointCount}
+      data-restaurant-count={discoveredRef.current.length}
       data-camera-look={lookingAround ? "active" : "idle"}
       onKeyDown={(event) => {
         if (event.key === "Escape" && cameraLook.current.active) {

@@ -1,0 +1,146 @@
+{
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 503 ()"
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/",
+      "type": "document"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/css/index.BGC-U3F-.css",
+      "type": "stylesheet"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/index-B8VH4ofH.js",
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/framework-D_rUT4EX.js",
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/layout-segment-context-CylTNtCf.js",
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/page-BGNAyF4D.js",
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-2.woff2",
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-5.woff2",
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/App-C2qWpOz_.js",
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/css/App.B9Vt_XQL.css",
+      "type": "stylesheet"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/favicon.svg",
+      "type": "other"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/shared-tables/session",
+      "type": "fetch"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/maplibre-gl-49ettL-S.js",
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-4.woff2",
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-6.woff2",
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-0.woff2",
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-8.woff2",
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-3.woff2",
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-7.woff2",
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/css/maplibre-gl.D7DNNUwi.css",
+      "type": "stylesheet"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/weather",
+      "type": "fetch"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/maplibre-gl-worker-CIBWxaY5.js",
+      "type": "script"
+    },
+    {
+      "url": "https://tiles.openfreemap.org/styles/liberty",
+      "type": "fetch"
+    }
+  ],
+  "snapshots": [
+    {
+      "label": "real-map-after-6s",
+      "hash": "#nearby",
+      "map": "<section class=\"geographic-map\" aria-label=\"Real geographic map of Brooklyn, New York\" data-renderer=\"error\" data-map-status=\"error\" data-latitude=\"40.692\" data-longitude=\"-73.977\" data-atmosphere=\"day\" data-lens=\"all\" data-poi-count=\"0\" data-restaurant-count=\"0\" data-camera-look=\"idle\"><div class=\"geographic-map-canvas\"></div><div class=\"geo-map-material\" aria-hidden=\"true\"></div><div class=\"geo-map-error\" role=\"alert\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"25\" height=\"25\" viewBox=\"0 0 ",
+      "vt": [],
+      "animations": [
+        {
+          "state": "finished",
+          "time": 300,
+          "pseudo": null,
+          "name": "field-note-arrive"
+        }
+      ],
+      "workers": [
+        {
+          "url": "/_next/static/chunks/maplibre-gl-49ettL-S.js",
+          "duration": 150.89999999850988,
+          "transfer": 294049
+        },
+        {
+          "url": "/_next/static/css/maplibre-gl.D7DNNUwi.css",
+          "duration": 89.29999999701977,
+          "transfer": 10383
+        },
+        {
+          "url": "/_next/static/chunks/maplibre-gl-worker-CIBWxaY5.js",
+          "duration": 115.89999999850988,
+          "transfer": 394
+        },
+        {
+          "url": "/styles/liberty",
+          "duration": 21.800000000745058,
+          "transfer": 0
+        }
+      ]
+    }
+  ],
+  "failure": "page.screenshot: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n"
+}

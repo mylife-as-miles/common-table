@@ -1,5 +1,7 @@
 import { test, expect, type Page, type Route } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { unavailableOptionalServices } from "./helpers/offline-services.ts";
+import { readSerializedApp } from "./helpers/device-storage.ts";
 
 const dialog = (page: Page) =>
   page.getByRole("dialog", { name: "The Waiter, at your service" });
@@ -11,8 +13,9 @@ const answer = (page: Page) => dialog(page).locator(".cw-guidance-result");
 const alert = (page: Page) => dialog(page).locator(".cw-request-error");
 const submit = (page: Page) =>
   dialog(page).getByRole("button", { name: "Ask The Waiter", exact: true });
-const providerNames = /claude|anthropic|sonnet/i;
+const providerNames = /claude|anthropic|sonnet|haiku|qloo/i;
 async function noProviderReferences(page: Page) {
+  await expect(page.locator(".app.cinematic")).toBeVisible();
   const body = page.locator("body");
   expect(await body.innerText()).not.toMatch(providerNames);
   expect(await body.ariaSnapshot()).not.toMatch(providerNames);
@@ -42,10 +45,10 @@ async function chooseGuidance(page: Page) {
   const radio = dialog(page).getByRole("radio", {
     name: /^Thoughtful guidance\b/,
   });
-  await expect(radio).toHaveAccessibleName(/offline demo/);
+  await expect(radio).toHaveAccessibleName(/live/);
   await radio.check();
   await expect(dialog(page).locator(".cw-provider-note")).toContainText(
-    "Try a sample answer. No live AI service is called.",
+    "Guest names and map locations are excluded.",
   );
   await expect(radio).toHaveAttribute("value", "guidance");
   await noProviderReferences(page);
@@ -54,14 +57,19 @@ async function ask(page: Page, text = "Help us compare this budget.") {
   await input(page).fill(text);
   await submit(page).click();
 }
-const response = (route: Route, text: string, source = "mock", status = 200) =>
+const response = (route: Route, text: string, source = "live", status = 200) =>
   route.fulfill({
     status,
     contentType: "application/json",
     body: JSON.stringify({ source, text }),
   });
-type Held = { route: Route; body: Record<string, unknown> };
-async function heldApi(page: Page, mode = "mock") {
+// These live-labelled responses are browser fixtures, not proof of configured provider access.
+type Held = {
+  route: Route;
+  body: Record<string, unknown>;
+  csrf: string | undefined;
+};
+async function heldApi(page: Page, mode = "live") {
   const calls: Held[] = [];
   await page.route("**/api/waiter/status", (route) =>
     route.fulfill({
@@ -70,12 +78,17 @@ async function heldApi(page: Page, mode = "mock") {
     }),
   );
   await page.route("**/api/waiter/reply", (route) => {
-    calls.push({ route, body: route.request().postDataJSON() });
+    calls.push({
+      route,
+      body: route.request().postDataJSON(),
+      csrf: route.request().headers()["x-common-table-request"],
+    });
   });
   return calls;
 }
 const errors = new WeakMap<Page, string[]>();
 test.beforeEach(async ({ page }) => {
+  await unavailableOptionalServices(page);
   const messages: string[] = [];
   errors.set(page, messages);
   page.on("pageerror", (error) => messages.push(error.message));
@@ -95,22 +108,14 @@ test.afterEach(async ({ page }) => {
   expect(errors.get(page)).toEqual([]);
 });
 
-test("the real default adapter is explicitly selected, accurately labelled offline, and does not change the plan", async ({
+test("the actual unconfigured service is honest, sends no paid request and leaves local planning useful", async ({
   page,
 }) => {
-  const requests: {
-    path: string;
-    body: unknown;
-    headers: Record<string, string>;
-  }[] = [];
+  const requests: string[] = [];
   page.on("request", (request) => {
     const path = new URL(request.url()).pathname;
     if (path.startsWith("/api/waiter/"))
-      requests.push({
-        path,
-        body: request.postData() ? request.postDataJSON() : null,
-        headers: request.headers(),
-      });
+      requests.push(`${request.method()} ${path}`);
   });
   for (const hash of ["nearby", "explore", "menu", "table", "plan"]) {
     await page.goto(`/#${hash}`);
@@ -119,62 +124,31 @@ test("the real default adapter is explicitly selected, accurately labelled offli
   }
   await page.goto("/#menu");
   expect(requests).toEqual([]);
+  const statusPromise = page.waitForResponse(
+    (value) => new URL(value.url()).pathname === "/api/waiter/status",
+  );
   await open(page);
+  const status = await statusPromise;
+  expect(status.status()).toBe(200);
+  expect(await status.json()).toEqual({ mode: "disabled", canEnable: false });
+  const guidance = dialog(page).getByRole("radio", {
+    name: /^Thoughtful guidance\b/,
+  });
+  await expect(guidance).toBeChecked();
+  await input(page).fill("A question about this place.");
+  await expect(submit(page)).toBeDisabled();
   await expect(
-    dialog(page).getByRole("radio", { name: "Local tips", exact: true }),
-  ).toBeChecked();
+    dialog(page).getByRole("button", { name: "Enable guidance", exact: true }),
+  ).toHaveCount(0);
+  const before = await readSerializedApp(page);
+  await dialog(page)
+    .getByRole("radio", { name: "Local tips", exact: true })
+    .check();
   await ask(page, "why this place?");
   await expect(dialog(page).locator(".cw-reasons")).toBeVisible();
-  expect(requests.filter((call) => call.path.endsWith("/reply"))).toHaveLength(
-    0,
-  );
-  const before = await page.evaluate(() =>
-    localStorage.getItem("common-table.demo.v1"),
-  );
-  await chooseGuidance(page);
-  expect(requests.filter((call) => call.path.endsWith("/reply"))).toHaveLength(
-    0,
-  );
-  await ask(page, "What about the budget?");
-  await expect(answer(page)).toBeVisible();
-  await expect(answer(page).locator(".cw-guidance-label")).toHaveText(
-    "OFFLINE DEMO · SAMPLE GUIDANCE",
-  );
-  await expect(answer(page).locator("p")).toContainText("$48");
-  await expect(answer(page).locator("p")).not.toContainText(
-    "Offline demo · sample guidance.",
-  );
+  expect(requests.filter((value) => value.startsWith("POST "))).toEqual([]);
+  expect(await readSerializedApp(page)).toBe(before);
   await noProviderReferences(page);
-  const posts = requests.filter((call) => call.path.endsWith("/reply"));
-  expect(posts).toHaveLength(1);
-  expect(posts[0].headers["x-common-table-request"]).toBe("waiter");
-  const body = posts[0].body as {
-    message: string;
-    context: Record<string, unknown>;
-  };
-  expect(body.message).toBe("What about the budget?");
-  expect(Object.keys(body).sort()).toEqual(["context", "message"]);
-  expect(Object.keys(body.context).sort()).toEqual([
-    "budget",
-    "mode",
-    "participantCount",
-    "planSaved",
-    "restrictions",
-    "venueId",
-    "view",
-  ]);
-  expect(body.context).toMatchObject({
-    view: "explore",
-    mode: "book",
-    venueId: "juniper",
-    participantCount: 1,
-    budget: 65,
-    restrictions: [],
-    planSaved: false,
-  });
-  expect(
-    await page.evaluate(() => localStorage.getItem("common-table.demo.v1")),
-  ).toBe(before);
 });
 
 test("repeated Enter sends one pending request, Cancel restores input focus, and a later explicit request works", async ({
@@ -184,11 +158,24 @@ test("repeated Enter sends one pending request, Cancel restores input focus, and
   await page.goto("/#menu");
   await open(page);
   await chooseGuidance(page);
+  const before = await readSerializedApp(page);
   await input(page).fill("One request, please.");
   await input(page).press("Enter");
   await input(page).press("Enter");
   await input(page).press("Enter");
   await expect.poll(() => calls.length).toBe(1);
+  expect(calls[0].csrf).toBe("waiter");
+  expect(Object.keys(calls[0].body).sort()).toEqual(["context", "message"]);
+  expect(calls[0].body.context).toEqual({
+    view: "explore",
+    mode: "book",
+    venueId: "juniper",
+    participantCount: 1,
+    budget: 65,
+    restrictions: [],
+    tastes: ["Italian", "Seasonal"],
+    planSaved: false,
+  });
   await expect(submit(page)).toBeDisabled();
   await expect(dialog(page).locator(".cw-request-pending")).toContainText(
     "Preparing a little guidance",
@@ -205,6 +192,10 @@ test("repeated Enter sends one pending request, Cancel restores input focus, and
   await expect.poll(() => calls.length).toBe(2);
   await response(calls[1].route, "A fresh answer for this table.");
   await expect(answer(page)).toContainText("A fresh answer for this table.");
+  await expect(answer(page).locator(".cw-guidance-label")).toHaveText(
+    "THE WAITER · LIVE GUIDANCE",
+  );
+  expect(await readSerializedApp(page)).toBe(before);
   await noProviderReferences(page);
   expect(calls).toHaveLength(2);
 });
@@ -276,7 +267,7 @@ test("closing cancels the request, restores the opener and sends fresh aggregate
   await response(calls[0].route, "STALE OLD BUDGET ANSWER").catch(() => {});
   await open(page);
   await expect(
-    dialog(page).getByRole("radio", { name: "Local tips", exact: true }),
+    dialog(page).getByRole("radio", { name: /^Thoughtful guidance\b/ }),
   ).toBeChecked();
   await expect(answer(page)).toHaveCount(0);
   expect(calls).toHaveLength(1);
@@ -288,18 +279,18 @@ test("closing cancels the request, restores the opener and sends fresh aggregate
   expect(after.budget).not.toBe(before.budget);
   expect(after.participantCount).toBe(2);
   expect(after.restrictions).toEqual(["Vegan"]);
+  expect(after.tastes).toEqual(["Italian", "Seasonal"]);
   expect(JSON.stringify(after)).not.toContain("Private Demo Name");
-  for (const key of Object.keys(after))
-    expect([
-      "view",
-      "mode",
-      "venueId",
-      "participantCount",
-      "budget",
-      "restrictions",
-      "planVenueId",
-      "planSaved",
-    ]).toContain(key);
+  expect(Object.keys(after).sort()).toEqual([
+    "budget",
+    "mode",
+    "participantCount",
+    "planSaved",
+    "restrictions",
+    "tastes",
+    "venueId",
+    "view",
+  ]);
   await response(calls[1].route, "CURRENT TABLE ANSWER");
   await expect(answer(page)).toContainText("CURRENT TABLE ANSWER");
 });
@@ -381,8 +372,93 @@ test("disabled thoughtful guidance cannot submit and local guidance remains usef
   expect(calls).toHaveLength(0);
 });
 
+test("anonymous guidance offers a safe top-level sign-in link without enabling a paid request", async ({
+  page,
+}) => {
+  const calls = await heldApi(page, "sign_in");
+  await page.goto("/#table");
+  await open(page);
+  await dialog(page)
+    .getByRole("radio", { name: /^Thoughtful guidance\b/ })
+    .check();
+  await input(page).fill("Help with this table.");
+  await expect(submit(page)).toBeDisabled();
+  const signIn = dialog(page).getByRole("link", {
+    name: "Sign in for guidance",
+    exact: true,
+  });
+  await expect(signIn).toHaveAttribute("target", "_top");
+  const href = await signIn.getAttribute("href");
+  expect(href).toMatch(/^\/signin-with-chatgpt\?/);
+  expect(
+    new URL(href!, "https://fixture.example").searchParams.get("return_to"),
+  ).toBe("/#table");
+  await expect(
+    dialog(page).getByRole("button", { name: "Enable guidance", exact: true }),
+  ).toHaveCount(0);
+  expect(calls).toHaveLength(0);
+  await noProviderReferences(page);
+});
+
+test("an authorized fixture enables once explicitly, refreshes availability and never requests an automatic top-up", async ({
+  page,
+}) => {
+  const calls = await heldApi(page, "disabled");
+  let enabled = false,
+    enables = 0;
+  await page.route("**/api/waiter/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        mode: enabled ? "live" : "disabled",
+        canEnable: !enabled,
+      }),
+    }),
+  );
+  await page.route("**/api/waiter/enable", (route) => {
+    enables++;
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toEqual({});
+    expect(route.request().headers()["x-common-table-request"]).toBe("waiter");
+    enabled = true;
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ enabled: true }),
+    });
+  });
+  await page.goto("/#menu");
+  await open(page);
+  await dialog(page)
+    .getByRole("radio", { name: /^Thoughtful guidance\b/ })
+    .check();
+  await input(page).fill("Help with this possibility.");
+  await expect(submit(page)).toBeDisabled();
+  expect(enables).toBe(0);
+  expect(calls).toHaveLength(0);
+  await dialog(page)
+    .getByRole("button", { name: "Enable guidance", exact: true })
+    .click();
+  await expect(
+    dialog(page).getByRole("radio", { name: /^Thoughtful guidance\b/ }),
+  ).toHaveAccessibleName(/live/);
+  await expect(
+    dialog(page).getByRole("button", { name: "Enable guidance", exact: true }),
+  ).toHaveCount(0);
+  expect(enables).toBe(1);
+  expect(calls).toHaveLength(0);
+  await submit(page).click();
+  await expect.poll(() => calls.length).toBe(1);
+  await response(
+    calls[0].route,
+    "Review the budget and dietary needs before choosing.",
+  );
+  await expect(answer(page)).toBeVisible();
+  expect(enables).toBe(1);
+  await noProviderReferences(page);
+});
+
 for (const mobile of [false, true]) {
-  test(`offline provider guidance meets WCAG AA and has a reachable exit on ${mobile ? "mobile" : "desktop"}`, async ({
+  test(`live guidance fixture meets WCAG AA and has a reachable exit on ${mobile ? "mobile" : "desktop"}`, async ({
     page,
   }) => {
     if (mobile) await page.setViewportSize({ width: 390, height: 844 });

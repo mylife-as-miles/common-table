@@ -1,0 +1,27 @@
+{
+  "project_id": "appgprj_6ae3844c39308191844738fe4334ad14",
+  "deployedVersion": 15,
+  "siteSourceCommit": "0d20513ce0970c09b1c5fa4c07a4c413e5b0cb5f",
+  "versionId": "appgprj_6ae3844c39308191844738fe4334ad14~appgver_647d2276b82881918b409061a8f39592",
+  "deploymentId": "appgdep_6ae8022a4fd88191b3d7bcdf976039cf",
+  "url": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "envRevision": 1,
+  "database": {
+    "binding": "DB",
+    "tables": [
+      "ai_budget_initialization",
+      "ai_test_attempts",
+      "ai_test_budget",
+      "service_quotas",
+      "shared_invites",
+      "shared_members",
+      "shared_operations",
+      "shared_tables"
+    ]
+  },
+  "paidGuidanceCalls": 0,
+  "paidGuidanceSpendUsd": 0,
+  "bookingMode": "venue booking-page handoff; no in-app confirmed reservation",
+  "liveAiVerified": false,
+  "liveDiscoveryVerified": false
+}

@@ -5,6 +5,18 @@ export interface MenuItem {
 }
 
 export interface Venue {
+  source?: "demo" | "qloo" | "osm";
+  providerEntityId?: string;
+  latitude?: number;
+  longitude?: number;
+  websiteUrl?: string;
+  bookingUrl?: string;
+  retrievedAt?: string;
+  priceKnown?: boolean;
+  ratingKnown?: boolean;
+  walkKnown?: boolean;
+  priceLevel?: 1 | 2 | 3 | 4;
+  affinity?: number;
   id: string;
   name: string;
   cuisine: string;
@@ -39,9 +51,15 @@ export interface Plan {
   /** Local simulated agreement, never authenticated consent from another person. */
   approvals: string[];
   saved: boolean;
+  /** Explicit acknowledgment of missing real-world menu, cost and dietary details. */
+  detailsAcknowledged?: boolean;
 }
 
 export interface AppState {
+  discoveryMode?: "sample" | "live";
+  catalog?: Venue[];
+  recommendationIds?: string[];
+  recommendationsRetrievedAt?: string;
   participants: Participant[];
   shortlist: string[];
   vetoes: string[];
@@ -50,6 +68,9 @@ export interface AppState {
 }
 
 export type AppAction =
+  | { type: "receive-recommendations"; venues: Venue[]; orderedIds: string[]; retrievedAt: string }
+  | { type: "browse-sample" }
+  | { type: "acknowledge-details"; acknowledged: boolean }
   | { type: "select"; venueId: string }
   | { type: "shortlist"; venueId: string }
   | { type: "veto"; venueId: string }

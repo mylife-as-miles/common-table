@@ -1,11 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { unavailableOptionalServices } from "./helpers/offline-services.ts";
 
 const atlas = (page: Page) => page.locator(".immersive-atlas");
 const world = (page: Page) => page.locator(".atlas-world");
 const waiter = (page: Page) =>
   page.getByRole("dialog", { name: "The Waiter, at your service" });
 test.beforeEach(async ({ page }) => {
+  await unavailableOptionalServices(page);
   await page.route("https://tile.openstreetmap.org/**", (route) =>
     route.abort(),
   );
@@ -26,6 +28,9 @@ async function openWaiter(page: Page) {
   await expect(waiter(page)).toBeVisible();
 }
 async function ask(page: Page, text: string) {
+  await waiter(page)
+    .getByRole("radio", { name: "Local tips", exact: true })
+    .check();
   await request(page).fill(text);
   await waiter(page)
     .getByRole("button", { name: "Ask The Waiter", exact: true })
@@ -319,7 +324,7 @@ test("group limits filter map pins and index, and The Waiter explains the actual
     "$32 per person fits everyone’s budget",
   );
   await expect(waiter(page).locator(".cw-reasons")).toContainText(
-    "Qloo is not connected",
+    "Fictional venue metadata. Confirm ingredients, cost and allergy safety with the restaurant.",
   );
 });
 
@@ -367,7 +372,7 @@ test("reduced-motion and low-power map views are flat, stable and still usable",
   ).toBe(0);
 });
 
-test("mobile postcard bookmark has an unobstructed hit target before and after scrolling", async ({
+test("mobile postcard bookmark has an unobstructed hit target when revealed and after page-bottom scrolling", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -378,6 +383,7 @@ test("mobile postcard bookmark has an unobstructed hit target before and after s
     name: "Save Juniper & Rye to shortlist",
     exact: true,
   });
+  await save.scrollIntoViewIfNeeded();
   const hitIsButton = async (label: "save" | "remove") => {
     const button =
       label === "save"
@@ -502,9 +508,11 @@ test("Waiter accepts useful typed requests and honestly handles unsupported serv
   );
   await ask(page, "book a table and invite Maya to my location");
   await expect(waiter(page).locator(".cw-response")).toContainText(
-    "Nothing is sent.",
+    "Nothing is sent or booked automatically.",
   );
-  await expect(waiter(page)).toContainText("aren’t connected in this demo");
+  await expect(waiter(page)).toContainText(
+    "Open the folded invitation note at Your table",
+  );
   await expect(page).not.toHaveURL(/#plan|#table/);
   expect(mutations).toEqual([]);
   await waiter(page)

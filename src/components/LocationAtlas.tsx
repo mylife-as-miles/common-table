@@ -16,15 +16,19 @@ import {
   Utensils,
   X,
 } from "lucide-react";
-import { GeographicMap, type MapPoint } from "./GeographicMap";
+import { GeographicMap, geographicVenueCandidates, type MapPoint } from "./GeographicMap";
 import type { LocationContext } from "../location/useLocationContext";
 import "./location-atlas.css";
+import type { Venue } from "../domain/types";
 
 interface Props {
   context: LocationContext;
   lowPower: boolean;
   onDemo: () => void;
   onWaiter: () => void;
+  discoveredVenues?: Venue[];
+  onOpenVenue?: (id: string) => void;
+  selectedVenueId?: string;
 }
 const lenses = [
   { id: "all", label: "Everything", icon: Compass },
@@ -54,7 +58,11 @@ export function LocationAtlas({
   lowPower,
   onDemo,
   onWaiter,
+  discoveredVenues = [],
+  onOpenVenue,
+  selectedVenueId,
 }: Props) {
+  const restaurantPossibilities = geographicVenueCandidates(discoveredVenues);
   const input = useRef<HTMLInputElement>(null),
     root = useRef<HTMLElement>(null),
     unfoldButton = useRef<HTMLButtonElement>(null);
@@ -289,6 +297,9 @@ export function LocationAtlas({
             selectedPoint={selected}
             onPointSelect={inspect}
             onPointsChange={setPoints}
+            discoveredVenues={restaurantPossibilities}
+            onOpenVenue={onOpenVenue}
+            selectedVenueId={selectedVenueId}
           />
           <div className="chosen-area-paper">
             <Compass size={18} strokeWidth={1.3} />
@@ -299,7 +310,7 @@ export function LocationAtlas({
                   : c.location.source === "device"
                     ? "DEVICE AREA · THIS SESSION"
                     : c.location.source === "saved"
-                      ? "FROM YOUR KEPT PLACES"
+                      ? "YOUR SAVED AREA"
                       : "YOUR CHOSEN AREA"}
               </span>
               <h3>{c.location.label}</h3>
@@ -374,7 +385,7 @@ export function LocationAtlas({
                     onClick={() => c.toggleSavedPoint(selected)}
                   >
                     {kept ? <Check size={14} /> : <Bookmark size={14} />}
-                    {kept ? "Kept for this session" : "Keep this place"}
+                    {kept ? c.storageAvailable ? "Kept on this device" : "Kept for this session" : "Keep this place"}
                   </button>
                   <a
                     href={`https://www.openstreetmap.org/?mlat=${selected.latitude}&mlon=${selected.longitude}#map=18/${selected.latitude}/${selected.longitude}`}
@@ -425,6 +436,7 @@ export function LocationAtlas({
               </>
             )}
           </div>
+          {restaurantPossibilities.length > 0 && onOpenVenue && <section className="recommended-place-index" aria-label="Restaurant possibilities for your table"><span className="eyebrow">A PLACE FOR YOUR EVENING</span><h4>Restaurant possibilities</h4><p>Open a restaurant book to explore the details. Prices and dietary needs may still need confirmation.</p><ol>{restaurantPossibilities.map(venue => <li key={venue.id}><button onClick={() => onOpenVenue(venue.id)} aria-pressed={selectedVenueId === venue.id} aria-label={`${venue.name} — Open menu book`}>{venue.image ? <img src={venue.image} alt="" loading="lazy"/> : <Utensils size={20}/>}<span><strong>{venue.name}</strong><small>{venue.neighborhood || venue.cuisine}</small></span><ArrowUpRight size={14}/></button></li>)}</ol></section>}
           <div
             className="map-collection-tabs"
             role="group"
@@ -446,7 +458,7 @@ export function LocationAtlas({
           </div>
           <p className="map-collection-caption">
             {collection === "kept"
-              ? "Your pocket collection · this session only"
+              ? c.storageAvailable ? "Your pocket collection · on this device" : "Your pocket collection · this session only"
               : "Places supplied by the map · not ranked recommendations"}
           </p>
           {list.length ? (
@@ -511,9 +523,9 @@ export function LocationAtlas({
       <footer className="location-privacy">
         <p>
           <LocateFixed size={13} /> Device location is requested only when you
-          choose it. Map and place-search services receive the chosen area. Kept
-          places stay in this session; no location is shared with guests or
-          dinner plans.
+          choose it. Map and place-search services receive the chosen area. {c.storageAvailable
+            ? "Chosen areas and kept places are saved on this device; the current device location is not stored."
+            : "Changes stay only in this session while device storage is unavailable."} No location is shared with guests or dinner plans.
         </p>
         <button onClick={onWaiter}>
           A word with The Waiter <ArrowUpRight size={12} />

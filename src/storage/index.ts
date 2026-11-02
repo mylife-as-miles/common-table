@@ -1,0 +1,13 @@
+export * from './database';
+import { deviceStore } from './database';
+export const initializeStorage=deviceStore.initialize;
+export const get=deviceStore.get.bind(deviceStore);
+export const getRecord=deviceStore.getRecord.bind(deviceStore);
+export const put=deviceStore.put.bind(deviceStore);
+export const update=deviceStore.update.bind(deviceStore);
+export const deleteValue=deviceStore.deleteValue.bind(deviceStore);
+export const subscribe=deviceStore.subscribe;
+export const subscribeStorageStatus=deviceStore.subscribeStatus;
+export const getStorageStatus=deviceStore.getStatus;
+export const flushStorage=deviceStore.flush;
+export const useSessionStorageOnly=deviceStore.sessionOnly.bind(deviceStore);

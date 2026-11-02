@@ -1,0 +1,31 @@
+✔ status requires server configuration, owner identity and explicit setup, without any provider call (50.8547ms)
+✔ only the configured owner can explicitly enable, and repeated enable never resets spending (33.912995ms)
+✔ live reply verifies the authorized organization and exact model before one bounded paid call (5.174187ms)
+✔ organization and model mismatches make no paid call and consume no reservation (7.430165ms)
+✔ paid failures retain their reservation, discard upstream detail and never retry (4.525838ms)
+✔ keys, unsupported tool blocks and malformed usage never enter a successful reply (19.234699ms)
+✔ origin, CSRF, content type, unknown context, personal fields and size checks happen before transport (9.21331ms)
+✔ timeout before preflight makes no reservation; timeout during paid output keeps the reservation (27.954403ms)
+✔ a shared-table reference requires membership and uses private-data-free server aggregates (5.711839ms)
+✔ real venue context is re-resolved on the server and omits its coordinates, neighborhood and website (13.340504ms)
+✔ streamed body overflow is rejected even without a declared content length (3.060914ms)
+✔ an aborted stalled request body is cancelled promptly before any paid or setup operation (3.394238ms)
+✔ oversized streamed output is cancelled with no successful reply and no released reservation (3.640259ms)
+✔ generated provider and infrastructure labels are replaced before appearing in product text (3.043308ms)
+✔ allowance is initialized only by explicit setup and charges five irrevocable cents per attempt up to the original five dollars (55.352024ms)
+✔ the durable setup marker prevents enable from refilling a missing ledger (3.01485ms)
+✔ orphan rows and inconsistent receipts fail closed without automatic repair or top-up (4.464535ms)
+✔ shared preference transport strips app seat identity fields while retaining the person's choices (2.238593ms)
+✔ device draft hydration rejects corrupt preferences and never restores a forged saved claim (0.710554ms)
+✔ the deployed service facade ignores forged identity headers and isolates host and member authority (52.156857ms)
+✔ a replayed save cannot resurrect stale approval after another authenticated member edits preferences (22.020037ms)
+✔ two authenticated edits to one version have one winner and explicit conflict recovery preserves both intents (11.225148ms)
+✔ one invitation has one concurrent accepter and removed membership cannot bypass an ETag check (11.594347ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 545.167243

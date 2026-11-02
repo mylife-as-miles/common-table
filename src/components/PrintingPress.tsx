@@ -18,6 +18,7 @@ interface PrintingPressProps {
   request: number;
   lowPower?: boolean;
   storageAvailable: boolean;
+  persistenceLabel?: string;
   onOperate: () => void;
   onReprint: () => void;
 }
@@ -76,6 +77,7 @@ export function PrintingPress({
   request,
   lowPower = false,
   storageAvailable,
+  persistenceLabel,
   onOperate,
   onReprint,
 }: PrintingPressProps) {
@@ -423,9 +425,9 @@ export function PrintingPress({
           {printing
             ? "Inking. Pressing. An evening on paper."
             : saved
-              ? storageAvailable
+              ? persistenceLabel ?? (storageAvailable
                 ? "Your current plan, pressed & saved locally."
-                : "Pressed for this session. Download a copy to keep it."
+                : "Pressed for this session. Download a copy to keep it.")
               : ready
                 ? "All seats agree. The press is ready."
                 : "A proof of your evening. Set the details & gather the nods."}

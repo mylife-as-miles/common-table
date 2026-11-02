@@ -1,4 +1,4 @@
-import { useState, type Dispatch } from "react";
+import { useEffect, useRef, useState, type Dispatch } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,13 +14,18 @@ import {
 import {
   type Action,
   type AppState,
-  venues,
-  rankVenues,
+  getVenue,
+  isDemoVenue,
+  venuePriceLabel,
+  venueVerificationWarnings,
+  planText as exportPlanText,
+  eligibilityReasons,
   planValidationErrors,
 } from "../domain";
 import "./table-plan.css";
 import { PrintingPress } from "./PrintingPress";
 import "./dinner-cinematic.css";
+import { canEditSharedPlan, canApproveSharedSeat, type SharedTableSnapshot } from "../collaboration/types";
 
 interface DinnerPlanProps {
   lowPower?: boolean;
@@ -29,6 +34,10 @@ interface DinnerPlanProps {
   dispatch: Dispatch<Action>;
   onExplore: () => void;
   onTable: () => void;
+  sharedTable?: SharedTableSnapshot;
+  sharedBusy?: boolean;
+  sharedOnline?: boolean;
+  sharedHasDraft?: boolean;
 }
 function localDate() {
   const d = new Date();
@@ -41,9 +50,23 @@ export function DinnerPlan({
   onTable,
   storageAvailable = true,
   lowPower = false,
+  sharedTable,
+  sharedBusy = false,
+  sharedOnline = true,
+  sharedHasDraft = false,
 }: DinnerPlanProps) {
   const [message, setMessage] = useState("");
   const [printRequest, setPrintRequest] = useState(0);
+  const mayEditPlan = !sharedTable || canEditSharedPlan(sharedTable);
+  const previousSharedPlan = useRef<{ id: string; saved: boolean } | null>(null);
+  useEffect(() => {
+    const previous = previousSharedPlan.current;
+    if (sharedTable && previous?.id === sharedTable.id && !previous.saved && sharedTable.plan.saved) {
+      setPrintRequest(value => value + 1);
+      setMessage("Your shared dinner plan is saved. No reservation was made.");
+    }
+    previousSharedPlan.current = sharedTable ? { id: sharedTable.id, saved: sharedTable.plan.saved } : null;
+  }, [sharedTable?.id, sharedTable?.plan.saved]);
   const printJobKey = JSON.stringify({
     venueId: state.plan.venueId,
     date: state.plan.date,
@@ -52,9 +75,9 @@ export function DinnerPlan({
     approvals: state.plan.approvals,
     participants: state.participants,
   });
-  const venue = venues.find((v) => v.id === state.plan.venueId);
+  const venue = getVenue(state, state.plan.venueId);
   const eligible =
-    venue && rankVenues(state).some((r) => r.venue.id === venue.id);
+    venue && eligibilityReasons(venue, state).length === 0;
   const dateObject = new Date(`${state.plan.date}T12:00:00`);
   const canonicalDate = !Number.isNaN(dateObject.getTime())
     ? `${dateObject.getFullYear()}-${String(dateObject.getMonth() + 1).padStart(2, "0")}-${String(dateObject.getDate()).padStart(2, "0")}`
@@ -76,12 +99,11 @@ export function DinnerPlan({
       }).format(dateObject)
     : "Choose a date";
   const people = state.participants.map((p) => p.name).join(", ");
-  const planText = venue
-    ? `COMMON TABLE — Dinner plan\n\n${venue.name}\n${venue.cuisine} · ${venue.neighborhood}, Brooklyn\n${longDate} at ${state.plan.time}\nTable for ${state.participants.length}: ${people}\nEstimated $${venue.price} per person (demo estimate)\n${state.plan.note ? `\nNote: ${state.plan.note}\n` : ""}\nA suggested plan, not a booking. Fictional demo venue. Confirm location, hours, ingredients and availability before going.\nMade with Common Table`
-    : "";
+  const planText = venue ? exportPlanText(state) : "";
   function savePlan() {
-    if (!canSave || state.plan.saved) return;
+    if (!canSave || state.plan.saved || !mayEditPlan || sharedBusy || sharedHasDraft || (sharedTable && !sharedOnline)) return;
     dispatch({ type: "save-plan" });
+    if (sharedTable) { setMessage("Your save request needs confirmation from the shared table. No reservation was made."); return; }
     setPrintRequest((value) => value + 1);
     setMessage(
       storageAvailable
@@ -150,11 +172,12 @@ export function DinnerPlan({
         <div className="tp-plan-layout">
           <PrintingPress
             saved={state.plan.saved}
-            ready={canSave}
+            ready={canSave && (mayEditPlan || state.plan.saved) && !sharedBusy && !sharedHasDraft && (!sharedTable || sharedOnline)}
             jobKey={printJobKey}
             request={printRequest}
             lowPower={lowPower}
             storageAvailable={storageAvailable}
+            persistenceLabel={sharedTable ? "Your current plan, pressed & saved for the shared table." : undefined}
             onOperate={savePlan}
             onReprint={reprintPlan}
           >
@@ -169,7 +192,7 @@ export function DinnerPlan({
                 {state.plan.saved ? (
                   <>
                     <CheckCircle2 size={14} />{" "}
-                    {storageAvailable
+                    {sharedTable ? "SAVED FOR THE SHARED TABLE" : storageAvailable
                       ? "SAVED ON THIS DEVICE"
                       : "KEPT FOR THIS SESSION"}
                   </>
@@ -209,15 +232,15 @@ export function DinnerPlan({
               <div className="tp-receipt-line">
                 <MapPin size={17} />
                 <div>
-                  <strong>{venue.neighborhood}, Brooklyn</strong>
-                  <span>Fictional venue · demonstration only</span>
+                  <strong>{venue.neighborhood}{isDemoVenue(venue) ? ", Brooklyn" : ""}</strong>
+                  <span>{isDemoVenue(venue) ? "Fictional venue · demonstration only" : "Confirm hours and availability"}</span>
                 </div>
               </div>
               <div className="tp-receipt-total">
-                <span>Estimated per person</span>
+                <span>{isDemoVenue(venue) ? "Estimated per person" : "Restaurant pricing"}</span>
                 <strong>
-                  ${venue.price}
-                  <small> + tip & tax</small>
+                  {venuePriceLabel(venue)}
+                  {isDemoVenue(venue) && <small> + tip & tax</small>}
                 </strong>
               </div>
               {state.plan.note && (
@@ -236,14 +259,20 @@ export function DinnerPlan({
                 <span className="tp-eyebrow">YOUR CHOSEN PLACE</span>
                 <strong>{venue.name}</strong>
                 <small>
-                  {venue.neighborhood} · ${venue.price} / person
+                  {venue.neighborhood} · {venuePriceLabel(venue)}
                 </small>
               </div>
             </div>
+            {!isDemoVenue(venue) && <fieldset className="tp-approvals">
+              <legend>Before we agree</legend>
+              {venueVerificationWarnings(venue, state).map(warning => <p key={warning}>{warning}</p>)}
+              <label><input type="checkbox" disabled={!mayEditPlan || sharedBusy} checked={state.plan.detailsAcknowledged === true} onChange={event => dispatch({type:"acknowledge-details", acknowledged:event.target.checked})} /><span>I understand these details need confirmation.</span></label>
+              {venue.websiteUrl && <a href={venue.websiteUrl} target="_blank" rel="noopener noreferrer">Restaurant website</a>}
+            </fieldset>}
             <span className="tp-eyebrow">THE LITTLE DETAILS</span>
             <h3>Make an evening of it.</h3>
             <p className="tp-subtext">
-              Set a time that works. You can always change your mind.
+              {sharedTable && !mayEditPlan ? "The host edits the plan. Your own approval below stays yours to give or withdraw." : "Set a time that works. You can always change your mind."}
             </p>
             <div className="tp-date-fields">
               <label htmlFor="plan-date">
@@ -253,6 +282,7 @@ export function DinnerPlan({
                   type="date"
                   min={localDate()}
                   value={state.plan.date}
+                  disabled={!mayEditPlan || sharedBusy}
                   onChange={(e) => {
                     dispatch({
                       type: "update-plan",
@@ -269,6 +299,7 @@ export function DinnerPlan({
                   id="plan-time"
                   type="time"
                   value={state.plan.time}
+                  disabled={!mayEditPlan || sharedBusy}
                   onChange={(e) => {
                     dispatch({
                       type: "update-plan",
@@ -287,6 +318,7 @@ export function DinnerPlan({
                 rows={3}
                 maxLength={350}
                 value={state.plan.note}
+                disabled={!mayEditPlan || sharedBusy}
                 onChange={(e) => {
                   dispatch({
                     type: "update-plan",
@@ -330,7 +362,7 @@ export function DinnerPlan({
               ))}
             <fieldset className="tp-approvals">
               <legend>
-                {state.participants.length === 1
+                {sharedTable ? "YOUR SHARED AGREEMENT" : state.participants.length === 1
                   ? "YOUR LITTLE NOD"
                   : "A NOD AROUND THE TABLE"}{" "}
                 <span>
@@ -338,7 +370,7 @@ export function DinnerPlan({
                 </span>
               </legend>
               <p>
-                {state.participants.length === 1
+                {sharedTable ? "Each signed-in member approves this exact version for themselves." : state.participants.length === 1
                   ? "Happy with the place, time, and budget?"
                   : "Try the agreement flow. Check each seat to simulate a yes."}
               </p>
@@ -348,8 +380,9 @@ export function DinnerPlan({
                     <input
                       type="checkbox"
                       checked={state.plan.approvals.includes(person.id)}
-                      disabled={!eligible}
+                      disabled={!eligible || sharedBusy || sharedHasDraft || Boolean(sharedTable && (!sharedOnline || !canApproveSharedSeat(sharedTable, person.id)))}
                       onChange={() => {
+                        if (sharedHasDraft || sharedTable && !canApproveSharedSeat(sharedTable, person.id)) return;
                         dispatch({
                           type: "toggle-approval",
                           participantId: person.id,
@@ -361,26 +394,25 @@ export function DinnerPlan({
                       {person.id === "you"
                         ? "Works for me"
                         : `${person.name} agrees`}
-                      {person.id !== "you" && <small>LOCAL DEMO</small>}
+                      {person.id !== "you" && <small>{sharedTable ? "SIGNED-IN MEMBER" : "LOCAL DEMO"}</small>}
                     </span>
                   </label>
                 ))}
               </div>
               <small>
-                Local demo approvals · no responses are sent. Editing the
-                details resets these decisions.
+                {sharedTable ? "Only your account can change your approval. Plan, preference and membership changes require fresh agreement." : "Local demo approvals · no responses are sent. Editing the details resets these decisions."}
               </small>
             </fieldset>
             <button
               className="tp-dark-button tp-save-plan"
-              disabled={!canSave}
+              disabled={!canSave || !mayEditPlan || sharedBusy || sharedHasDraft || Boolean(sharedTable && !sharedOnline)}
               aria-disabled={state.plan.saved}
               onClick={savePlan}
             >
               {state.plan.saved ? (
                 <>
                   <Check size={16} />{" "}
-                  {storageAvailable
+                  {sharedTable ? "Shared plan saved" : storageAvailable
                     ? "Saved for a good evening"
                     : "Kept for this session"}
                 </>
@@ -391,7 +423,7 @@ export function DinnerPlan({
               )}
             </button>
             <p className="tp-fine">
-              {storageAvailable
+              {sharedTable ? "The shared table confirms saved changes for every member." : storageAvailable
                 ? "Stored in this browser."
                 : "Browser storage is unavailable. This plan lasts only for this session; download a copy to keep it."}{" "}
               Editing the venue, guests, or details resets agreement and updates
@@ -416,9 +448,8 @@ export function DinnerPlan({
             <div className="tp-honest-note">
               <strong>A little housekeeping.</strong>
               <p>
-                All venues and prices are demo data. No booking, invitation, or
-                location sharing takes place. Always confirm dietary needs and
-                allergy safety with the restaurant.
+                {isDemoVenue(venue) ? "This sample venue and its prices are demo data. " : "Menu, cost and availability need direct confirmation. "}
+                Saving a plan does not make a reservation. Confirm dietary needs and allergy safety with the restaurant.
               </p>
             </div>
           </div>

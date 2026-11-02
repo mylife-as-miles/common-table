@@ -1,0 +1,156 @@
+{
+  "network": [
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/",
+      "status": 200,
+      "type": "document"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/layout-segment-context-CylTNtCf.js",
+      "status": 200,
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/page-BGNAyF4D.js",
+      "status": 200,
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/framework-D_rUT4EX.js",
+      "status": 200,
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+      "status": 200,
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/css/index.BGC-U3F-.css",
+      "status": 200,
+      "type": "stylesheet"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/index-B8VH4ofH.js",
+      "status": 200,
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-5.woff2",
+      "status": 200,
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-2.woff2",
+      "status": 200,
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/css/App.B9Vt_XQL.css",
+      "status": 200,
+      "type": "stylesheet"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/App-C2qWpOz_.js",
+      "status": 200,
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-7.woff2",
+      "status": 200,
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-0.woff2",
+      "status": 200,
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-4.woff2",
+      "status": 200,
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-8.woff2",
+      "status": 200,
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-6.woff2",
+      "status": 200,
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/fonts/font-3.woff2",
+      "status": 200,
+      "type": "font"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/favicon.svg",
+      "status": 200,
+      "type": "other"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/shared-tables/session",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/maplibre-gl-49ettL-S.js",
+      "status": 200,
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/css/maplibre-gl.D7DNNUwi.css",
+      "status": 200,
+      "type": "stylesheet"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/_next/static/chunks/maplibre-gl-worker-CIBWxaY5.js",
+      "status": 200,
+      "type": "script"
+    },
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/weather",
+      "status": 503,
+      "type": "fetch"
+    },
+    {
+      "url": "https://tiles.openfreemap.org/styles/liberty",
+      "status": 200,
+      "type": "fetch"
+    }
+  ],
+  "errors": [],
+  "console": [
+    "Failed to load resource: the server responded with a status of 503 ()"
+  ],
+  "samples": [
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/#nearby",
+      "app": "real",
+      "body": "Skip to content\ncommon table.\n01\nExplore\n02\nYour table\n1\n03\nDinner plan\nSound off\nAbout your evening\nFIND YOUR COMMON GROUND\nGood food. Better company.\n\nA place you’ll love. A meal you’ll remember. Let’s find it together.\n\nBrooklyn, New York\nREAL MAP\nSet your table\n\nOpening your saved evening…\n\nA FEW PLACES, CHOSEN TOGETHER\nLet’s find your common ground.\n\nNear Brooklyn, New York. Chosen for your table’s tastes, budget and needs.\n\nReal restaurant discovery. Menus, exact prices and availability need confirmation.\n\nFind real restaurants\nExplore the sample evening\nTHE WORLD, A LITTLE CLOSER\nFind your corner.\nOpenStreetMap\nSearch a city or neighborhood\nSearch places\nUse my location\nEverything\nFood\nCoffee\nOutdoors\nDaylight\nUnfold map\n\nSelect a mapped place to read its notes.\n\nLook\n3D\nUnfolding your neighborhood…\nTry standard 2D map\nReal geography · mapped places · no live tracking\nOpenFreeMap · © OpenMapTiles · © OpenStreetMap contributors\nSTARTING VIEW\nBrooklyn, New York\nA COMMON TABLE FIELD GUIDE\nNo. 01\nA little curiosity goes a long way.\nThe evening starts\nsomewhere.\n\nTap a place on the map. Keep a corner that catches your eye.\n\nIn this view\n0\nKept\n0\n\nPlaces supplied by the map · not ranked recommendations\n\nPan or zoom to reveal mapped places. The standard 2D map shows geography without this place index.\n\nFollow your appetite.\n\nDrag to wander. Zoom to get closer.\nFind a place, then make an evening of it.\n\nCONTINUE INTO OUR FICTIONAL NEIGHBORHOOD\n\nFrom a pin to a shared table.\n\nOpen demo atlas\nSix fictional Brooklyn restaurants. Real menus and personalized recommendations are not connected yet.\n\n Device location is requested only when you choose it. Map and place-search servi",
+      "map": "<section class=\"geographic-map\" aria-label=\"Real geographic map of Brooklyn, New York\" data-renderer=\"loading\" data-map-status=\"loading\" data-latitude=\"40.692\" data-longitude=\"-73.977\" data-atmosphere=\"day\" data-lens=\"all\" data-poi-count=\"0\" data-restaurant-count=\"0\" data-camera-look=\"idle\"><div class=\"geographic-map-canvas\"></div><div class=\"geo-map-material\" aria-hidden=\"true\"></div><div class=\"geo-map-controls\" aria-label=\"Geographic map contr",
+      "animations": [
+        {
+          "name": "geo-loader",
+          "state": "running",
+          "time": 14499.406000003202,
+          "pseudo": null
+        },
+        {
+          "name": "field-note-arrive",
+          "state": "finished",
+          "time": 300,
+          "pseudo": null
+        },
+        {
+          "state": "running",
+          "time": 0,
+          "pseudo": null
+        }
+      ]
+    }
+  ],
+  "failure": "locator.click: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Open demo atlas', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button>…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n"
+}

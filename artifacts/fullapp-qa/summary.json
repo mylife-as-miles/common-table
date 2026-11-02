@@ -1,0 +1,68 @@
+{
+  "scope": "Frozen production build at http://127.0.0.1:4175; desktop/mobile native UI and fixture-labelled optional service integration.",
+  "completedAt": "2026-11-02T03:18:24.246Z",
+  "browser": {
+    "total": 93,
+    "passed": 93,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 317461.62,
+    "automatedWcagAandAAScans": 25,
+    "retriesConfigured": 0
+  },
+  "independentSharedProtocol": {
+    "passed": 4,
+    "failed": 0,
+    "transport": "Real SQLite generated migrations behind the actual service router, trusted synthetic identities only.",
+    "report": "shared-protocol.tap"
+  },
+  "localAuthenticatedSharedJourney": {
+    "passed": 8,
+    "failed": 0,
+    "identity": "Native local development fixture, not production authentication.",
+    "report": "shared-ui-local.json"
+  },
+  "verified": [
+    "Map → physical menu → shared local table → approved plan continuity",
+    "Repeated actions, page curl, tear/reprint/cancel/edit/navigation and cleanup",
+    "IndexedDB hydration, legacy migration, quota/denial and no empty fallback overwrite",
+    "Recommendation response metadata sanitization and selected real-ID continuity into saved plan",
+    "Current/dinner weather separation, stale cache, cancel and late-area response rejection",
+    "Generic Waiter interface, source guards, duplicate submission lock, cancellation, stale-result removal, sign-in and explicit enable flows",
+    "Shared authorization, per-member approval, stale versions, idempotency, concurrent edits and single-use invites in isolated D1-compatible fixtures"
+  ],
+  "limits": [
+    "Optional recommendation/live guidance/weather success responses in browser tests were test fixtures, not credentialed provider calls.",
+    "No paid provider requests, external invitations, email delivery, location sharing to others or bookings were performed.",
+    "Authenticated shared UI was verified with one native development fixture; multi-user protocol behavior used isolated synthetic trusted identities.",
+    "Production native authentication and reserved-header stripping require the deployed-edge probe; these local tests cannot prove that boundary.",
+    "Browser report applies to the frozen production build tested; any later CSS changes require focused layout/accessibility validation."
+  ],
+  "authoritativeBrowserReport": "browser-final.json",
+  "historicalBaseline": "browser-regression.json is the superseded DEV baseline (77/91), not the final result.",
+  "finalCssValidation": {
+    "commit": "579b893188e60c28021708347a048e59845e0c0f",
+    "scope": "Final CSS-only production build: phone functional text and static map bevel; no app geometry or JavaScript changes.",
+    "total": 28,
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 68046.12899999999,
+    "automatedWcagAandAAScans": 21,
+    "report": "browser-final-css.json"
+  },
+  "weatherAndGuidanceValidation": {
+    "scope": "Production preview release with nullable alternate-source weather fields and bounded solo tastes in Waiter context.",
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 66927.014,
+    "automatedWcagAandAAScans": 2,
+    "report": "browser-weather-guidance-final.json",
+    "limits": "Weather and live guidance success are explicit browser response fixtures; no paid provider was called. This focused follow-up does not claim a new full94 run."
+  }
+}

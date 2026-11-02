@@ -1,0 +1,62 @@
+{
+  "id": "desktop",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "steps": [
+    {
+      "name": "actual_application_and_anonymous_session",
+      "status": "pass",
+      "elapsedMs": 1998,
+      "details": {
+        "documentStatus": 200,
+        "sessionAnonymous": true,
+        "databaseBindingReportedAvailable": true,
+        "authenticatedSharingVerified": false
+      }
+    },
+    {
+      "name": "actual_real_map_renderer",
+      "status": "fail",
+      "elapsedMs": 25157,
+      "error": "page.waitForFunction: Timeout 25000ms exceeded."
+    },
+    {
+      "name": "native_explicit_sample_atlas_then_menu",
+      "status": "fail",
+      "elapsedMs": 14434,
+      "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Open the menu', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"atlas-open-menu\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <html lang=\"en\">…</html> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n"
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [],
+  "badSiteAssets": [],
+  "apiResponses": [
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/weather",
+      "status": 503,
+      "type": "fetch"
+    }
+  ],
+  "externalHosts": {},
+  "rasterBlocked": 0,
+  "forbiddenSubmissions": [],
+  "screenshots": [],
+  "authenticatedSharingVerified": false,
+  "liveRankingVerified": false,
+  "liveModelVerified": false,
+  "reservationsVerified": false,
+  "finishedAt": "2026-11-02T03:06:44.915Z",
+  "noPaidOrSharedSubmissions": true
+}

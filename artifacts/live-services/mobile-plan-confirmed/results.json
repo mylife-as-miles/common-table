@@ -1,0 +1,208 @@
+{
+  "target": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "startedAt": "2026-11-02T03:16:08.068Z",
+  "historicalDefaultTargetUsed": false,
+  "transport": "Inherited HTTPS proxy; normal TLS verification",
+  "scope": "Anonymous public production UI; actual geographic assets/weather and native fictional local dinner flow. Authenticated sharing, invitations, paid guidance/ranking and reservations remain unverified.",
+  "requestsMocked": false,
+  "interventions": [
+    "Only tile.openstreetmap.org raster requests are blocked."
+  ],
+  "storageRead": "IndexedDB common-table / app / main; DeviceRecord.value is a serialized versioned app-state envelope. No LocalStorage read or state write is used.",
+  "scenarios": [
+    {
+      "id": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "steps": [
+        {
+          "name": "actual_application_and_anonymous_session",
+          "status": "pass",
+          "elapsedMs": 1299,
+          "details": {
+            "documentStatus": 200,
+            "sessionAnonymous": true,
+            "databaseBindingReportedAvailable": true,
+            "authenticatedSharingVerified": false
+          }
+        },
+        {
+          "name": "actual_real_map_renderer",
+          "status": "not_verified",
+          "elapsedMs": 20115,
+          "details": {
+            "renderer": "leaflet",
+            "status": "error",
+            "pointCount": 0,
+            "canvasWidth": 0,
+            "notVerified": true,
+            "reason": "Actual vector rendering unavailable. Raster fallback is deliberately blocked; no substitute image was supplied."
+          }
+        },
+        {
+          "name": "native_explicit_sample_atlas_then_menu",
+          "status": "pass",
+          "elapsedMs": 15690,
+          "details": {
+            "fictionalVenueChosen": "Juniper & Rye",
+            "nextPreviousVenueVerified": true,
+            "heldNativeCurlAndEscapeVerified": false,
+            "mobileStaticReducedMotion": true,
+            "paidDiscoveryRequested": false
+          }
+        },
+        {
+          "name": "native_guest_cancel_restores_focus",
+          "status": "pass",
+          "elapsedMs": 2675,
+          "details": {
+            "participants": 1,
+            "cancelledGuestWasNotAdded": true,
+            "focusRestored": true
+          }
+        },
+        {
+          "name": "native_local_guest_tastes_budget_and_restrictions",
+          "status": "pass",
+          "elapsedMs": 48015,
+          "details": {
+            "localGuestCount": 2,
+            "changedBudget": 55,
+            "taste": "Seasonal",
+            "restriction": "Vegetarian",
+            "belowBudgetInvalidatedPlannedVenue": true,
+            "eligibilityRestorationDidNotAutoChoose": true,
+            "eligibleVenueExplicitlyChosenAgain": "juniper",
+            "invitationsSent": false,
+            "tableImage": {
+              "complete": true,
+              "naturalWidth": 1100
+            }
+          }
+        },
+        {
+          "name": "native_plan_agreement_save_and_indexeddb_commit",
+          "status": "pass",
+          "elapsedMs": 9503,
+          "details": {
+            "indexedDB": "common-table/app/main",
+            "schema": 1,
+            "revision": 24,
+            "serializedStringValue": true,
+            "saved": true,
+            "participantApprovals": 2,
+            "sharedServerPlanVerified": false
+          }
+        },
+        {
+          "name": "reload_reads_native_indexeddb_and_explicit_download",
+          "status": "fail",
+          "elapsedMs": 3098,
+          "error": "expect(received).toContain(expected) // indexOf\n\nExpected substring: \"Local Casey mobile\"\nReceived string:    \"COMMON TABLE · Demo dinner plan\nJuniper & Rye\nFort Greene · Italian · seasonal\n2026-11-03 at 19:15 · 2 people\nAbout $48 per person · illustrative pricing\nPublished-site verification: mobile fictional local plan only.\nFictional venue. This is a plan, not a reservation. No invitations have been sent.\""
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/weather",
+          "type": "fetch",
+          "error": "net::ERR_ABORTED",
+          "possibleNavigationCancellation": true
+        },
+        {
+          "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/weather",
+          "type": "fetch",
+          "error": "net::ERR_ABORTED",
+          "possibleNavigationCancellation": true
+        }
+      ],
+      "badSiteAssets": [],
+      "apiResponses": [
+        {
+          "path": "/api/shared-tables/session",
+          "status": 200,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/shared-tables/session",
+          "status": 200,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/weather",
+          "status": 503,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/weather",
+          "status": 503,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/weather",
+          "status": 503,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/shared-tables/session",
+          "status": 200,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/weather",
+          "status": 503,
+          "type": "fetch"
+        }
+      ],
+      "externalHosts": {},
+      "rasterBlocked": 9,
+      "forbiddenSubmissions": [],
+      "screenshots": [
+        "mobile-01-real-map.png",
+        "mobile-02-explicit-sample-menu.png",
+        "mobile-03-local-table.png",
+        "mobile-04-saved-plan.png",
+        "mobile-reload-reads-native-indexeddb-and-explicit-download-failed.png"
+      ],
+      "authenticatedSharingVerified": false,
+      "liveRankingVerified": false,
+      "liveModelVerified": false,
+      "reservationsVerified": false,
+      "planBudgetEvidence": [
+        {
+          "stage": "before_budget_change",
+          "plannedVenueId": "juniper"
+        },
+        {
+          "stage": "budget_20_below_venue_cost",
+          "plannedVenueId": null
+        },
+        {
+          "stage": "budget_55_eligible_again",
+          "plannedVenueId": null
+        },
+        {
+          "stage": "explicit_native_menu_rechoose",
+          "plannedVenueId": "juniper"
+        }
+      ],
+      "finishedAt": "2026-11-02T03:17:51.216Z",
+      "noPaidOrSharedSubmissions": true
+    }
+  ],
+  "finishedAt": "2026-11-02T03:17:52.603Z",
+  "summary": {
+    "passedSteps": 5,
+    "failedSteps": 1,
+    "notVerifiedSteps": 1,
+    "pageErrors": 0,
+    "badSiteAssets": 0,
+    "unexpectedPaidOrSharedSubmissions": 0,
+    "authenticatedInvitationsVerified": false,
+    "livePaidGuidanceVerified": false,
+    "livePaidRankingVerified": false,
+    "actualReservationVerified": false
+  }
+}

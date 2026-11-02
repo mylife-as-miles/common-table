@@ -1,0 +1,61 @@
+{
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "source": "Actual public deployed Common Table app, native controls only",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "reducedMotion": "reduce",
+  "apiResponsesMocked": false,
+  "idbStateInjected": false,
+  "authenticated": false,
+  "threeDMapVerified": false,
+  "blockedOnly": "Public tile.openstreetmap.org raster requests",
+  "paidCallsRequested": false,
+  "sharedWritesRequested": false,
+  "bookingActionsRequested": false,
+  "weather": [
+    {
+      "status": 200,
+      "bodyStatus": "ok",
+      "dinnerStatus": "forecast",
+      "timezone": "America/New_York"
+    }
+  ],
+  "errors": [],
+  "screenshots": [
+    {
+      "file": "01-book-desktop.png",
+      "caption": "Actual public app: Juniper & Rye sample folio, desktop reduced-motion view."
+    },
+    {
+      "file": "02-table-desktop.png",
+      "caption": "Actual public app: one-person local table and preferences for the chosen sample venue."
+    },
+    {
+      "file": "03-saved-plan-desktop.png",
+      "caption": "Actual public app: future dinner plan saved through the native one-person approval and save flow; no reservation made."
+    },
+    {
+      "file": "04-waiter-desktop.png",
+      "caption": "Actual public app: contextual Waiter service pad in Local tips mode. No AI question submitted or fabricated answer displayed."
+    }
+  ],
+  "requests": [
+    {
+      "path": "/api/shared-tables/session",
+      "method": "GET"
+    },
+    {
+      "path": "/api/weather",
+      "method": "GET"
+    },
+    {
+      "path": "/api/waiter/status",
+      "method": "GET"
+    }
+  ],
+  "venue": "Juniper & Rye",
+  "planDate": "2026-11-03",
+  "elapsedMs": 13364
+}

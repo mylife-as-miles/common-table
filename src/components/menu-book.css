@@ -2367,3 +2367,4 @@
     display: none;
   }
 }
+.book-real-notes{min-height:175px;padding:10px 0;color:var(--ink-muted,#766853);font-size:12px;line-height:1.7}.book-real-notes p{margin:8px 0 16px}.book-real-notes a{display:inline-flex;align-items:center;gap:9px;color:#6c4b33;font-weight:600;text-underline-offset:4px}.book-real-notes a:focus-visible{outline:2px solid #6c4b33;outline-offset:5px}

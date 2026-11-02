@@ -1,4 +1,4 @@
-import type { Participant, Venue } from "./types";
+import type { Participant, Venue } from "./types.ts";
 
 // Fictional restaurants, illustrative prices/menus/walking times. Photography is illustrative.
 const photo = (id: string) => `/images/${id}.jpg`;

@@ -1,11 +1,12 @@
-import { defaultParticipant, initialVenueId, venues } from "./data";
+import { defaultParticipant, initialVenueId } from "./data";
+import { getVenue, isDemoVenue, sanitizeVenueSnapshot, MAX_CATALOG_VENUES, venueVerificationWarnings } from "./catalog";
 import { rankVenues, eligibilityReasons } from "./ranking";
 import type { AppAction, AppState, Participant, Plan } from "./types";
 
 export const STORAGE_KEY = "common-table.demo.v1";
 export const MAX_PARTICIPANTS = 6;
-const venueExists = (id: unknown): id is string =>
-  typeof id === "string" && venues.some((venue) => venue.id === id);
+const venueExists = (state: Pick<AppState, "catalog">, id: unknown): id is string =>
+  typeof id === "string" && Boolean(getVenue(state, id));
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 export function localDate(date = new Date()): string {
@@ -33,6 +34,7 @@ export function createInitialState(): AppState {
         restrictions: [],
       },
     ],
+    discoveryMode: "sample",
     shortlist: [],
     vetoes: [],
     selectedVenueId: initialVenueId,
@@ -53,10 +55,12 @@ export function planValidationErrors(
   now = new Date(),
 ): string[] {
   const errors: string[] = [];
-  const venue = venues.find((entry) => entry.id === state.plan.venueId);
+  const venue = getVenue(state, state.plan.venueId);
   if (!venue) errors.push("Choose a restaurant for the plan.");
   else if (eligibilityReasons(venue, state).length)
     errors.push("This restaurant no longer fits the table. Choose another.");
+  if (venue && venueVerificationWarnings(venue, state).length && !state.plan.detailsAcknowledged)
+    errors.push("Acknowledge that menu, cost and dietary details need restaurant confirmation.");
   if (!isCalendarDate(state.plan.date) || state.plan.date < localDate(now)) {
     errors.push("Choose today or a future date.");
   }
@@ -72,7 +76,7 @@ export function planValidationErrors(
       state.plan.approvals.includes(person.id),
     )
   )
-    errors.push("Confirm each person’s demo approval before saving.");
+    errors.push(venue && !isDemoVenue(venue) ? "Everyone needs to approve this plan before saving." : "Confirm each person’s demo approval before saving.");
   return errors;
 }
 
@@ -83,9 +87,8 @@ function reconcileGroup(state: AppState, clearApprovals = true): AppState {
   )
     ? state.selectedVenueId
     : (ranked[0]?.venue.id ?? state.selectedVenueId);
-  const venueId = ranked.some(({ venue }) => venue.id === state.plan.venueId)
-    ? state.plan.venueId
-    : null;
+  const planned = getVenue(state, state.plan.venueId);
+  const venueId = planned && !eligibilityReasons(planned, state).length ? planned.id : null;
   return {
     ...state,
     selectedVenueId,
@@ -94,6 +97,7 @@ function reconcileGroup(state: AppState, clearApprovals = true): AppState {
       venueId,
       approvals: clearApprovals || !venueId ? [] : state.plan.approvals,
       saved: false,
+      detailsAcknowledged: clearApprovals ? false : state.plan.detailsAcknowledged,
     },
   };
 }
@@ -125,13 +129,33 @@ function validParticipant(value: unknown): value is Participant {
 
 export function reducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case "select":
-      return venueExists(action.venueId) &&
-        state.selectedVenueId !== action.venueId
-        ? { ...state, selectedVenueId: action.venueId }
-        : state;
+    case "receive-recommendations": {
+      const received = action.venues.slice(0, 30).map(sanitizeVenueSnapshot).filter((v): v is NonNullable<typeof v> => Boolean(v) && !isDemoVenue(v!));
+      const merged = new Map((state.catalog || []).map(v => [v.id, v]));
+      received.forEach(v => merged.set(v.id, v));
+      const protectedIds = new Set([state.plan.venueId, state.selectedVenueId, ...state.shortlist, ...state.vetoes]);
+      const catalog = [...merged.values()].sort((a,b) => Number(protectedIds.has(b.id))-Number(protectedIds.has(a.id))).slice(0, MAX_CATALOG_VENUES);
+      const orderedIds = [...new Set(action.orderedIds)].filter(id => received.some(v => v.id===id) && !state.vetoes.includes(id));
+      return { ...state, discoveryMode: "live", catalog, recommendationIds: orderedIds,
+        recommendationsRetrievedAt: Number.isFinite(Date.parse(action.retrievedAt)) ? action.retrievedAt : undefined,
+        selectedVenueId: orderedIds.includes(state.selectedVenueId) ? state.selectedVenueId : (orderedIds[0] || state.selectedVenueId) };
+    }
+    case "browse-sample": {
+      const sampleState: AppState = { ...state, discoveryMode: "sample" };
+      const first = rankVenues(sampleState)[0]?.venue.id;
+      return { ...sampleState, selectedVenueId: first ?? state.selectedVenueId };
+    }
+    case "acknowledge-details":
+      return { ...state, plan: { ...state.plan, detailsAcknowledged: action.acknowledged === true, approvals: [], saved: false } };
+    case "select": {
+      const venue = getVenue(state, action.venueId);
+      if (!venue) return state;
+      const discoveryMode = isDemoVenue(venue) ? "sample" : "live";
+      return state.selectedVenueId === venue.id && state.discoveryMode === discoveryMode
+        ? state : { ...state, selectedVenueId: venue.id, discoveryMode };
+    }
     case "shortlist":
-      if (!venueExists(action.venueId) || state.vetoes.includes(action.venueId))
+      if (!venueExists(state, action.venueId) || state.vetoes.includes(action.venueId))
         return state;
       return {
         ...state,
@@ -140,7 +164,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
           : [...state.shortlist, action.venueId],
       };
     case "veto": {
-      if (!venueExists(action.venueId) || state.vetoes.includes(action.venueId))
+      if (!venueExists(state, action.venueId) || state.vetoes.includes(action.venueId))
         return state;
       const next = {
         ...state,
@@ -216,20 +240,22 @@ export function reducer(state: AppState, action: AppAction): AppState {
       };
     }
     case "choose-plan": {
-      const venue = venues.find((entry) => entry.id === action.venueId);
+      const venue = getVenue(state, action.venueId);
       if (!venue || eligibilityReasons(venue, state).length) return state;
+      const discoveryMode = isDemoVenue(venue) ? "sample" : "live";
       if (state.plan.venueId === venue.id)
-        return state.selectedVenueId === venue.id
+        return state.selectedVenueId === venue.id && state.discoveryMode === discoveryMode
           ? state
-          : { ...state, selectedVenueId: venue.id };
+          : { ...state, selectedVenueId: venue.id, discoveryMode };
       return {
         ...state,
         selectedVenueId: venue.id,
-        plan: { ...state.plan, venueId: venue.id, approvals: [], saved: false },
+        discoveryMode,
+        plan: { ...state.plan, venueId: venue.id, approvals: [], saved: false, detailsAcknowledged: false },
       };
     }
     case "toggle-approval": {
-      const venue = venues.find((entry) => entry.id === state.plan.venueId);
+      const venue = getVenue(state, state.plan.venueId);
       if (
         !venue ||
         eligibilityReasons(venue, state).length ||
@@ -276,21 +302,28 @@ export function hydrateState(raw: string | null): AppState {
       typeof source.plan !== "object"
     )
       return fallback;
-    const vetoes = [...new Set(source.vetoes.filter(venueExists))];
+    const catalog = Array.isArray(source.catalog) ? source.catalog.slice(0,MAX_CATALOG_VENUES).map(sanitizeVenueSnapshot).filter((v): v is NonNullable<typeof v> => Boolean(v) && !isDemoVenue(v!)) : [];
+    const exists = (id: unknown): id is string => venueExists({ catalog }, id);
+    const vetoes = [...new Set(source.vetoes.filter(exists))];
     const state: AppState = {
+      discoveryMode: source.discoveryMode === "sample" || source.discoveryMode === "live" ? source.discoveryMode : Array.isArray(source.recommendationIds) || catalog.some(v => v.id === source.selectedVenueId) ? "live" : "sample",
+      ...(catalog.length ? { catalog } : {}),
+      ...(Array.isArray(source.recommendationIds) ? { recommendationIds: [...new Set(source.recommendationIds.filter(exists))].filter(id=>!vetoes.includes(id)) } : {}),
+      ...(typeof source.recommendationsRetrievedAt === 'string' && Number.isFinite(Date.parse(source.recommendationsRetrievedAt)) ? { recommendationsRetrievedAt: source.recommendationsRetrievedAt } : {}),
       participants: [
         ...source.participants.filter((person) => person.id === "you"),
         ...source.participants.filter((person) => person.id !== "you"),
       ].map((person) => ({ ...person, name: person.name.trim() })),
-      shortlist: [...new Set(source.shortlist.filter(venueExists))].filter(
+      shortlist: [...new Set(source.shortlist.filter(exists))].filter(
         (id) => !vetoes.includes(id),
       ),
       vetoes,
-      selectedVenueId: venueExists(source.selectedVenueId)
+      selectedVenueId: exists(source.selectedVenueId)
         ? source.selectedVenueId
         : initialVenueId,
       plan: {
-        venueId: venueExists(source.plan.venueId) ? source.plan.venueId : null,
+        detailsAcknowledged: source.plan.detailsAcknowledged === true,
+        venueId: exists(source.plan.venueId) ? source.plan.venueId : null,
         date:
           typeof source.plan.date === "string" &&
           isCalendarDate(source.plan.date)
@@ -322,7 +355,7 @@ export function hydrateState(raw: string | null): AppState {
           isCalendarDate(source.plan.date) &&
           typeof source.plan.time === "string" &&
           timePattern.test(source.plan.time) &&
-          venueExists(source.plan.venueId),
+          exists(source.plan.venueId),
       },
     };
     const reconciled = reconcileGroup(state, false);
@@ -357,17 +390,18 @@ export function serializeState(state: AppState): string {
 }
 
 export function planText(state: AppState): string {
-  const venue = venues.find((entry) => entry.id === state.plan.venueId);
+  const venue = getVenue(state, state.plan.venueId);
   if (!venue)
     return "Common Table · Choose a restaurant to make a dinner plan.";
   return [
-    "COMMON TABLE · Demo dinner plan",
+    isDemoVenue(venue) ? "COMMON TABLE · Demo dinner plan" : "COMMON TABLE · Dinner plan",
     venue.name,
     `${venue.neighborhood} · ${venue.cuisine}`,
     `${state.plan.date} at ${state.plan.time} · ${state.participants.length} ${state.participants.length === 1 ? "person" : "people"}`,
-    `About $${venue.price} per person · illustrative pricing`,
+    isDemoVenue(venue) ? `About $${venue.price} per person · illustrative pricing` : "Confirm menu, pricing and dietary needs with the restaurant.",
     state.plan.note,
-    "Fictional venue. This is a plan, not a reservation. No invitations have been sent.",
+    isDemoVenue(venue) ? "Fictional venue. This is a plan, not a reservation. No invitations have been sent." : "This is a dinner plan. A reservation needs separate confirmation.",
+    !isDemoVenue(venue) ? venue.websiteUrl : undefined,
   ]
     .filter(Boolean)
     .join("\n");

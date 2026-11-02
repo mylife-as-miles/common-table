@@ -18,8 +18,12 @@ import {
 import {
   type Action,
   type AppState,
-  venues,
+  getVenueCatalog,
+  getVenue,
+  isDemoVenue,
+  venuePriceLabel,
   rankVenues,
+  eligibilityReasons,
   tasteOptions,
   restrictionOptions,
 } from "../domain";
@@ -27,6 +31,7 @@ import "./table-plan.css";
 import "./shared-table-cinematic.css";
 import { playInteractionSound } from "../experience/interactionSound";
 import { PhysicalTableStage } from "./table-only/PhysicalTableStage";
+import { canEditSharedPlan, canEditSharedSeat, type SharedTableSnapshot } from "../collaboration/types";
 
 interface SharedTableProps {
   state: AppState;
@@ -34,6 +39,9 @@ interface SharedTableProps {
   onExplore: () => void;
   onPlan: () => void;
   lowPower?: boolean;
+  sharedTable?: SharedTableSnapshot;
+  sharedBusy?: boolean;
+  sharedHasDraft?: boolean;
 }
 const tastes = [...tasteOptions, "Cozy", "Lively"];
 const restrictions = restrictionOptions;
@@ -52,6 +60,9 @@ export function SharedTable({
   onExplore,
   onPlan,
   lowPower = false,
+  sharedTable,
+  sharedBusy = false,
+  sharedHasDraft = false,
 }: SharedTableProps) {
   const [editingId, setEditingId] = useState(state.participants[0]?.id || "");
   const [adding, setAdding] = useState(false);
@@ -66,9 +77,12 @@ export function SharedTable({
   const editing =
     state.participants.find((p) => p.id === editingId) || state.participants[0];
   const ranked = rankVenues(state);
-  const eligible = new Set(ranked.map((r) => r.venue.id));
-  const shortlist = venues.filter((v) => state.shortlist.includes(v.id));
-  const chosenVenue = venues.find((v) => v.id === state.plan.venueId);
+  const eligible = new Set(getVenueCatalog(state).filter(v=>!eligibilityReasons(v,state).length).map(v=>v.id));
+  const shortlist = getVenueCatalog(state).filter((v) => state.shortlist.includes(v.id));
+  const chosenVenue = getVenue(state, state.plan.venueId);
+  const mayEditSeat = !sharedTable || canEditSharedSeat(sharedTable, editing?.id ?? "");
+  const mayEditPlan = !sharedTable || canEditSharedPlan(sharedTable);
+  useEffect(() => { if (sharedTable) { setAdding(false); setName(""); } }, [sharedTable?.id]);
   useEffect(() => {
     if (adding) nameRef.current?.focus();
   }, [adding]);
@@ -136,7 +150,7 @@ export function SharedTable({
     event.preventDefault();
     cancelEditorReveal();
     const cleanName = name.trim();
-    if (!cleanName || state.participants.length >= 6) return;
+    if (sharedTable || !cleanName || state.participants.length >= 6) return;
     const id = `guest-${crypto.randomUUID()}`;
     dispatch({
       type: "add-participant",
@@ -160,7 +174,7 @@ export function SharedTable({
     );
   }
   function toggle(field: "tastes" | "restrictions", value: string) {
-    if (!editing) return;
+    if (!editing || !mayEditSeat || sharedBusy) return;
     const current = editing[field];
     dispatch({
       type: "update-participant",
@@ -199,8 +213,7 @@ export function SharedTable({
             <span className="tp-eyebrow">FOR YOUR EVENING</span>
             <h3>{chosenVenue.name}</h3>
             <p>
-              {chosenVenue.neighborhood} · {chosenVenue.cuisine} · $
-              {chosenVenue.price} / person
+              {chosenVenue.neighborhood} · {chosenVenue.cuisine} · {venuePriceLabel(chosenVenue)}
             </p>
           </div>
           <button className="tp-outline" onClick={onPlan}>
@@ -245,7 +258,7 @@ export function SharedTable({
           <div className="tp-table-caption">
             <Users size={15} />
             <span>
-              {state.participants.length === 1
+              {sharedTable ? "Each person controls their own place at this table." : state.participants.length === 1
                 ? "A lovely dinner starts with you."
                 : "A shared table, simulated on this device."}
             </span>
@@ -257,12 +270,12 @@ export function SharedTable({
               setAdding(true);
               setMessage("");
             }}
-            disabled={state.participants.length >= 6}
+            disabled={Boolean(sharedTable) || state.participants.length >= 6}
           >
-            <Plus size={16} /> Add a demo guest
+            <Plus size={16} /> {sharedTable ? "Invite using a private link above" : "Add a demo guest"}
           </button>
           <p className="tp-fine">
-            Local prototype · no invitations are sent. Up to six seats.
+            {sharedTable ? "Membership changes through signed-in invitation acceptance. Up to six seats." : "Local prototype · no invitations are sent. Up to six seats."}
           </p>
         </div>
         <div className="tp-preferences">
@@ -279,12 +292,12 @@ export function SharedTable({
                 {person.name}
               </button>
             ))}
-            <button
+            {!sharedTable && <button
               onClick={() => setAdding(true)}
               disabled={state.participants.length >= 6}
             >
               <Plus size={13} /> Guest
-            </button>
+            </button>}
           </div>
           {adding ? (
             <form
@@ -336,7 +349,7 @@ export function SharedTable({
                     <SlidersHorizontal size={13} /> {editing.name.toUpperCase()}
                     ’S TASTES
                   </span>
-                  {editing.id !== state.participants[0]?.id && (
+                  {!sharedTable && editing.id !== state.participants[0]?.id && (
                     <button
                       className="tp-icon-button"
                       title={`Remove ${editing.name}`}
@@ -370,9 +383,9 @@ export function SharedTable({
                   What sounds good?
                 </h3>
                 <p className="tp-subtext">
-                  Pick a few. We’ll find the overlap.
+                  {sharedTable && !mayEditSeat ? "This member controls their own preferences. You can read them here." : "Pick a few. We’ll find the overlap."}
                 </p>
-                <fieldset className="tp-chip-field">
+                <fieldset className="tp-chip-field" disabled={!mayEditSeat || sharedBusy}>
                   <legend>Favorite cuisines & moods</legend>
                   {tastes.map((taste) => (
                     <button
@@ -401,6 +414,7 @@ export function SharedTable({
                   max="150"
                   step="5"
                   value={editing.budget}
+                  disabled={!mayEditSeat || sharedBusy}
                   onChange={(e) =>
                     dispatch({
                       type: "update-participant",
@@ -413,7 +427,7 @@ export function SharedTable({
                   <span>$20 · easy evening</span>
                   <span>$150 · occasion</span>
                 </div>
-                <fieldset className="tp-chip-field tp-diet-field">
+                <fieldset className="tp-chip-field tp-diet-field" disabled={!mayEditSeat || sharedBusy}>
                   <legend>Dietary needs</legend>
                   {restrictions.map((restriction) => (
                     <button
@@ -427,8 +441,7 @@ export function SharedTable({
                   ))}
                 </fieldset>
                 <p className="tp-fine">
-                  Demo suitability only. Confirm ingredients and allergy safety
-                  with the restaurant.
+                  {sharedTable ? "Each person saves their own needs. Confirm ingredients and allergy safety with the restaurant." : "Demo suitability only. Confirm ingredients and allergy safety with the restaurant."}
                 </p>
               </div>
             )
@@ -443,7 +456,7 @@ export function SharedTable({
               Your contenders <span>({shortlist.length})</span>
             </h3>
           </div>
-          <span className="tp-fine">{ranked.length} places fit this table</span>
+          <span className="tp-fine">{ranked.length} places to consider</span>
         </div>
         {shortlist.length ? (
           <div className="tp-contenders">
@@ -453,13 +466,13 @@ export function SharedTable({
                 <div>
                   <h4>{venue.name}</h4>
                   <p>
-                    {venue.cuisine} · ${venue.price} / person
+                    {venue.cuisine} · {venuePriceLabel(venue)}
                   </p>
                   <span
                     className={eligible.has(venue.id) ? "tp-fit" : "tp-no-fit"}
                   >
                     {eligible.has(venue.id)
-                      ? "Fits your table"
+                      ? isDemoVenue(venue) ? "Fits your table" : "Confirm cost & dietary needs"
                       : "Outside current needs or vetoed"}
                   </span>
                 </div>
@@ -474,8 +487,9 @@ export function SharedTable({
                 </button>
                 <button
                   className="tp-outline tp-contender-choose"
-                  disabled={!eligible.has(venue.id)}
+                  disabled={!eligible.has(venue.id) || !mayEditPlan || sharedBusy || sharedHasDraft}
                   onClick={() => {
+                    if (!mayEditPlan || sharedBusy || sharedHasDraft) return;
                     dispatch({ type: "choose-plan", venueId: venue.id });
                     onPlan();
                   }}

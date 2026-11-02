@@ -1,0 +1,124 @@
+{
+  "id": "mobile",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "steps": [
+    {
+      "name": "actual_application_and_anonymous_session",
+      "status": "pass",
+      "elapsedMs": 1960,
+      "details": {
+        "documentStatus": 200,
+        "sessionAnonymous": true,
+        "databaseBindingReportedAvailable": true,
+        "authenticatedSharingVerified": false
+      }
+    },
+    {
+      "name": "actual_real_map_renderer",
+      "status": "not_verified",
+      "elapsedMs": 18255,
+      "details": {
+        "renderer": "leaflet",
+        "status": "error",
+        "pointCount": 0,
+        "canvasWidth": 0,
+        "notVerified": true,
+        "reason": "Actual vector rendering unavailable. Raster fallback is deliberately blocked; no substitute image was supplied."
+      }
+    },
+    {
+      "name": "native_explicit_sample_atlas_then_menu",
+      "status": "pass",
+      "elapsedMs": 11218,
+      "details": {
+        "fictionalVenueChosen": "Juniper & Rye",
+        "nextPreviousVenueVerified": true,
+        "heldNativeCurlAndEscapeVerified": false,
+        "mobileStaticReducedMotion": true,
+        "paidDiscoveryRequested": false
+      }
+    },
+    {
+      "name": "native_guest_cancel_restores_focus",
+      "status": "pass",
+      "elapsedMs": 1064,
+      "details": {
+        "participants": 1,
+        "cancelledGuestWasNotAdded": true,
+        "focusRestored": true
+      }
+    },
+    {
+      "name": "native_local_guest_tastes_budget_and_restrictions",
+      "status": "pass",
+      "elapsedMs": 11142,
+      "details": {
+        "localGuestCount": 2,
+        "changedBudget": 55,
+        "taste": "Seasonal",
+        "restriction": "Vegetarian",
+        "invitationsSent": false,
+        "tableImage": {
+          "complete": true,
+          "naturalWidth": 1100
+        }
+      }
+    },
+    {
+      "name": "native_plan_agreement_save_and_indexeddb_commit",
+      "status": "fail",
+      "elapsedMs": 5051,
+      "error": "expect(locator).toContainText(expected) failed\n\nLocator: getByRole('group', { name: 'Dinner plan printing press' }).getByRole('article', { name: 'Dinner plan summary' })\nExpected substring: \"Juniper & Rye\"\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toContainText\" getByRole('group', { name: 'Dinner plan printing press' }).getByRole('article', { name: 'Dinner plan summary' }) with timeout 5000ms\n  - waiting for getByRole('group', { name: 'Dinner plan printing press' }).getByRole('article', { name: 'Dinner plan summary' })\n"
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [
+    {
+      "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/weather",
+      "type": "fetch",
+      "error": "net::ERR_ABORTED",
+      "possibleNavigationCancellation": true
+    }
+  ],
+  "badSiteAssets": [],
+  "apiResponses": [
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/weather",
+      "status": 503,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/weather",
+      "status": 503,
+      "type": "fetch"
+    }
+  ],
+  "externalHosts": {},
+  "rasterBlocked": 9,
+  "forbiddenSubmissions": [],
+  "screenshots": [
+    "mobile-01-real-map.png",
+    "mobile-02-explicit-sample-menu.png",
+    "mobile-03-local-table.png",
+    "mobile-native-plan-agreement-save-and-indexeddb-commit-failed.png"
+  ],
+  "authenticatedSharingVerified": false,
+  "liveRankingVerified": false,
+  "liveModelVerified": false,
+  "reservationsVerified": false,
+  "finishedAt": "2026-11-02T03:07:41.009Z",
+  "noPaidOrSharedSubmissions": true
+}

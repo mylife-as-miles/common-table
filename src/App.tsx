@@ -16,7 +16,16 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useCommonTable, venues } from "./domain";
+import { getVenue, getVenueCatalog, isDemoVenue } from "./domain";
+import { useTableExperience } from "./collaboration/useTableExperience";
+import { SharedTablePanel } from "./collaboration";
+import { useBooleanSetting } from "./storage/settings";
+import { useRecommendations } from "./recommendations/useRecommendations";
+import { RecommendationPanel } from "./recommendations/RecommendationPanel";
+import { WeatherCard } from "./weather";
+import { BookingCard } from "./booking";
+import "./services.css";
+import "./finishing.css";
 import MenuBook from "./components/MenuBook";
 import { SharedTable } from "./components/SharedTable";
 import { DinnerPlan } from "./components/DinnerPlan";
@@ -45,23 +54,25 @@ const modeFromHash = () =>
       ? ("map" as const)
       : ("real" as const);
 export default function App() {
-  const { state, dispatch, ranked, selectedVenue, storageAvailable } =
-    useCommonTable();
-  const [view, setView] = useState<View>(viewFromHash);
+  const experience = useTableExperience();
+  const { state, dispatch, ranked, selectedVenue, storageAvailable, storageReady, storageSaving, storageConflict, resolveStorageConflict, shared, editor } = experience;
+  const [view, setView] = useState<View>(() => location.hash.startsWith("#join/") ? "table" : viewFromHash());
   const [mode, setMode] = useState<"book" | "map" | "real">(modeFromHash);
   const locationContext = useLocationContext(
     view === "explore" && mode === "real",
   );
-  const [lowPower, setLowPower] = useState(() => {
-    try {
-      return localStorage.getItem("common-table-low-power") === "true";
-    } catch {
-      return false;
-    }
-  });
+  const [lowPower, setLowPower] = useBooleanSetting("lowPower");
+  const discovery = useRecommendations({ state, dispatch, location: locationContext.location });
+  const discoveredVenues = getVenueCatalog(state).filter(v => !isDemoVenue(v) && v.latitude !== undefined && v.longitude !== undefined);
+  const plannedVenue = getVenue(state, state.plan.venueId);
+  const weatherArea = plannedVenue?.latitude !== undefined && plannedVenue.longitude !== undefined
+    ? {latitude: plannedVenue.latitude, longitude: plannedVenue.longitude, label: plannedVenue.name}
+    : locationContext.location;
+
   const [waiterOpen, setWaiterOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [about, setAbout] = useState(false);
+  const [sharingOpen, setSharingOpen] = useState(() => location.hash.startsWith("#join/"));
   const [sound, setSound] = useState(false);
   const [soundBusy, setSoundBusy] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -73,7 +84,7 @@ export default function App() {
   const modeIntent = useRef<"map" | "book" | "real">(modeFromHash());
   useEffect(() => {
     const change = () => {
-      const nextView = viewFromHash();
+      const nextView = location.hash.startsWith("#join/") ? "table" : viewFromHash();
       setView(nextView);
       if (nextView === "explore" && modeIntent.current !== modeFromHash()) {
         modeIntent.current = modeFromHash();
@@ -175,6 +186,7 @@ export default function App() {
     switchMode("map");
     navigate("explore");
   };
+  const openSample = () => { dispatch({type:"browse-sample"}); openMap(); };
   const shortlistSelected = () => {
     dispatch({ type: "shortlist", venueId: selectedVenue.id });
     setNotice(
@@ -197,22 +209,23 @@ export default function App() {
     const idx = ranked.findIndex((x) => x.venue.id === selectedVenue.id);
     return ranked[(idx + direction + ranked.length) % ranked.length]?.venue;
   };
-  const choose = () => {
-    dispatch({ type: "choose-plan", venueId: selectedVenue.id });
+  const choose = async () => {
+    if (shared.table) {
+      if (shared.table.ownerId !== shared.table.viewerId) {setNotice("The host chooses the dinner plan. Keep this place on your shortlist.");return;}
+      if (editor.draft) {setNotice("Apply or discard your table edits before choosing a new place.");return;}
+      const confirmed = await shared.updatePlan({venueId:selectedVenue.id,venueSnapshot:selectedVenue,date:state.plan.date,time:state.plan.time,note:state.plan.note,saved:false});
+      if (!confirmed) {setNotice("The plan change was not confirmed. Review your shared table.");return;}
+    } else dispatch({ type: "choose-plan", venueId: selectedVenue.id });
     navigate("table");
     setNotice(`${selectedVenue.name} is on your dinner plan.`);
   };
   const reason =
     ranked.find((x) => x.venue.id === selectedVenue.id)?.reasons.join(" · ") ??
     "Adjust your table’s tastes to find a fit.";
-  const togglePower = () => {
-    setLowPower(!lowPower);
-    try {
-      localStorage.setItem("common-table-low-power", String(!lowPower));
-    } catch {
-      /* Optional preference */
-    }
-  };
+  const togglePower = () => setLowPower(value => !value);
+  const sampleSelected = isDemoVenue(selectedVenue);
+  const initialSharedPlan = {venueId:state.plan.venueId,venueSnapshot:plannedVenue??null,date:state.plan.date,time:state.plan.time,note:state.plan.note,saved:false,detailsAcknowledged:state.plan.detailsAcknowledged};
+  const myPreferences = state.participants.find(person => person.id === "you") ?? state.participants[0];
   return (
     <div
       ref={room}
@@ -309,7 +322,7 @@ export default function App() {
             <span>{sound ? "Sound on" : "Sound off"}</span>
           </button>
           <button className="demo-pill" onClick={() => setAbout(true)}>
-            <span className="status-dot" /> A little demo{" "}
+            <span className="status-dot" /> About your evening{" "}
             <ArrowUpRight size={13} />
           </button>
         </div>
@@ -350,9 +363,9 @@ export default function App() {
                   <MapPin size={15} />{" "}
                   {mode === "real"
                     ? locationContext.location.label
-                    : "Brooklyn, New York"}{" "}
+                    : isDemoVenue(selectedVenue) ? "Brooklyn, New York" : selectedVenue.neighborhood}{" "}
                   <span className="tiny-demo">
-                    {mode === "real" ? "REAL MAP" : "DEMO"}
+                    {mode === "real" ? "REAL MAP" : isDemoVenue(selectedVenue) ? "DEMO" : "REAL PLACE"}
                   </span>
                 </span>
                 <button
@@ -363,21 +376,31 @@ export default function App() {
                 </button>
               </>
             ) : (
-              <button className="text-button" onClick={openMap}>
+              <button className="text-button" onClick={openRealMap}>
                 Back to the neighborhood <ArrowRight size={16} />
               </button>
             )}
           </div>
         </section>
+        {!storageReady && <p className="service-notice" role="status">Opening your saved evening…</p>}
+        {storageConflict && <section className="service-notice" role="alert"><p>{storageConflict}</p><button onClick={() => void resolveStorageConflict("reload")}>Load device copy</button><button onClick={() => void resolveStorageConflict("keep-local")}>Keep this tab’s draft</button></section>}
+        {editor.storageError && <p className="service-notice" role="alert">{editor.storageError}</p>}
+        {editor.draft && <section className="service-notice shared-editor" aria-label="Unsubmitted table edits"><p>{editor.draftConflict ? "The shared table changed while you were editing. Review the current plan before applying your draft." : "Your edits are a device draft. Apply them so everyone sees the same details."}</p>{editor.draftConflict && <label><input type="checkbox" checked={editor.reviewed} onChange={e => editor.setReviewed(e.target.checked)} />I reviewed the latest table.</label>}<button disabled={editor.applying || shared.busy || (editor.draftConflict && !editor.reviewed)} onClick={() => void editor.applyDraft()}>Apply table changes</button><button disabled={editor.applying} onClick={editor.discardDraft}>Discard edits</button></section>}
+        {view === "explore" && (mode === "real" ? <RecommendationPanel {...discovery} locationLabel={locationContext.location.label} onRefresh={() => void discovery.refresh()} onCancel={discovery.cancel} onDemo={openSample} disabled={!storageReady || shared.busy} /> : <details className="restaurant-discovery-fold"><summary><span aria-hidden="true">✳</span><b>Make room for a new favorite.</b><span>Find real restaurants near your chosen area <Plus size={14}/></span></summary><RecommendationPanel {...discovery} locationLabel={locationContext.location.label} onRefresh={() => void discovery.refresh()} onCancel={discovery.cancel} disabled={!storageReady || shared.busy} /></details>)}
+        {view === "explore" && discovery.message.startsWith("Sign in") && <p className="service-notice"><a href="/signin-with-chatgpt?return_to=%2F%23nearby" target="_top">Sign in to discover restaurants</a></p>}
+        {view === "table" && <details className="shared-envelope" open={sharingOpen || Boolean(shared.pendingInvite)} onToggle={event => setSharingOpen(event.currentTarget.open)}><summary><span className="envelope-seal" aria-hidden="true">✳</span><span><b>{shared.table ? shared.table.title : "Good company starts with an invitation."}</b><small>{shared.table ? `${shared.table.members.length} at your table · ${shared.status === "connected" ? "connected" : "offline copy"}` : "Private join links · everyone brings their own tastes"}</small></span><span className="envelope-action">{sharingOpen ? "Fold away" : shared.table ? "Manage table" : "Invite your company"}<Plus size={15}/></span></summary><SharedTablePanel session={shared} initialPlan={initialSharedPlan} initialPreferences={myPreferences} onUseTable={() => {setSharingOpen(false);navigate("table");}} /></details>}
         {view === "explore" ? (
           mode === "real" ? (
             <LocationAtlas
               context={locationContext}
               lowPower={lowPower}
-              onDemo={openMap}
+              onDemo={openSample}
               onWaiter={() => setWaiterOpen(true)}
+              discoveredVenues={discoveredVenues}
+              selectedVenueId={selectedVenue.id}
+              onOpenVenue={(id) => {dispatch({type:"select",venueId:id});openMenu();}}
             />
-          ) : mode === "map" && ranked.length > 0 ? (
+          ) : mode === "map" && sampleSelected && ranked.length > 0 ? (
             <ImmersiveMap
               venues={ranked.map((item) => item.venue)}
               selected={selectedVenue}
@@ -398,7 +421,7 @@ export default function App() {
             >
               <aside className="discovery-sidebar book-journey-rail">
                 <span className="eyebrow">THE EVENING IS UNFOLDING</span>
-                <button className="atlas-return" onClick={openMap}>
+                <button className="atlas-return" onClick={sampleSelected ? openMap : openRealMap}>
                   <span className="folded-atlas" aria-hidden="true">
                     <Map size={33} strokeWidth={1} />
                   </span>
@@ -463,10 +486,10 @@ export default function App() {
                 </button>
               </aside>
               <div className="discovery-main">
-                <button className="mobile-neighborhood" onClick={openMap}>
+                <button className="mobile-neighborhood" onClick={sampleSelected ? openMap : openRealMap}>
                   <MapPin size={17} />
                   <span>
-                    Brooklyn, a little closer
+                    {sampleSelected ? "Brooklyn, a little closer" : locationContext.location.label}
                     <small>{ranked.length} places around your table</small>
                   </span>
                   <b>
@@ -483,7 +506,7 @@ export default function App() {
                     <button aria-pressed={mode === "book"} onClick={openMenu}>
                       <BookOpen size={14} /> Menu
                     </button>
-                    <button aria-pressed={mode === "map"} onClick={openMap}>
+                    <button aria-pressed={mode === "map"} onClick={sampleSelected ? openMap : openRealMap}>
                       <Map size={14} /> Map
                     </button>
                   </div>
@@ -493,7 +516,7 @@ export default function App() {
                     <Leaf size={40} />
                     <h2>Let’s make a little room.</h2>
                     <p>
-                      No demo restaurant meets every budget and dietary need.
+                      No restaurant meets the table’s current choices.
                       Adjust your table, or revisit a place you passed.
                     </p>
                     <button
@@ -510,7 +533,7 @@ export default function App() {
                           dispatch({ type: "undo-veto", venueId: id })
                         }
                       >
-                        Reconsider {venues.find((v) => v.id === id)?.name}{" "}
+                        Reconsider {getVenue(state, id)?.name}{" "}
                         <Plus size={14} />
                       </button>
                     ))}
@@ -552,14 +575,14 @@ export default function App() {
                   />
                 )}
                 <div className="under-book">
-                  <span>FICTIONAL PLACES. REAL POSSIBILITIES.</span>
+                  <span>{sampleSelected ? "SAMPLE EVENING · FICTIONAL PLACES" : "REAL PLACES · DETAILS TO CONFIRM"}</span>
                   <p>
                     {mode === "book"
                       ? "Turn a page. Find a feeling."
                       : "Choose a pin. Meet your next favorite."}{" "}
                     <span>✳</span>
                   </p>
-                  <span>THE BROOKLYN EDITION · VOL. 01</span>
+                  <span>{sampleSelected ? "THE BROOKLYN EDITION · VOL. 01" : "YOUR EVENING, TAKING SHAPE"}</span>
                 </div>
               </div>
             </section>
@@ -571,6 +594,9 @@ export default function App() {
             dispatch={dispatch}
             onExplore={openMenu}
             onPlan={() => navigate("plan")}
+            sharedTable={shared.table ?? undefined}
+            sharedBusy={shared.busy || editor.applying}
+            sharedHasDraft={Boolean(editor.draft)}
           />
         ) : (
           <DinnerPlan
@@ -580,8 +606,14 @@ export default function App() {
             dispatch={dispatch}
             onExplore={openMenu}
             onTable={() => navigate("table")}
+            sharedTable={shared.table ?? undefined}
+            sharedBusy={shared.busy || editor.applying}
+            sharedHasDraft={Boolean(editor.draft)}
+            sharedOnline={shared.status === "connected"}
           />
         )}
+        {view === "plan" && <div className="evening-extras"><WeatherCard latitude={weatherArea.latitude} longitude={weatherArea.longitude} locationLabel={weatherArea.label} date={state.plan.date} time={state.plan.time} persistCache={locationContext.location.source !== "device" || Boolean(plannedVenue?.latitude)} /><BookingCard venue={plannedVenue??null} date={state.plan.date} time={state.plan.time} partySize={state.participants.length} /></div>}
+        {view === "explore" && <div className="weather-on-map"><WeatherCard compact latitude={locationContext.location.latitude} longitude={locationContext.location.longitude} locationLabel={locationContext.location.label} date={state.plan.date} time={state.plan.time} persistCache={locationContext.location.source !== "device"} /></div>}
         {state.vetoes.length > 0 && view === "explore" && ranked.length > 0 && (
           <div className="passed-places">
             <span>Passed for now</span>
@@ -590,7 +622,7 @@ export default function App() {
                 key={id}
                 onClick={() => dispatch({ type: "undo-veto", venueId: id })}
               >
-                {venues.find((v) => v.id === id)?.name}
+                {getVenue(state, id)?.name}
                 <Plus size={12} />
                 <span className="sr-only">Undo pass</span>
               </button>
@@ -599,6 +631,8 @@ export default function App() {
         )}
       </main>
       <Waiter
+        sharedTableId={shared.table?.id}
+        canEditPlan={!shared.table || shared.table.ownerId === shared.table.viewerId}
         state={state}
         dispatch={dispatch}
         view={view}
@@ -635,12 +669,12 @@ export default function App() {
             {lowPower ? "Low-power view on" : "Low-power view"}
           </button>
           <button onClick={() => setAbout(true)}>
-            About this demo <ArrowUpRight size={11} />
+            About Common Table <ArrowUpRight size={11} />
           </button>
         </div>
         <span>
-          {storageAvailable
-            ? "Your table stays in this browser."
+          {shared.table ? shared.status === "connected" ? "Your shared table is connected." : "Offline table copy · drafts stay on this device." : storageSaving ? "Saving your device draft…" : storageAvailable
+            ? "Your evening stays on this device."
             : "Browser storage is unavailable; this session is temporary."}
         </span>
       </footer>
@@ -667,7 +701,7 @@ export default function App() {
       >
         <button
           className="dialog-close"
-          aria-label="Close about this demo"
+          aria-label="Close about Common Table"
           onClick={() => setAbout(false)}
         >
           <X size={20} />
@@ -678,25 +712,10 @@ export default function App() {
           <br />
           <em>what’s to come.</em>
         </h2>
-        <p>
-          The real map uses OpenStreetMap-based geography. Device location is
-          requested only after you choose Use my location; map and place-search
-          providers receive the chosen area. Dining features remain an
-          interactive demo with fictional Brooklyn restaurants, illustrative
-          menus, prices, dietary options, ratings, walking times, and
-          photography.
-        </p>
-        <p>
-          Recommendations use a local taste, budget, and dietary filter.{" "}
-          <b>Qloo is not connected.</b> Demo guests are saved in this browser;
-          real invitations and shared live tables are not available.
-        </p>
-        <p>
-          Plans can be saved on this device and exported as text. Nothing is
-          booked, sent, or shared automatically. No location is automatically
-          collected or shared with guests. Always confirm dietary needs directly
-          with a restaurant.
-        </p>
+        <p>Explore real geography, find restaurants for your table, and carry the same place into a menu and dinner plan. The sample evening uses fictional Brooklyn restaurants and illustrative menus, prices and photography.</p>
+        <p>Sign in to create private invitation links. Every member controls their own preferences and approves the current plan. Plans and offline drafts are stored on this device; shared tables also use secure server storage.</p>
+        <p>The Waiter offers guidance when live service is configured. Availability is shown before you send a question. Restaurant discovery and weather show unavailable states when their services cannot connect. Always confirm prices, dietary needs and reservation availability directly with the restaurant.</p>
+        <p>Your device location is requested only when you choose it. Nothing is invited, booked or shared automatically. <a href="/data-credits.html" target="_blank" rel="noreferrer">Data credits</a></p>
         <button className="primary-button" onClick={() => setAbout(false)}>
           Pull up a chair <ArrowRight size={16} />
         </button>

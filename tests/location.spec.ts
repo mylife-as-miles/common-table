@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Route } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { persistedState, readDeviceRecord } from "./helpers/device-storage.ts";
 
 // These are browser integration fixtures, not evidence of a live provider response.
 // All map styles, tiles and glyphs are served by this test: no tile-server traffic.
@@ -174,13 +175,33 @@ async function installFixture(
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (
-      url.pathname === "/api/weather" ||
       url.pathname === "/api/location-config" ||
       url.hostname.endsWith("openweathermap.org")
     ) {
       retired.push(url.toString());
       return json(route, { status: "error", code: "not_found" }, 404);
     }
+    if (url.pathname === "/api/weather")
+      return json(
+        route,
+        {
+          status: "error",
+          code: "unavailable",
+          message: "Weather could not be checked right now.",
+        },
+        503,
+      );
+    if (url.pathname === "/api/recommendations")
+      return json(
+        route,
+        {
+          error: {
+            code: "unavailable",
+            message: "Restaurant suggestions could not be checked right now.",
+          },
+        },
+        503,
+      );
     if (url.pathname === "/api/geocode") {
       requests.push(url);
       if (fixture.geocode) return fixture.geocode(route, url);
@@ -256,6 +277,10 @@ async function choose(page: Page, place: Place) {
 }
 async function ready(page: Page) {
   await expect(map(page)).toHaveAttribute("data-map-status", "ready");
+  await expect(map(page)).toHaveAttribute(
+    "data-renderer",
+    /^(maplibre|leaflet)$/,
+  );
   const box = await map(page).locator(".geographic-map-canvas").boundingBox();
   expect(box?.height).toBeGreaterThan(400);
   expect(box?.width).toBeGreaterThan(250);
@@ -276,7 +301,7 @@ async function assertAccessible(page: Page) {
   ).toEqual([]);
 }
 
-test("real OpenStreetMap geography loads without device permission or weather services", async ({
+test("real geography loads without device permission when weather is unavailable", async ({
   page,
 }) => {
   await installFixture(page);
@@ -319,6 +344,11 @@ test("device location is used only after the explicit button and updates the act
   await expect(map(page)).toHaveAttribute("data-longitude", "139.6503");
   expect(await geoCalls(page)).toBe(1);
   await expect(page.locator(".atlas-photo-pin")).toHaveCount(0);
+  const stored = await readDeviceRecord<{
+    area: { source: string; latitude: number } | null;
+  }>(page, "location", "context");
+  expect(stored?.value.area?.source).not.toBe("device");
+  expect(stored?.value.area?.latitude).not.toBe(35.6762);
   await page.reload();
   await ready(page);
   expect(await geoCalls(page)).toBe(0);
@@ -747,13 +777,13 @@ test("mapped place notes support repeated keep and unkeep, close focus, and revi
       .getByRole("button", { name: "Keep this place", exact: true })
       .click();
     await expect(
-      notes.getByRole("button", { name: "Kept for this session", exact: true }),
+      notes.getByRole("button", { name: "Kept on this device", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
     await expect(
       collection.getByRole("button", { name: /^Kept\b/ }),
     ).toContainText("1");
     await notes
-      .getByRole("button", { name: "Kept for this session", exact: true })
+      .getByRole("button", { name: "Kept on this device", exact: true })
       .click();
     await expect(
       collection.getByRole("button", { name: /^Kept\b/ }),
@@ -795,15 +825,21 @@ test("mapped place notes support repeated keep and unkeep, close focus, and revi
     notes.getByRole("heading", { name: "Fixture Supper Room", exact: true }),
   ).toBeVisible();
   await expect(
-    notes.getByRole("button", { name: "Kept for this session", exact: true }),
+    notes.getByRole("button", { name: "Kept on this device", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
-  expect(
-    await page.evaluate(() =>
-      Object.values(localStorage).some((value) =>
-        value.includes("Fixture Supper Room"),
+  await expect
+    .poll(async () =>
+      (
+        await readDeviceRecord<{ savedPoints: { name: string }[] }>(
+          page,
+          "location",
+          "context",
+        )
+      )?.value.savedPoints.some(
+        (point) => point.name === "Fixture Supper Room",
       ),
-    ),
-  ).toBe(false);
+    )
+    .toBe(true);
   await page
     .getByRole("button", { name: "Low-power view", exact: true })
     .click();
@@ -817,7 +853,20 @@ test("mapped place notes support repeated keep and unkeep, close focus, and revi
     notes.getByRole("heading", { name: "Fixture Supper Room", exact: true }),
   ).toBeVisible();
   await expect(
-    notes.getByRole("button", { name: "Kept for this session", exact: true }),
+    notes.getByRole("button", { name: "Kept on this device", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await ready(page);
+  await collection.getByRole("button", { name: /^Kept\b/ }).click();
+  await expect(
+    kept.getByRole("button", { name: /Fixture Supper Room/ }),
+  ).toHaveCount(1);
+  await kept.getByRole("button", { name: /Fixture Supper Room/ }).click();
+  await expect(
+    notes.getByRole("heading", { name: "Fixture Supper Room", exact: true }),
+  ).toBeVisible();
+  await expect(
+    notes.getByRole("button", { name: "Kept on this device", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -932,8 +981,9 @@ test("The Waiter follows the same real mapped place and shares its keep state wi
     .getByRole("button", { name: "Keep mapped place", exact: true })
     .click();
   await expect(
-    waiter.getByRole("button", { name: "Mapped place kept", exact: true }),
+    waiter.getByRole("button", { name: "Kept on this device", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+  await waiter.getByRole("radio", { name: "Local tips", exact: true }).check();
   await waiter.getByLabel("Or leave a small request").fill("keep this place");
   await waiter
     .getByRole("button", { name: "Ask The Waiter", exact: true })
@@ -944,7 +994,7 @@ test("The Waiter follows the same real mapped place and shares its keep state wi
   await expect(waiter).not.toBeVisible();
   await expect(summon).toBeFocused();
   await expect(
-    notes.getByRole("button", { name: "Kept for this session", exact: true }),
+    notes.getByRole("button", { name: "Kept on this device", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
     page
@@ -952,7 +1002,7 @@ test("The Waiter follows the same real mapped place and shares its keep state wi
       .getByRole("button", { name: /^Kept\b/ }),
   ).toContainText("1");
   await notes
-    .getByRole("button", { name: "Kept for this session", exact: true })
+    .getByRole("button", { name: "Kept on this device", exact: true })
     .click();
   await summon.click();
   await expect(
@@ -1033,3 +1083,274 @@ for (const mobile of [false, true])
       })),
     ).toEqual([]);
   });
+
+test("a restaurant response enters the map, book and saved plan without inventing missing facts", async ({
+  page,
+}) => {
+  test.info().annotations.push({
+    type: "service-fixture",
+    description:
+      "Recommendation response is synthetic; no discovery provider was called.",
+  });
+  await installFixture(page);
+  const providerEntityId = "11111111-1111-4111-8111-111111111111";
+  const venueId = `qloo:${providerEntityId}`;
+  let submitted: Record<string, unknown> | undefined;
+  await page.route("**/api/recommendations", async (route) => {
+    submitted = route.request().postDataJSON();
+    expect(route.request().headers()["x-common-table-request"]).toBe(
+      "recommendations",
+    );
+    return json(route, {
+      source: "qloo",
+      retrievedAt: new Date().toISOString(),
+      orderedIds: [venueId],
+      venues: [
+        {
+          id: venueId,
+          source: "qloo",
+          providerEntityId,
+          name: "Fixture Real Restaurant",
+          latitude: 40.692,
+          longitude: -73.98,
+          cuisine: "Italian",
+          neighborhood: "Fixture neighborhood",
+          description:
+            "A synthetic restaurant response for this integration test.",
+          websiteUrl: "https://example.com/",
+          price: 1,
+          dietary: ["Nut-free"],
+          menu: [{ name: "Invented fixture dish", price: 1 }],
+          walkMinutes: 1,
+        },
+      ],
+    });
+  });
+  await page.goto("/");
+  await ready(page);
+  await page
+    .getByRole("button", { name: "Find real restaurants", exact: true })
+    .click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "1 real places to explore" }),
+  ).toBeVisible();
+  expect(submitted).toBeDefined();
+  expect(Object.keys(submitted!).sort()).toEqual([
+    "latitude",
+    "longitude",
+    "participants",
+    "seedVenueIds",
+    "vetoes",
+  ]);
+  const people = submitted!.participants as Record<string, unknown>[];
+  expect(people).toHaveLength(1);
+  expect(Object.keys(people[0]).sort()).toEqual([
+    "budget",
+    "restrictions",
+    "tastes",
+  ]);
+  const pin = map(page).locator(
+    `.geo-recommended-marker[data-venue-id="${venueId}"]`,
+  );
+  await expect(pin).toBeVisible();
+  await pin.click();
+  await expect(page).toHaveURL(/#menu$/);
+  await expect(page.locator(".book-restaurant-title")).toContainText(
+    "Fixture Real Restaurant",
+  );
+  await expect(page.locator(".menu-book")).toContainText(/confirm price/i);
+  await expect(
+    page.getByText("Invented fixture dish", { exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Bring this to the table", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#table$/);
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: /Dinner plan/ })
+    .click();
+  const receipt = page.getByRole("article", { name: "Dinner plan summary" });
+  await expect(receipt).toContainText("Fixture Real Restaurant");
+  await page
+    .getByRole("checkbox", { name: "Works for me", exact: true })
+    .check();
+  const save = page.getByRole("button", {
+    name: "Save this dinner plan",
+    exact: true,
+  });
+  await expect(save).toBeDisabled();
+  await page
+    .getByRole("checkbox", {
+      name: "I understand these details need confirmation.",
+      exact: true,
+    })
+    .check();
+  await expect(
+    page.getByRole("checkbox", { name: "Works for me", exact: true }),
+  ).not.toBeChecked();
+  await page
+    .getByRole("checkbox", { name: "Works for me", exact: true })
+    .check();
+  await expect(save).toBeEnabled();
+  await save.click();
+  await expect
+    .poll(async () => (await persistedState(page)).plan.saved)
+    .toBe(true);
+  const stored = await persistedState(page);
+  expect(stored.plan.venueId).toBe(venueId);
+  expect(stored.plan.detailsAcknowledged).toBe(true);
+  const snapshot = stored.catalog?.find((venue) => venue.id === venueId);
+  expect(snapshot?.menu).toEqual([]);
+  expect(snapshot?.dietary).toEqual([]);
+  expect(snapshot?.priceKnown).toBe(false);
+  await page.reload();
+  await expect(receipt).toContainText("Fixture Real Restaurant");
+  await expect(page.locator(".printing-press")).toHaveAttribute(
+    "data-phase",
+    "printed",
+  );
+  await expect(
+    page.getByRole("checkbox", {
+      name: "I understand these details need confirmation.",
+      exact: true,
+    }),
+  ).toBeChecked();
+  expect(await geoCalls(page)).toBe(0);
+});
+
+for (const unknownValues of [false, true])
+  test(
+    unknownValues
+      ? "unknown weather values stay absent through stale, cancel and area changes"
+      : "weather separates current conditions from dinner and cancels a stale-area refresh",
+    async ({ page }) => {
+      test.info().annotations.push({
+        type: "service-fixture",
+        description:
+          "Weather is a bounded response fixture, not a live forecast.",
+      });
+      await installFixture(page);
+      let responseMode: "ready" | "failed" | "pending" = "ready";
+      let release: (() => void) | undefined;
+      let calls = 0;
+      await page.route("**/api/weather?**", async (route) => {
+        calls++;
+        const url = new URL(route.request().url());
+        const mode = responseMode;
+        if (mode === "failed")
+          return json(
+            route,
+            {
+              status: "error",
+              code: "unavailable",
+              message: "Weather is unavailable.",
+            },
+            503,
+          );
+        if (mode === "pending")
+          await new Promise<void>((resolve) => {
+            release = resolve;
+          });
+        const date = url.searchParams.get("date")!;
+        const hour = Number(url.searchParams.get("hour"));
+        const latitude = Number(url.searchParams.get("latitude"));
+        const longitude = Number(url.searchParams.get("longitude"));
+        const now = Date.now();
+        const conditions = {
+          time: `${date}T${String(hour).padStart(2, "0")}:00`,
+          temperatureC: latitude > 45 ? 22 : 17,
+          feelsLikeC: unknownValues ? null : 16,
+          precipitationMm: unknownValues ? null : 0,
+          precipitationProbability: unknownValues ? null : 20,
+          windKmh: 8,
+          weatherCode: 0,
+          isDay: unknownValues ? null : false,
+        };
+        try {
+          await json(route, {
+            status: "ok",
+            area: { latitude, longitude },
+            timezone: "UTC",
+            utcOffsetSeconds: 0,
+            requested: { date, hour },
+            fetchedAt: new Date(now).toISOString(),
+            freshUntil: new Date(now + 10 * 60_000).toISOString(),
+            staleUntil: new Date(now + 60 * 60_000).toISOString(),
+            stale: false,
+            current: {
+              ...conditions,
+              temperatureC: 9,
+              weatherCode: 3,
+              isDay: unknownValues ? null : true,
+            },
+            dinner: conditions,
+            dinnerStatus: "forecast",
+          });
+        } catch {
+          /* A deliberately cancelled request may no longer accept its late fixture response. */
+        }
+      });
+      await page.goto("/");
+      await ready(page);
+      const weather = page.getByRole("region", {
+        name: "Weather for your evening",
+      });
+      await expect(weather).toHaveAttribute("data-weather-state", "ready");
+      await expect(weather.locator(".weather-current")).toContainText(
+        "9°C · Overcast",
+      );
+      await expect(weather.locator(".weather-dinner")).toContainText("17");
+      async function assertWeatherFacts() {
+        await expect(weather).toContainText("Wind 8 km/h");
+        if (unknownValues) {
+          await expect(weather.locator(".weather-condition h3")).toHaveText(
+            "Clear sky",
+          );
+          await expect(weather.locator(".weather-condition p")).toHaveCount(0);
+          await expect(weather).not.toContainText(
+            /Feels like|precipitation|Clear night|daylight/i,
+          );
+        } else {
+          await expect(weather).toContainText("20% chance of precipitation");
+          await expect(weather).toContainText("Feels like 16°C");
+          await expect(weather.locator(".weather-condition h3")).toHaveText(
+            "Clear night",
+          );
+        }
+      }
+      await assertWeatherFacts();
+      await expect(
+        weather.getByRole("link", { name: "Data credits", exact: true }),
+      ).toHaveAttribute("href", "/data-credits.html#weather");
+      responseMode = "failed";
+      await weather
+        .getByRole("button", { name: "Check weather again", exact: true })
+        .click();
+      await expect(weather).toHaveAttribute("data-weather-state", "stale");
+      await expect(weather).toContainText("Last checked");
+      await assertWeatherFacts();
+      responseMode = "pending";
+      await weather
+        .getByRole("button", { name: "Check weather again", exact: true })
+        .click();
+      await expect.poll(() => Boolean(release)).toBe(true);
+      await weather
+        .getByRole("button", { name: "Cancel weather check", exact: true })
+        .click();
+      await expect(weather).toHaveAttribute("data-weather-state", "cancelled");
+      await assertWeatherFacts();
+      responseMode = "ready";
+      await choose(page, PLACES.Paris);
+      await expect(weather).toHaveAttribute("data-weather-state", "ready");
+      await expect(weather).toContainText(PLACES.Paris.label);
+      await expect(weather.locator(".weather-dinner")).toContainText("22");
+      await assertWeatherFacts();
+      release!();
+      await expect(weather).toHaveAttribute("data-weather-state", "ready");
+      await expect(weather.locator(".weather-dinner")).toContainText("22");
+      await assertWeatherFacts();
+      expect(calls).toBe(4);
+      expect(await geoCalls(page)).toBe(0);
+    },
+  );

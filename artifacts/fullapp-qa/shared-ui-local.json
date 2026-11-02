@@ -1,0 +1,320 @@
+{
+  "scope": "Local DEV4174 UI \u2192 Worker \u2192 persisted local D1",
+  "authentication": "Native Sites development fixture only; production authentication not verified",
+  "startedAt": "2026-11-02T02:42:16.709Z",
+  "optionalServices": [
+    "external map/tile requests blocked",
+    "weather endpoint unavailable fixture"
+  ],
+  "checks": [
+    {
+      "name": "Explicit sample book \u2192 choose a venue \u2192 table",
+      "pass": true
+    },
+    {
+      "name": "Folded envelope opens native local sign-in and preserves chosen plan",
+      "pass": true
+    },
+    {
+      "name": "Create an actual D1-backed shared table from the current plan",
+      "pass": true
+    },
+    {
+      "name": "Create a private invitation link without copying, sending or accepting it",
+      "pass": true
+    },
+    {
+      "name": "Plan edits remain explicit IndexedDB drafts before Apply",
+      "pass": true
+    },
+    {
+      "name": "Apply confirms the plan revision in Worker and local D1",
+      "pass": true
+    },
+    {
+      "name": "Only own approval and host save commit this exact revision",
+      "pass": true
+    },
+    {
+      "name": "Reload restores the actual saved D1 snapshot and no pending draft",
+      "pass": true
+    }
+  ],
+  "http": [
+    {
+      "method": "GET",
+      "route": "/api/shared-tables/session",
+      "status": 200,
+      "localFixtureAuthenticated": false
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables/session",
+      "status": 200,
+      "localFixtureAuthenticated": true
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/shared-tables",
+      "status": 200,
+      "version": 1,
+      "revision": 1,
+      "saved": false,
+      "memberCount": 1,
+      "approvalCount": 0
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/shared-tables/:table/invites",
+      "status": 200,
+      "version": 2,
+      "revision": 1,
+      "saved": false,
+      "memberCount": 1,
+      "approvalCount": 0
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables/:table",
+      "status": 200,
+      "version": 2,
+      "revision": 1,
+      "saved": false,
+      "memberCount": 1,
+      "approvalCount": 0
+    },
+    {
+      "method": "POST",
+      "route": "/api/shared-tables/:table/plan",
+      "status": 200,
+      "version": 3,
+      "revision": 2,
+      "saved": false,
+      "memberCount": 1,
+      "approvalCount": 0
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables/:table",
+      "status": 200,
+      "version": 3,
+      "revision": 2,
+      "saved": false,
+      "memberCount": 1,
+      "approvalCount": 0
+    },
+    {
+      "method": "POST",
+      "route": "/api/shared-tables/:table/approval",
+      "status": 200,
+      "version": 4,
+      "revision": 2,
+      "saved": false,
+      "memberCount": 1,
+      "approvalCount": 1
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/shared-tables/:table/save",
+      "status": 200,
+      "version": 5,
+      "revision": 2,
+      "saved": true,
+      "memberCount": 1,
+      "approvalCount": 1
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables/:table",
+      "status": 200,
+      "version": 5,
+      "revision": 2,
+      "saved": true,
+      "memberCount": 1,
+      "approvalCount": 1
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables/session",
+      "status": 200,
+      "localFixtureAuthenticated": true
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables/:table",
+      "status": 200,
+      "version": 5,
+      "revision": 2,
+      "saved": true,
+      "memberCount": 1,
+      "approvalCount": 1
+    },
+    {
+      "method": "GET",
+      "route": "/api/shared-tables/:table",
+      "status": 200,
+      "version": 5,
+      "revision": 2,
+      "saved": true,
+      "memberCount": 1,
+      "approvalCount": 1
+    }
+  ],
+  "pageErrorCount": 0,
+  "consoleErrorCount": 20,
+  "invitation": {
+    "created": true,
+    "sent": false,
+    "accepted": false,
+    "rawTokenCaptured": false,
+    "tokenLength": 43,
+    "tokenSha256": "c4442b82880b9bba6df6e2b95d118abf3ac7b22bb657f6ea559d561125189b32",
+    "sameOrigin": true,
+    "routeClass": "#join/:token",
+    "tokenPersistedInIndexedDB": false
+  },
+  "complete": true,
+  "regression": {
+    "preFixReproduced": true,
+    "problem": "The first unsubmitted note edit disabled the remaining plan date/time fields because an editor draft was conflated with network busy.",
+    "fix": "Separate sharedHasDraft from sharedBusy: drafts block approval/save/choose, while authorized form editing remains available.",
+    "postFixRerun": true
+  },
+  "created": {
+    "version": 1,
+    "revision": 1,
+    "memberCount": 1,
+    "venueId": "juniper"
+  },
+  "beforeApply": {
+    "server": {
+      "status": 200,
+      "version": 2,
+      "revision": 1,
+      "saved": false,
+      "venueId": "juniper",
+      "noteMatches": false,
+      "memberCount": 1,
+      "approvedCount": 0
+    },
+    "device": {
+      "databasePresent": true,
+      "editorDraftPresent": true,
+      "editorDraftHasPlan": true,
+      "editorDraftVersion": 2,
+      "mutationDraftPresent": false,
+      "cachedServerVersion": 2,
+      "cachedSaved": false,
+      "activeSelectionPersisted": true
+    }
+  },
+  "afterApply": {
+    "server": {
+      "status": 200,
+      "version": 3,
+      "revision": 2,
+      "saved": false,
+      "venueId": "juniper",
+      "noteMatches": true,
+      "memberCount": 1,
+      "approvedCount": 0
+    },
+    "device": {
+      "databasePresent": true,
+      "editorDraftPresent": false,
+      "editorDraftHasPlan": false,
+      "editorDraftVersion": null,
+      "mutationDraftPresent": false,
+      "cachedServerVersion": 3,
+      "cachedSaved": false,
+      "activeSelectionPersisted": true
+    }
+  },
+  "afterSave": {
+    "server": {
+      "status": 200,
+      "version": 5,
+      "revision": 2,
+      "saved": true,
+      "venueId": "juniper",
+      "noteMatches": true,
+      "memberCount": 1,
+      "approvedCount": 1
+    },
+    "device": {
+      "databasePresent": true,
+      "editorDraftPresent": false,
+      "editorDraftHasPlan": false,
+      "editorDraftVersion": null,
+      "mutationDraftPresent": false,
+      "cachedServerVersion": 5,
+      "cachedSaved": true,
+      "activeSelectionPersisted": true
+    }
+  },
+  "afterReload": {
+    "server": {
+      "status": 200,
+      "version": 5,
+      "revision": 2,
+      "saved": true,
+      "venueId": "juniper",
+      "noteMatches": true,
+      "memberCount": 1,
+      "approvedCount": 1
+    },
+    "device": {
+      "databasePresent": true,
+      "editorDraftPresent": false,
+      "editorDraftHasPlan": false,
+      "editorDraftVersion": null,
+      "mutationDraftPresent": false,
+      "cachedServerVersion": 5,
+      "cachedSaved": true,
+      "activeSelectionPersisted": true
+    }
+  },
+  "finishedAt": "2026-11-02T02:42:40.118Z",
+  "verificationLimits": [
+    "Single-account native development fixture; production sign-in and multi-account browser behavior were not verified.",
+    "Invitation link generation and non-persistence were verified; no link was copied, sent, or accepted.",
+    "External maps were blocked and weather returned a deliberate 503 fixture. Console errors were counted, not classified; this run validates the shared-table journey.",
+    "No live guidance, restaurant discovery, or booking provider was called by this journey."
+  ],
+  "sharedHttpFailures": 0
+}
