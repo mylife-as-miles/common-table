@@ -1,0 +1,62 @@
+{
+  "scope": "Actual anonymous public mobile UI, no response fixtures; observed published app release before MET fallback.",
+  "capturedAt": "2026-11-02T03:17:51.216Z",
+  "requestsMocked": false,
+  "planBudgetEvidence": [
+    {
+      "stage": "before_budget_change",
+      "plannedVenueId": "juniper"
+    },
+    {
+      "stage": "budget_20_below_venue_cost",
+      "plannedVenueId": null
+    },
+    {
+      "stage": "budget_55_eligible_again",
+      "plannedVenueId": null
+    },
+    {
+      "stage": "explicit_native_menu_rechoose",
+      "plannedVenueId": "juniper"
+    }
+  ],
+  "planSaveEvidence": {
+    "name": "native_plan_agreement_save_and_indexeddb_commit",
+    "status": "pass",
+    "elapsedMs": 9503,
+    "details": {
+      "indexedDB": "common-table/app/main",
+      "schema": 1,
+      "revision": 24,
+      "serializedStringValue": true,
+      "saved": true,
+      "participantApprovals": 2,
+      "sharedServerPlanVerified": false
+    }
+  },
+  "reloadAndExportEvidence": {
+    "downloadedFile": "mobile-local-dinner-plan.txt",
+    "verifiedFromExecutedScriptBeforeStaleAssertion": [
+      "saved control shown after reload",
+      "note and time restored",
+      "two local approvals restored",
+      "exact serialized IndexedDB record unchanged",
+      "native Download action produced a file"
+    ],
+    "fileHasVenue": true,
+    "fileHasPartySize": true,
+    "fileOmitsGuestName": true,
+    "fileHasNote": true,
+    "fileHasChosenTime": true,
+    "fileHasNoReservationClaim": true
+  },
+  "remainingVerifierFailure": "Historical guest-name export expectation disagreed with current count-only privacy contract; canonical verifier now asserts party size and omitted guest names. The full script was not relabeled green after stopping.",
+  "pageErrors": [],
+  "badSiteAssets": [],
+  "paidOrSharedSubmissions": [],
+  "limits": [
+    "Real vector map not verified in reduced-motion mobile run because raster tile requests were deliberately blocked.",
+    "Weather503 observed in this loaded release; new fallback is validated separately.",
+    "Authenticated sharing, paid guidance/ranking and bookings not exercised."
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "config": {
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/workspace/sites/common-table/node_modules/.bin/playwright",
+      "test",
+      "tests/location.spec.ts",
+      "--grep",
+      "restaurant response",
+      "--output=/tmp/fullapp-new-discovery",
+      "--reporter=json"
+    ],
+    "configFile": "/workspace/sites/common-table/playwright.config.ts",
+    "rootDir": "/workspace/sites/common-table/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/fullapp-new-discovery",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/workspace/sites/common-table/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "app.spec.ts",
+          "immersive.spec.ts",
+          "location.spec.ts",
+          "cinematic.spec.ts",
+          "waiter-claude.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/tmp/fullapp-new-discovery",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "/workspace/sites/common-table/tests",
+        "snapshotDir": "/workspace/sites/common-table/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "app.spec.ts",
+          "immersive.spec.ts",
+          "location.spec.ts",
+          "cinematic.spec.ts",
+          "waiter-claude.spec.ts"
+        ],
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:4175",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screenshot": "only-on-failure",
+          "trace": "retain-on-failure",
+          "launchOptions": {
+            "executablePath": "/usr/bin/chromium",
+            "args": [
+              "--no-sandbox"
+            ]
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 2,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "location.spec.ts",
+      "file": "location.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "a restaurant response enters the map, book and saved plan without inventing missing facts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "service-fixture",
+                  "description": "Recommendation response is synthetic; no discovery provider was called."
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14438,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T02:41:58.994Z",
+                  "annotations": [
+                    {
+                      "type": "service-fixture",
+                      "description": "Recommendation response is synthetic; no discovery provider was called."
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-4645c13b71c535addbc4",
+          "file": "location.spec.ts",
+          "line": 1087,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-02T02:41:57.725Z",
+    "duration": 16310.970000000001,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

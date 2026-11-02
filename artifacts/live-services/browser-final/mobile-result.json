@@ -1,0 +1,212 @@
+{
+  "id": "mobile",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "steps": [
+    {
+      "name": "actual_application_and_anonymous_session",
+      "status": "pass",
+      "elapsedMs": 1636,
+      "details": {
+        "documentStatus": 200,
+        "sessionAnonymous": true,
+        "databaseBindingReportedAvailable": true,
+        "authenticatedSharingVerified": false
+      }
+    },
+    {
+      "name": "actual_real_map_renderer",
+      "status": "not_verified",
+      "elapsedMs": 18716,
+      "details": {
+        "renderer": "leaflet",
+        "status": "error",
+        "pointCount": 0,
+        "canvasWidth": 0,
+        "notVerified": true,
+        "reason": "Actual vector rendering unavailable. Raster fallback is deliberately blocked; no substitute image was supplied."
+      }
+    },
+    {
+      "name": "native_explicit_sample_atlas_then_menu",
+      "status": "pass",
+      "elapsedMs": 11838,
+      "details": {
+        "fictionalVenueChosen": "Juniper & Rye",
+        "nextPreviousVenueVerified": true,
+        "heldNativeCurlAndEscapeVerified": false,
+        "mobileStaticReducedMotion": true,
+        "paidDiscoveryRequested": false
+      }
+    },
+    {
+      "name": "native_guest_cancel_restores_focus",
+      "status": "pass",
+      "elapsedMs": 1214,
+      "details": {
+        "participants": 1,
+        "cancelledGuestWasNotAdded": true,
+        "focusRestored": true
+      }
+    },
+    {
+      "name": "native_local_guest_tastes_budget_and_restrictions",
+      "status": "pass",
+      "elapsedMs": 22338,
+      "details": {
+        "localGuestCount": 2,
+        "changedBudget": 55,
+        "taste": "Seasonal",
+        "restriction": "Vegetarian",
+        "belowBudgetInvalidatedPlannedVenue": true,
+        "eligibilityRestorationDidNotAutoChoose": true,
+        "eligibleVenueExplicitlyChosenAgain": "juniper",
+        "invitationsSent": false,
+        "tableImage": {
+          "complete": true,
+          "naturalWidth": 1100
+        }
+      }
+    },
+    {
+      "name": "native_plan_agreement_save_and_indexeddb_commit",
+      "status": "pass",
+      "elapsedMs": 8555,
+      "details": {
+        "indexedDB": "common-table/app/main",
+        "schema": 1,
+        "revision": 24,
+        "serializedStringValue": true,
+        "saved": true,
+        "participantApprovals": 2,
+        "sharedServerPlanVerified": false
+      }
+    },
+    {
+      "name": "reload_reads_native_indexeddb_and_explicit_download",
+      "status": "pass",
+      "elapsedMs": 8044,
+      "details": {
+        "persistedAcrossReload": true,
+        "exportExplicitlyClicked": true,
+        "file": "mobile-local-dinner-plan.txt",
+        "suggestedFilename": "common-table-dinner-plan.txt",
+        "bytes": 304,
+        "partySizeExported": 2,
+        "guestNamesExcluded": true,
+        "authenticatedSharingVerified": false
+      }
+    },
+    {
+      "name": "actual_weather_state_and_sample_booking_truth",
+      "status": "pass",
+      "elapsedMs": 24,
+      "details": {
+        "weatherState": "ready",
+        "liveWeatherVerified": true,
+        "notVerified": false,
+        "sampleBookingUnavailable": true,
+        "actualReservationVerified": false
+      }
+    },
+    {
+      "name": "waiter_availability_and_local_tips_without_paid_post",
+      "status": "pass",
+      "elapsedMs": 5521,
+      "details": {
+        "observedAvailability": "disabled",
+        "notVerified": false,
+        "unavailableGuidanceCannotSubmit": true,
+        "localTipsVerified": true,
+        "liveModelVerified": false,
+        "paidQuestionSubmitted": false
+      }
+    },
+    {
+      "name": "waiter_exit_browser_back_and_keyboard_focus",
+      "status": "pass",
+      "elapsedMs": 1794,
+      "details": {
+        "exitFocusRestored": true,
+        "browserBackRestoredSavedPlan": true,
+        "noHorizontalOverflow": true
+      }
+    },
+    {
+      "name": "plan_edit_resets_agreement_and_explicit_resave",
+      "status": "pass",
+      "elapsedMs": 2288,
+      "details": {
+        "agreementInvalidatedByEdit": true,
+        "resavedExplicitly": true
+      }
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [],
+  "badSiteAssets": [],
+  "apiResponses": [
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/weather",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/shared-tables/session",
+      "status": 200,
+      "type": "fetch"
+    },
+    {
+      "path": "/api/waiter/status",
+      "status": 200,
+      "type": "fetch"
+    }
+  ],
+  "externalHosts": {},
+  "rasterBlocked": 9,
+  "forbiddenSubmissions": [],
+  "screenshots": [
+    "mobile-01-real-map.png",
+    "mobile-02-explicit-sample-menu.png",
+    "mobile-03-local-table.png",
+    "mobile-04-saved-plan.png",
+    "mobile-05-reloaded-local-plan.png",
+    "mobile-06-local-waiter.png"
+  ],
+  "authenticatedSharingVerified": false,
+  "liveRankingVerified": false,
+  "liveModelVerified": false,
+  "reservationsVerified": false,
+  "planBudgetEvidence": [
+    {
+      "stage": "before_budget_change",
+      "plannedVenueId": "juniper"
+    },
+    {
+      "stage": "budget_20_below_venue_cost",
+      "plannedVenueId": null
+    },
+    {
+      "stage": "budget_55_eligible_again",
+      "plannedVenueId": null
+    },
+    {
+      "stage": "explicit_native_menu_rechoose",
+      "plannedVenueId": "juniper"
+    }
+  ],
+  "finishedAt": "2026-11-02T03:26:36.548Z",
+  "noPaidOrSharedSubmissions": true
+}

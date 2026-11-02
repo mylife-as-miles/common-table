@@ -1,4 +1,4 @@
-import { venues } from "./data";
+import { getVenueCatalog, isDemoVenue, venueVerificationWarnings } from "./catalog";
 import type {
   AppState,
   RankedVenue,
@@ -17,11 +17,11 @@ export function eligibilityReasons(venue: Venue, state: AppState): string[] {
   const problems: string[] = [];
   if (state.vetoes.includes(venue.id)) problems.push("Passed on by the table");
   for (const person of state.participants) {
-    if (venue.price > person.budget)
+    if (isDemoVenue(venue) && venue.price > person.budget)
       problems.push(
         `Above ${person.name === "You" ? "your" : `${person.name}’s`} $${person.budget} budget`,
       );
-    for (const restriction of person.restrictions) {
+    for (const restriction of isDemoVenue(venue) ? person.restrictions : []) {
       if (
         !venue.dietary.some(
           (option) => normalize(option) === normalize(restriction),
@@ -39,9 +39,19 @@ export function eligibilityReasons(venue: Venue, state: AppState): string[] {
 /** Honest, deterministic local ranking. No Qloo requests or inferred taste profiles. */
 export function rankVenues(state: AppState): RankedVenue[] {
   const budget = Math.min(...state.participants.map((person) => person.budget));
-  return venues
+  const catalog = getVenueCatalog(state);
+  const live = state.discoveryMode === "live" || state.discoveryMode === undefined && state.recommendationIds !== undefined;
+  const liveIds = state.recommendationIds ?? catalog.filter(v => !isDemoVenue(v)).map(v => v.id);
+  const candidates = live
+    ? liveIds.map(id => catalog.find(v => v.id === id)).filter((v): v is Venue => Boolean(v) && !isDemoVenue(v!))
+    : catalog.filter(isDemoVenue);
+  return candidates
     .filter((venue) => eligibilityReasons(venue, state).length === 0)
-    .map((venue) => {
+    .map((venue, position) => {
+      if (!isDemoVenue(venue)) {
+        return { venue, score: venue.affinity === undefined ? Math.max(0, 100-position) : venue.affinity * 100,
+          reasons: ["Selected for your table’s tastes near this location", ...venueVerificationWarnings(venue, state)] };
+      }
       const haystack = [venue.cuisine, ...venue.tags].map(normalize).join(" ");
       const preferences = state.participants.flatMap((person) => person.tastes);
       const matched = [
@@ -75,7 +85,9 @@ export function rankVenues(state: AppState): RankedVenue[] {
       ];
       return { venue, score: Math.max(0, Math.min(99, score)), reasons };
     })
-    .sort((a, b) => b.score - a.score || a.venue.id.localeCompare(b.venue.id));
+    .sort((a, b) => live
+      ? liveIds.indexOf(a.venue.id) - liveIds.indexOf(b.venue.id)
+      : b.score - a.score || a.venue.id.localeCompare(b.venue.id));
 }
 
 export const demoRecommendationProvider: RecommendationProvider = {

@@ -1,0 +1,257 @@
+{
+  "config": {
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/workspace/sites/common-table/node_modules/.bin/playwright",
+      "test",
+      "tests/location.spec.ts",
+      "--grep",
+      "restaurant response|weather separates",
+      "--output=/tmp/fullapp-new-services",
+      "--reporter=json"
+    ],
+    "configFile": "/workspace/sites/common-table/playwright.config.ts",
+    "rootDir": "/workspace/sites/common-table/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/fullapp-new-services",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/workspace/sites/common-table/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "app.spec.ts",
+          "immersive.spec.ts",
+          "location.spec.ts",
+          "cinematic.spec.ts",
+          "waiter-claude.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/tmp/fullapp-new-services",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "name": "",
+        "testDir": "/workspace/sites/common-table/tests",
+        "snapshotDir": "/workspace/sites/common-table/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "app.spec.ts",
+          "immersive.spec.ts",
+          "location.spec.ts",
+          "cinematic.spec.ts",
+          "waiter-claude.spec.ts"
+        ],
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:4175",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screenshot": "only-on-failure",
+          "trace": "retain-on-failure",
+          "launchOptions": {
+            "executablePath": "/usr/bin/chromium",
+            "args": [
+              "--no-sandbox"
+            ]
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 2,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "location.spec.ts",
+      "file": "location.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "a restaurant response enters the map, book and saved plan without inventing missing facts",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "service-fixture",
+                  "description": "Recommendation response is synthetic; no discovery provider was called."
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 11065,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('.book-restaurant-title')\nExpected: \u001b[32m\"Fixture Real Restaurant\"\u001b[39m\nReceived: \u001b[31m\"Fixture Real Restaurant\u001b[7mItalian\u001b[27m\"\u001b[39m\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('.book-restaurant-title') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.book-restaurant-title')\u001b[22m\n\u001b[2m    12 × locator resolved to <div class=\"book-restaurant-title\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"Fixture Real RestaurantItalian\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('.book-restaurant-title')\nExpected: \u001b[32m\"Fixture Real Restaurant\"\u001b[39m\nReceived: \u001b[31m\"Fixture Real Restaurant\u001b[7mItalian\u001b[27m\"\u001b[39m\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('.book-restaurant-title') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.book-restaurant-title')\u001b[22m\n\u001b[2m    12 × locator resolved to <div class=\"book-restaurant-title\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"Fixture Real RestaurantItalian\"\u001b[22m\n\n    at /workspace/sites/common-table/tests/location.spec.ts:1160:56",
+                    "location": {
+                      "file": "/workspace/sites/common-table/tests/location.spec.ts",
+                      "column": 56,
+                      "line": 1160
+                    },
+                    "snippet": "  1158 |   await pin.click();\n  1159 |   await expect(page).toHaveURL(/#menu$/);\n> 1160 |   await expect(page.locator(\".book-restaurant-title\")).toHaveText(\n       |                                                        ^\n  1161 |     \"Fixture Real Restaurant\",\n  1162 |   );\n  1163 |   await expect(page.locator(\".menu-book\")).toContainText(/confirm price/i);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/location.spec.ts",
+                        "column": 56,
+                        "line": 1160
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('.book-restaurant-title')\nExpected: \u001b[32m\"Fixture Real Restaurant\"\u001b[39m\nReceived: \u001b[31m\"Fixture Real Restaurant\u001b[7mItalian\u001b[27m\"\u001b[39m\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('.book-restaurant-title') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.book-restaurant-title')\u001b[22m\n\u001b[2m    12 × locator resolved to <div class=\"book-restaurant-title\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"Fixture Real RestaurantItalian\"\u001b[22m\n\n\n  1158 |   await pin.click();\n  1159 |   await expect(page).toHaveURL(/#menu$/);\n> 1160 |   await expect(page.locator(\".book-restaurant-title\")).toHaveText(\n       |                                                        ^\n  1161 |     \"Fixture Real Restaurant\",\n  1162 |   );\n  1163 |   await expect(page.locator(\".menu-book\")).toContainText(/confirm price/i);\n    at /workspace/sites/common-table/tests/location.spec.ts:1160:56"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T02:41:03.072Z",
+                  "annotations": [
+                    {
+                      "type": "service-fixture",
+                      "description": "Recommendation response is synthetic; no discovery provider was called."
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/fullapp-new-services/location-a-restaurant-resp-27cc3-out-inventing-missing-facts/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/fullapp-new-services/location-a-restaurant-resp-27cc3-out-inventing-missing-facts/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/fullapp-new-services/location-a-restaurant-resp-27cc3-out-inventing-missing-facts/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/sites/common-table/tests/location.spec.ts",
+                    "column": 56,
+                    "line": 1160
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-4645c13b71c535addbc4",
+          "file": "location.spec.ts",
+          "line": 1087,
+          "column": 1
+        },
+        {
+          "title": "weather separates current conditions from dinner and cancels a stale-area refresh",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "service-fixture",
+                  "description": "Weather is a bounded response fixture, not a live forecast."
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 7387,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T02:41:03.080Z",
+                  "annotations": [
+                    {
+                      "type": "service-fixture",
+                      "description": "Weather is a bounded response fixture, not a live forecast."
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-bcf8d0be37646f4b09c7",
+          "file": "location.spec.ts",
+          "line": 1218,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-02T02:41:02.546Z",
+    "duration": 12201.492999999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

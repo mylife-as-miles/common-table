@@ -1,0 +1,12 @@
+✔ the deployed service facade ignores forged identity headers and isolates host and member authority (83.664849ms)
+✔ a replayed save cannot resurrect stale approval after another authenticated member edits preferences (16.266798ms)
+✔ two authenticated edits to one version have one winner and explicit conflict recovery preserves both intents (22.230538ms)
+✔ one invitation has one concurrent accepter and removed membership cannot bypass an ETag check (14.043378ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 570.089153

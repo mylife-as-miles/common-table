@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { MapPoint } from "../components/GeographicMap";
+import { get, update, subscribe, LOCATION_RECORD_KEY, StorageCorruptionError, useSessionStorageOnly } from "../storage";
+import { useDeviceStorageStatus } from "../storage/react";
+import { applyLocationChange, cleanLocationSnapshot, emptyLocation, validMapPoint, type LocationChange, type LocationSnapshot } from "../storage/location";
 
 export interface MapLocation {
   latitude: number;
@@ -40,6 +43,72 @@ export function useLocationContext(active: boolean) {
   const searchRequest = useRef<AbortController | null>(null);
   const searchSequence = useRef(0);
   const geoSequence = useRef(0);
+  const snapshot = useRef<LocationSnapshot>(emptyLocation());
+  const changes = useRef<LocationChange[]>([]);
+  const locationTouched = useRef(false);
+  const hydrated = useRef(false);
+  const writing = useRef(false);
+  const mounted = useRef(true);
+  const inFlightChanges = useRef<LocationChange[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
+  const [storageSaving, setStorageSaving] = useState(false);
+  const [persistTick, setPersistTick] = useState(0);
+  const storage = useDeviceStorageStatus();
+  function remember(change: LocationChange) {
+    snapshot.current = applyLocationChange(snapshot.current, change);
+    changes.current.push(change);
+    setStorageSaving(true);
+    setSavedPoints(snapshot.current.savedPoints);
+    setPersistTick(value => value + 1);
+  }
+  useEffect(() => {
+    let alive = true;
+    mounted.current = true;
+    void get<LocationSnapshot>("location", LOCATION_RECORD_KEY).then(saved => {
+      if (!alive) return;
+      if (saved && (saved.schema !== 1 || !Array.isArray(saved.savedPoints))) useSessionStorageOnly(new StorageCorruptionError());
+      snapshot.current = changes.current.reduce(applyLocationChange, cleanLocationSnapshot(saved));
+      if (!locationTouched.current && snapshot.current.area) {
+        setLocation({ ...snapshot.current.area, source: "saved" });
+        if (snapshot.current.area.source === "saved") setSelectedPoint(snapshot.current.savedPoints.find(point => point.name === snapshot.current.area?.label && point.latitude === snapshot.current.area.latitude && point.longitude === snapshot.current.area.longitude) ?? null);
+      }
+      setSavedPoints(snapshot.current.savedPoints);
+      hydrated.current = true;
+      setStorageReady(true);
+      setPersistTick(value => value + 1);
+    });
+    const stop = subscribe("location", LOCATION_RECORD_KEY, event => {
+      if (!alive || !event.external || !hydrated.current) return;
+      snapshot.current = [...inFlightChanges.current, ...changes.current].reduce(applyLocationChange, cleanLocationSnapshot(event.record?.value));
+      setSavedPoints(snapshot.current.savedPoints);
+      if (!locationTouched.current && snapshot.current.area) setLocation({ ...snapshot.current.area, source: "saved" });
+    });
+    return () => { alive = false; mounted.current = false; stop(); };
+  }, []);
+  useEffect(() => {
+    if (!hydrated.current || writing.current || !changes.current.length) return;
+    writing.current = true;
+    void (async () => {
+      try {
+        while (changes.current.length) {
+          const batch = changes.current.splice(0);
+          inFlightChanges.current = batch;
+          try {
+            const record = await update<LocationSnapshot>("location", LOCATION_RECORD_KEY, previous => batch.reduce(applyLocationChange, cleanLocationSnapshot(previous)));
+            snapshot.current = changes.current.reduce(applyLocationChange, cleanLocationSnapshot(record?.value));
+            if (mounted.current) setSavedPoints(snapshot.current.savedPoints);
+          } catch (error) {
+            useSessionStorageOnly(error);
+            if (mounted.current) setLocationMessage("Your map changes are kept only for this session.");
+          }
+        }
+      } finally {
+        writing.current = false;
+        inFlightChanges.current = [];
+        if (mounted.current) setStorageSaving(false);
+      }
+    })();
+  }, [persistTick, storageReady]);
 
   function cancelSearch(clearQuery = false) {
     searchSequence.current++;
@@ -116,9 +185,12 @@ export function useLocationContext(active: boolean) {
     cancelSearch(true);
     setLocationMessage("");
     setSelectedPoint(null);
+    locationTouched.current = true;
     setLocation({ ...place, source: "search" });
+    remember({ kind: "area", area: { latitude: place.latitude, longitude: place.longitude, label: place.label, source: "search" } });
   }
   function useDeviceLocation() {
+    locationTouched.current = true;
     cancelSearch();
     cancelLocation(true);
     setLocationMessage("");
@@ -174,25 +246,28 @@ export function useLocationContext(active: boolean) {
     );
   }
   function selectMappedPoint(point: MapPoint) {
+    if (!validMapPoint(point)) return;
+    locationTouched.current = true;
     cancelLocation(true);
     cancelSearch();
     setLocationMessage("");
     setSelectedPoint({ ...point });
   }
   function revisitPoint(point: MapPoint) {
+    if (!validMapPoint(point)) return;
+    locationTouched.current = true;
     cancelSearch(true);
     cancelLocation(true);
     setLocationMessage("");
     setSelectedPoint({ ...point });
     setLocation({ ...point, label: point.name, source: "saved" });
+    remember({ kind: "area", area: { latitude: point.latitude, longitude: point.longitude, label: point.name, source: "saved" } });
   }
   function toggleSavedPoint(point: MapPoint) {
-    setSavedPoints((current) =>
-      current.some((p) => p.id === point.id)
-        ? current.filter((p) => p.id !== point.id)
-        : [...current, point],
-    );
+    if (!validMapPoint(point)) return;
+    remember({ kind: "point", point, saved: !snapshot.current.savedPoints.some(saved => saved.id === point.id) });
   }
+
   useEffect(() => {
     if (!active) {
       searchSequence.current++;
@@ -212,6 +287,11 @@ export function useLocationContext(active: boolean) {
   );
   return {
     location,
+    storageReady,
+    storageSaving,
+    storageStatus: storage,
+    storageAvailable: storageReady && storage.available,
+    storageError: storage.error,
     query,
     results,
     searching,

@@ -1,7 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { unavailableOptionalServices } from "./helpers/offline-services.ts";
+import {
+  persistedState,
+  readDeviceRecord,
+  readSerializedApp,
+  watchAppWrites,
+} from "./helpers/device-storage.ts";
 
-const STORAGE_KEY = "common-table.demo.v1";
 const press = (page: Page) =>
   page.getByRole("group", { name: "Dinner plan printing press" });
 const folio = (page: Page) => page.locator(".menu-book-scene");
@@ -11,10 +17,7 @@ const nav = (page: Page, name: string) =>
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("button", { name: new RegExp(name) });
 async function storedPlan(page: Page) {
-  return page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!).state.plan,
-    STORAGE_KEY,
-  );
+  return (await persistedState(page)).plan;
 }
 async function approve(page: Page) {
   for (const checkbox of await page.getByRole("checkbox").all())
@@ -91,29 +94,7 @@ async function pullPaper(page: Page, distance: number) {
   return { x, y };
 }
 async function watchVisualOnlyWrites(page: Page) {
-  const before = await page.evaluate(
-    (key) => localStorage.getItem(key),
-    STORAGE_KEY,
-  );
-  await page.evaluate((key) => {
-    const original = Storage.prototype.setItem;
-    (window as unknown as { __tearWrites: number }).__tearWrites = 0;
-    Storage.prototype.setItem = function (k: string, v: string) {
-      if (k === key)
-        (window as unknown as { __tearWrites: number }).__tearWrites++;
-      return original.call(this, k, v);
-    };
-  }, STORAGE_KEY);
-  return async () => {
-    expect(
-      await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY),
-    ).toBe(before);
-    expect(
-      await page.evaluate(
-        () => (window as unknown as { __tearWrites: number }).__tearWrites,
-      ),
-    ).toBe(0);
-  };
+  return watchAppWrites(page);
 }
 async function trackFrames(page: Page) {
   await page.addInitScript(() => {
@@ -223,7 +204,7 @@ async function localMap(page: Page) {
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (["localhost", "127.0.0.1"].includes(url.hostname))
-      return route.continue();
+      return route.fallback();
     if (
       url.hostname === "tiles.openfreemap.org" &&
       url.pathname.includes("/styles/")
@@ -255,6 +236,7 @@ async function localMap(page: Page) {
 const errors = new WeakMap<Page, string[]>();
 const unexpectedDownloads = new WeakMap<Page, string[]>();
 test.beforeEach(async ({ page }) => {
+  await unavailableOptionalServices(page);
   const messages: string[] = [];
   errors.set(page, messages);
   page.on("pageerror", (error) => messages.push(error.message));
@@ -350,22 +332,7 @@ test("reprinting changes the physical impression without rewriting the saved pla
     .click();
   await page.clock.fastForward(1800);
   await expect(press(page)).toHaveAttribute("data-phase", "printed");
-  const before = await page.evaluate(
-    (key) => localStorage.getItem(key),
-    STORAGE_KEY,
-  );
-  await page.evaluate((key) => {
-    const original = Storage.prototype.setItem;
-    (
-      window as unknown as { __pressStorageWrites: number }
-    ).__pressStorageWrites = 0;
-    Storage.prototype.setItem = function (k: string, v: string) {
-      if (k === key)
-        (window as unknown as { __pressStorageWrites: number })
-          .__pressStorageWrites++;
-      return original.call(this, k, v);
-    };
-  }, STORAGE_KEY);
+  const unchanged = await watchAppWrites(page);
   for (let i = 0; i < 2; i++) {
     await press(page)
       .getByRole("button", { name: "Reprint dinner plan", exact: true })
@@ -374,16 +341,7 @@ test("reprinting changes the physical impression without rewriting the saved pla
     await page.clock.fastForward(1800);
     await expect(press(page)).toHaveAttribute("data-phase", "printed");
   }
-  expect(
-    await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY),
-  ).toBe(before);
-  expect(
-    await page.evaluate(
-      () =>
-        (window as unknown as { __pressStorageWrites: number })
-          .__pressStorageWrites,
-    ),
-  ).toBe(0);
+  await unchanged();
   expect(downloads).toEqual([]);
 });
 
@@ -492,11 +450,19 @@ for (const mode of ["reduced motion", "low power"] as const) {
     await trackFrames(page);
     if (mode === "reduced motion")
       await page.emulateMedia({ reducedMotion: "reduce" });
-    else
-      await page.addInitScript(() =>
-        localStorage.setItem("common-table-low-power", "true"),
-      );
     await page.goto("/#menu");
+    if (mode === "low power") {
+      await page
+        .getByRole("button", { name: "Low-power view", exact: true })
+        .click();
+      await expect
+        .poll(
+          async () =>
+            (await readDeviceRecord<boolean>(page, "settings", "lowPower"))
+              ?.value,
+        )
+        .toBe(true);
+    }
     await page
       .getByRole("button", { name: "Close folio", exact: true })
       .click();
@@ -1313,19 +1279,14 @@ test("a real paper pull returns when short, cancels on Escape, and turns forward
   await page.goto("/#menu");
   await settledBook(page);
   const first = (await venueTitle(page).innerText()).trim();
-  const before = await page.evaluate(
-    (key) => localStorage.getItem(key),
-    STORAGE_KEY,
-  );
+  const before = await readSerializedApp(page);
   await beginLeafPull(page, "next", 0.06);
   await expect(folio(page)).toHaveAttribute("data-flip-state", "dragging");
   await snapshotsArePaintOnly(page);
   await page.mouse.up();
   await settledBook(page);
   await expect(venueTitle(page)).toHaveText(first);
-  expect(
-    await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY),
-  ).toBe(before);
+  expect(await readSerializedApp(page)).toBe(before);
 
   const corner = page.getByRole("button", {
     name: "Turn this page",

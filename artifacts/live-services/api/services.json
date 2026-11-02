@@ -1,0 +1,126 @@
+{
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "phase": "services",
+  "checkedAt": "2026-11-02T03:23:52.709Z",
+  "historicalDefaultTargetUsed": false,
+  "requestsMocked": false,
+  "credentialsUsed": false,
+  "paidProviderCalls": 0,
+  "validGuidanceQuestionsSent": 0,
+  "sharedWrites": 0,
+  "invitationsCreated": 0,
+  "reservationRequests": 0,
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "notVerified": 1
+  },
+  "results": [
+    {
+      "name": "Published Common Table application",
+      "method": "GET",
+      "path": "/",
+      "httpStatus": 200,
+      "elapsedMs": 1169,
+      "status": "pass",
+      "details": {
+        "actualHtml": true
+      }
+    },
+    {
+      "name": "Actual current and dinner weather",
+      "method": "GET",
+      "path": "/api/weather?latitude=40.692&longitude=-73.977&date=2026-11-03&hour=19",
+      "httpStatus": 200,
+      "elapsedMs": 1006,
+      "status": "pass",
+      "details": {
+        "liveWeatherVerified": true,
+        "cachedWeatherOnly": false,
+        "dinnerForecastVerified": true,
+        "dinnerStatus": "forecast",
+        "timezone": "America/New_York",
+        "currentTemperatureC": 10.9
+      }
+    },
+    {
+      "name": "Weather rejects an invalid location",
+      "method": "GET",
+      "path": "/api/weather?latitude=91&longitude=0&date=2026-02-30&hour=25",
+      "httpStatus": 400,
+      "elapsedMs": 421,
+      "status": "pass",
+      "details": {
+        "rejectedBeforeWeatherFetch": true
+      }
+    },
+    {
+      "name": "Anonymous shared-table session",
+      "method": "GET",
+      "path": "/api/shared-tables/session",
+      "httpStatus": 200,
+      "elapsedMs": 91,
+      "status": "pass",
+      "details": {
+        "anonymous": true,
+        "databaseBindingReportedAvailable": true,
+        "liveSharedMutationsVerified": false
+      }
+    },
+    {
+      "name": "Anonymous shared-table list is private",
+      "method": "GET",
+      "path": "/api/shared-tables",
+      "httpStatus": 401,
+      "elapsedMs": 89,
+      "status": "pass",
+      "details": {
+        "anonymousReadRejected": true
+      }
+    },
+    {
+      "name": "Public ingress ignores forged reserved identity headers",
+      "method": "GET",
+      "path": "/api/shared-tables/session",
+      "httpStatus": 200,
+      "elapsedMs": 70,
+      "status": "pass",
+      "details": {
+        "forgedIdentityIgnored": true,
+        "trustedEdgeBoundaryOnly": true
+      }
+    },
+    {
+      "name": "Forged identity cannot read shared tables",
+      "method": "GET",
+      "path": "/api/shared-tables",
+      "httpStatus": 401,
+      "elapsedMs": 117,
+      "status": "pass",
+      "details": {
+        "forgedReadRejected": true
+      }
+    },
+    {
+      "name": "Live restaurant ranking, authenticated invitations and reservations",
+      "status": "not_verified",
+      "details": {
+        "reason": "No paid discovery, authenticated table mutation, invitation creation or reservation was attempted.",
+        "paidDiscoveryVerified": false,
+        "liveSharedMutationsVerified": false,
+        "reservationVerified": false
+      }
+    },
+    {
+      "name": "Unknown service route is rejected",
+      "method": "GET",
+      "path": "/api/live-verification-not-a-route",
+      "httpStatus": 404,
+      "elapsedMs": 56,
+      "status": "pass",
+      "details": {
+        "rejected": true
+      }
+    }
+  ]
+}

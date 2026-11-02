@@ -1,0 +1,91 @@
+/* A final, scoped material/readability pass. No new motion or interaction layers. */
+
+.cinematic .geo-map-material::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border: 1px solid #fff9dd55;
+  border-radius: 2px;
+  background: linear-gradient(132deg, #fff9e111, transparent 18%, transparent 43%, #fff9e108 43.2%, transparent 48%);
+  pointer-events: none;
+}
+.cinematic .geo-map-controls > button,
+.cinematic .geo-zoom-controls {
+  box-shadow: inset 0 1px 0 #fffcefcc, inset 1px 0 0 #fffcef55, 1px 3px 0 #8e987244, 0 5px 9px #20332624;
+}
+@media (max-width: 680px) {
+  .cinematic .intro p,
+  .cinematic .site-header nav button,
+  .cinematic .restaurant-discovery-fold > summary > span:last-child,
+  .cinematic .restaurant-discovery-note p,
+  .cinematic .restaurant-discovery-note .discovery-status,
+  .cinematic .restaurant-discovery-note .discovery-secondary,
+  .cinematic .shared-envelope summary small,
+  .cinematic .envelope-action {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .cinematic .restaurant-discovery-fold > summary > span:last-child {
+    max-width: 45%;
+  }
+  .cinematic .shared-envelope summary small {
+    color: #d0d5b8;
+  }
+
+
+  .cinematic .ct-cinematic-table .tp-fine,
+  .cinematic .ct-cinematic-table .tp-subtext,
+  .cinematic .ct-cinematic-table .tp-table-caption,
+  .cinematic .ct-cinematic-table .tp-range-labels,
+  .cinematic .ct-cinematic-table .tp-budget-label small,
+  .cinematic .ct-cinematic-table .tp-chosen-venue p,
+  .cinematic .ct-cinematic-table .tp-chip,
+  .cinematic .ct-cinematic-table .tp-text-button,
+  .cinematic .ct-cinematic-table .tp-contender p,
+  .cinematic .ct-cinematic-table .tp-fit,
+  .cinematic .ct-cinematic-table .tp-no-fit,
+  .cinematic .ct-cinematic-table .tp-mobile-guests button {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .cinematic .ct-cinematic-table .tp-chip {
+    min-height: 38px;
+  }
+  .cinematic .menu-book-scene .book-left-story > p,
+  .cinematic .menu-book-scene .book-details,
+  .cinematic .menu-book-scene .book-details small,
+  .cinematic .menu-book-scene .book-photo-caption,
+  .cinematic .menu-book-scene .book-menu-items li p,
+  .cinematic .menu-book-scene .book-match-note p,
+  .cinematic .menu-book-scene .book-veto,
+  .cinematic .menu-book-scene .book-navigation button,
+  .cinematic .menu-book-scene .folio-object-tools > button {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .cinematic .menu-book-scene .book-details {
+    flex-wrap: wrap;
+    column-gap: 14px;
+    row-gap: 7px;
+  }
+  .cinematic .location-atlas .field-note-source,
+  .cinematic .location-atlas .field-note-caveat,
+  .cinematic .location-atlas .map-collection-caption,
+  .cinematic .location-atlas .map-index-empty,
+  .cinematic .location-atlas .location-privacy p,
+  .cinematic .location-atlas .field-note-actions button,
+  .cinematic .location-atlas .field-note-actions a,
+  .cinematic .location-atlas .geocode-credit,
+  .cinematic .location-atlas .recommended-place-index > p,
+  .cinematic .weather-paper .weather-status,
+  .cinematic .weather-paper .weather-timezone,
+  .cinematic .weather-paper .weather-footer,
+  .cinematic .weather-paper .weather-footer button,
+  .cinematic .weather-paper .weather-footer a {
+    font-size: 12px;
+    line-height: 1.65;
+  }
+  .cinematic .location-atlas .field-note-caveat {
+    color: #5b6746;
+  }
+}

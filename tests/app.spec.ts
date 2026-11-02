@@ -1,8 +1,17 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { unavailableOptionalServices } from "./helpers/offline-services.ts";
 import { readFile } from "node:fs/promises";
+import { createInitialState, serializeState } from "../src/domain/state.ts";
+import {
+  LEGACY_APP_KEY,
+  persistedApp,
+  readDeviceRecord,
+  readSerializedApp,
+} from "./helpers/device-storage.ts";
 
 test.beforeEach(async ({ page }) => {
+  await unavailableOptionalServices(page);
   await page.route("https://tile.openstreetmap.org/**", (route) =>
     route.abort(),
   );
@@ -183,7 +192,7 @@ test("all dietary restrictions and the lowest budget are respected in candidate 
   for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight");
   await expect(budget).toHaveValue("35");
   await expect(page.locator(".tp-shortlist-header")).toContainText(
-    "1 places fit this table",
+    "1 places to consider",
   );
   await nav(page, "Explore").click();
   await page
@@ -249,11 +258,11 @@ test("save, edit, reload, save again and download produce the revised dinner pla
   expect(body).toContain("Juniper & Rye");
   expect(body).toContain("A walk after dinner, if the weather is kind.");
   expect(body).toContain("20:15");
-  expect(body).toContain("not a booking");
-  expect(body).toContain("Fictional demo venue");
+  expect(body).toContain("not a reservation");
+  expect(body).toContain("Fictional venue");
 });
 
-test("invalid schedule cannot be saved and corrupted browser storage recovers safely", async ({
+test("invalid schedule cannot be saved and corrupted legacy browser storage recovers safely", async ({
   page,
 }) => {
   await page.addInitScript(() =>
@@ -273,10 +282,15 @@ test("invalid schedule cannot be saved and corrupted browser storage recovers sa
   ).toBeDisabled();
 });
 
-test("blocked browser storage keeps a temporary usable plan without claiming persistence", async ({
+test("denied IndexedDB keeps a temporary usable plan without claiming persistence", async ({
   page,
 }) => {
   await page.addInitScript(() => {
+    Object.defineProperty(IDBFactory.prototype, "open", {
+      value() {
+        throw new DOMException("Device storage blocked", "SecurityError");
+      },
+    });
     Object.defineProperty(Storage.prototype, "getItem", {
       value() {
         throw new DOMException("Storage blocked", "SecurityError");
@@ -306,11 +320,171 @@ test("blocked browser storage keeps a temporary usable plan without claiming per
   ).toBeVisible();
 });
 
+test("a valid legacy plan migrates once into IndexedDB and survives reload without the old key", async ({
+  page,
+}) => {
+  const state = createInitialState();
+  state.plan = {
+    ...state.plan,
+    venueId: "juniper",
+    date: "2099-02-15",
+    time: "19:45",
+    note: "A migrated local dinner.",
+    approvals: ["you"],
+    saved: true,
+  };
+  const legacy = serializeState(state);
+  await page.goto("/api/waiter/status");
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: LEGACY_APP_KEY,
+    value: legacy,
+  });
+  await page.goto("/#plan");
+  await expect(note(page)).toHaveValue("A migrated local dinner.");
+  await expect(
+    page.getByRole("button", { name: "Saved for a good evening", exact: true }),
+  ).toBeVisible();
+  const committed = await persistedApp(page);
+  expect(JSON.parse(committed).state.plan.note).toBe(
+    "A migrated local dinner.",
+  );
+  await expect
+    .poll(() =>
+      page.evaluate((key) => localStorage.getItem(key), LEGACY_APP_KEY),
+    )
+    .toBeNull();
+  const marker = await readDeviceRecord(
+    page,
+    "meta",
+    "migration:local-storage:v1",
+  );
+  expect(marker?.schema).toBe(1);
+  expect(marker?.persistent).toBe(true);
+  await page.reload();
+  await expect(note(page)).toHaveValue("A migrated local dinner.");
+  expect(await readSerializedApp(page)).toBe(committed);
+});
+
+test("quota failure retains the last committed device plan and labels later edits as session-only", async ({
+  page,
+}) => {
+  await choosePlan(page);
+  await note(page).fill("The committed device copy.");
+  await approveAll(page);
+  await page
+    .getByRole("button", { name: "Save this dinner plan", exact: true })
+    .click();
+  await expect
+    .poll(
+      async () =>
+        JSON.parse((await readSerializedApp(page)) ?? "{}").state?.plan?.saved,
+    )
+    .toBe(true);
+  const before = await persistedApp(page);
+  await page.evaluate(() => {
+    const original = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (value, key) {
+      if (this.name === "app")
+        throw new DOMException(
+          "Synthetic quota exhaustion",
+          "QuotaExceededError",
+        );
+      return original.call(this, value, key);
+    };
+  });
+  await note(page).fill("An unsaved-on-device session revision.");
+  await approveAll(page);
+  await page
+    .getByRole("button", { name: "Save this dinner plan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Kept for this session", exact: true }),
+  ).toBeDisabled();
+  expect(await readSerializedApp(page)).toBe(before);
+  await expect(
+    page.getByRole("button", { name: "Download", exact: true }),
+  ).toBeEnabled();
+  await page.reload();
+  await expect(note(page)).toHaveValue("The committed device copy.");
+  await expect(
+    page.getByRole("button", { name: "Saved for a good evening", exact: true }),
+  ).toBeVisible();
+});
+
+test("a failed hydration read cannot overwrite an existing device plan with an empty fallback", async ({
+  page,
+  context,
+}) => {
+  await choosePlan(page);
+  await note(page).fill("Protect this existing device plan.");
+  await approveAll(page);
+  await page
+    .getByRole("button", { name: "Save this dinner plan", exact: true })
+    .click();
+  await expect
+    .poll(
+      async () =>
+        JSON.parse((await readSerializedApp(page)) ?? "{}").state?.plan?.saved,
+    )
+    .toBe(true);
+  const before = await persistedApp(page);
+  await page.addInitScript(() => {
+    const windowState = window as unknown as {
+      __failedAppReads: number;
+      __unsafeAppWrites: number;
+    };
+    windowState.__failedAppReads = 0;
+    windowState.__unsafeAppWrites = 0;
+    const get = IDBObjectStore.prototype.get,
+      put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.get = function (key) {
+      if (this.name === "app" && key === "main") {
+        windowState.__failedAppReads++;
+        throw new DOMException(
+          "Synthetic hydration read failure",
+          "UnknownError",
+        );
+      }
+      return get.call(this, key);
+    };
+    IDBObjectStore.prototype.put = function (value, key) {
+      if (this.name === "app") windowState.__unsafeAppWrites++;
+      return put.call(this, value, key);
+    };
+  });
+  await page.reload();
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { __failedAppReads: number }).__failedAppReads > 0,
+  );
+  await expect(
+    page.getByRole("heading", { name: "Your evening is still unwritten." }),
+  ).toBeVisible();
+  await choosePlan(page);
+  await approveAll(page);
+  await page
+    .getByRole("button", { name: "Save this dinner plan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Kept for this session", exact: true }),
+  ).toBeDisabled();
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { __unsafeAppWrites: number }).__unsafeAppWrites,
+    ),
+  ).toBe(0);
+  const verification = await context.newPage();
+  await verification.goto("/api/waiter/status");
+  expect(await readSerializedApp(verification)).toBe(before);
+  await verification.close();
+});
+
 test("keyboard dialog focus is contained; Escape and Waiter close return focus without actions", async ({
   page,
 }) => {
   await page.goto("/#explore");
-  const about = page.getByRole("button", { name: "About this demo" });
+  const about = page.getByRole("button", { name: "About your evening" });
   await about.click();
   await expect(page.getByRole("dialog")).toBeVisible();
   for (let i = 0; i < 4; i++) {
@@ -412,6 +586,7 @@ for (const mobile of [false, true]) {
         await page.goto(`/#${view === "menu" ? "explore" : view}`);
         if (view === "menu") await openMenu(page);
       }
+      await expect(page.locator(".app.cinematic")).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
       // Measure the settled view; entrance opacity temporarily blends colors.
       await page.evaluate(async () => {

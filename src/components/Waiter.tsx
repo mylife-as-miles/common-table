@@ -25,6 +25,9 @@ import {
   type AppState,
   rankVenues,
   venues,
+  getVenue,
+  isDemoVenue,
+  venuePriceLabel,
   planValidationErrors,
 } from "../domain";
 import "./waiter.css";
@@ -39,6 +42,8 @@ interface WaiterProps {
   view: View;
   mode: "map" | "book" | "real";
   realLocation?: string;
+  sharedTableId?: string;
+  canEditPlan?: boolean;
   realPoint?: {
     name: string;
     category: "food" | "coffee" | "outdoors" | "other";
@@ -239,6 +244,8 @@ export function Waiter({
   view,
   mode,
   realLocation,
+  sharedTableId,
+  canEditPlan = true,
   realPoint,
   onKeepRealPoint,
   realPointKept = false,
@@ -261,12 +268,14 @@ export function Waiter({
   const [why, setWhy] = useState(false);
   const [request, setRequest] = useState("");
   const [response, setLocalResponse] = useState("");
-  const [requestService, setRequestService] = useState<"local" | "guidance">("local");
+  const [requestService, setRequestService] = useState<"local" | "guidance">("guidance");
   const [ring, setRing] = useState(0);
   const ranked = rankVenues(state);
   const selected =
-    venues.find((v) => v.id === state.selectedVenueId) || venues[0];
-  const planned = venues.find((v) => v.id === state.plan.venueId);
+    getVenue(state, state.selectedVenueId) || venues[0];
+  const planned = getVenue(state, state.plan.venueId);
+  const sample = isDemoVenue(selected);
+  const mappedPlaceMode = mode === "real" && view === "explore";
   const selectedMatch = ranked.find((v) => v.venue.id === selected.id);
   const alternatives = ranked.filter((v) => v.venue.id !== selected.id);
   const minimumBudget = Math.min(...state.participants.map((p) => p.budget));
@@ -296,9 +305,11 @@ export function Waiter({
       venueId: selected.id,
       participantCount: state.participants.length,
       budget: minimumBudget,
-      restrictions: dietaryNeeds,
+      restrictions: dietaryNeeds.slice(0, 12),
+      tastes: sharedTableId ? [] : [...new Set(state.participants.flatMap(person => person.tastes))].slice(0, 24),
       ...(state.plan.venueId ? { planVenueId: state.plan.venueId } : {}),
       planSaved: state.plan.saved,
+      ...(sharedTableId ? {tableId:sharedTableId} : {}),
     },
     `${view}:${course}:${realPoint?.id ?? ""}:${realLocation ?? ""}:${JSON.stringify(state.plan)}:${JSON.stringify(state.participants)}`,
   );
@@ -330,7 +341,7 @@ export function Waiter({
       setWhy(false);
       setRequest("");
       setResponse("");
-      setRequestService("local");
+      setRequestService("guidance");
       setRing((value) => value + 1);
       dialog.current.showModal();
     } else if (!open && dialog.current?.open) {
@@ -364,7 +375,7 @@ export function Waiter({
   function ringBell() {
     playInteractionSound("bell");
     setRing((value) => value + 1);
-    if (mode === "real" && course === "place") {
+    if (mappedPlaceMode && course === "place") {
       setResponse(
         realPoint
           ? `${realPoint.name} is a real mapped ${realCategory.toLowerCase()} place from OpenStreetMap${realLocation ? ` in ${realLocation}` : ""}. I can help keep this point; prices, menus, dietary fit, and bookings are not connected. Your demo dinner plan stays as it was.`
@@ -375,9 +386,9 @@ export function Waiter({
     const tips =
       course === "table"
         ? [
-            `At your service. ${ranked.length} demo places fit every seat. The table’s tightest budget is $${minimumBudget} per person.`,
+            sample ? `At your service. ${ranked.length} sample places fit every seat. The table’s tightest budget is $${minimumBudget} per person.` : `${ranked.length} real places are on the table. The tightest budget is $${minimumBudget}; exact costs still need confirmation.`,
             "A little give and take goes a long way. Each seat keeps its own tastes, budget, and dietary needs.",
-            "Need another chair? The shared table can hold up to six local demo guests.",
+            "Need another chair? Open the invitation note at your table to invite a signed-in friend. You can also try sample guests locally.",
           ]
         : course === "evening"
           ? [
@@ -385,23 +396,23 @@ export function Waiter({
                 ? `Your evening has a place: ${planned.name}. Next: ${eveningNext.toLowerCase()}.`
                 : "A place comes first. Choose one from the menu and I’ll help you put an evening around it.",
               "A saved plan is a lovely start. It isn’t a reservation; nothing is booked or sent.",
-              storageAvailable
-                ? "Your plan stays in this browser. Copy or download it when you’re ready to share the details."
+              sharedTableId ? "Your shared plan stays connected to everyone at this table. Each person approves the current details."
+                : storageAvailable ? "Your plan stays on this device. Copy or download it when you’re ready to share the details."
                 : "This session has no browser storage. Download your plan to keep a copy.",
             ]
           : [
-              `A little service, gladly. ${selected.name} is ${selectedMatch ? "within the table’s current budget and listed dietary needs" : "outside the table’s current needs"}.`,
+              sample ? `A little service, gladly. ${selected.name} is ${selectedMatch ? "within the sample table’s current budget and listed dietary needs" : "outside the table’s current needs"}.` : `${selected.name} is a real possibility for the table. Confirm menu, cost and dietary needs before agreeing.`,
               alternatives.length
                 ? `${alternatives.length} other ${alternatives.length === 1 ? "place fits" : "places fit"} this table. Ask for another possibility and we’ll turn a fresh page.`
                 : "This is the only current fit. A budget or preference change can open up a few more doors.",
-              "I use local demo tastes and venue notes. Qloo is not connected, and dietary details need confirmation with a restaurant.",
+              sample ? "These sample venue notes illustrate the flow. Confirm dietary details with a restaurant." : "These places were discovered for the table’s tastes. Menus, exact cost and dietary details still need restaurant confirmation.",
             ];
     setResponse(
-      `${mode === "real" ? "For your separate fictional demo journey: " : ""}${tips[ringTip.current++ % tips.length]}`,
+      `${mappedPlaceMode ? "For your separate fictional demo journey: " : ""}${tips[ringTip.current++ % tips.length]}`,
     );
   }
   function nextPossibility() {
-    if (mode === "real") {
+    if (mappedPlaceMode) {
       setCourse("place");
       setResponse(
         `Choose another named place on the OpenStreetMap map to explore a different possibility${realPoint ? ` from ${realPoint.name}` : ""}. Real mapped places aren’t ranked against the table’s budgets or dietary needs. The fictional demo plan stays unchanged.`,
@@ -446,6 +457,7 @@ export function Waiter({
     );
   }
   function bringToTable(destination: View = "table") {
+    if (!canEditPlan) {setResponse("The host chooses the dinner plan. You can keep a place on your shortlist and share the suggestion with your table.");return;}
     if (!selectedMatch) {
       setResponse(
         "This place doesn’t currently fit every seat. Let’s adjust the table or try another possibility first.",
@@ -470,7 +482,7 @@ export function Waiter({
       return;
     }
     // Deep-linked plans may retain real-map browsing mode after reload.
-    if (mode === "real" && course === "place") {
+    if (mappedPlaceMode && course === "place") {
       setCourse("place");
       if (
         /reserv|booking|book a|invite|send|location shar|where am i/.test(text)
@@ -498,7 +510,7 @@ export function Waiter({
         )
       ) {
         setResponse(
-          `${realName} is ${realPoint ? `an OpenStreetMap ${realCategory.toLowerCase()} point` : "an area on OpenStreetMap"}. That tells us its mapped name, category, and geography. I don’t have verified menus, prices, hours, allergy safety, or a taste or dietary fit for real places. Qloo is not connected.`,
+          `${realName} is ${realPoint ? `an OpenStreetMap ${realCategory.toLowerCase()} point` : "an area on OpenStreetMap"}. That tells us its mapped name, category, and geography. I don’t have verified menus, prices, hours, allergy safety, or a taste or dietary fit for real places. Menu, cost and dietary details need direct confirmation.`,
         );
       } else if (
         /save|plan|tonight|dinner|finish|time|date|friend|guest|table|taste|together|group/.test(
@@ -506,11 +518,11 @@ export function Waiter({
         )
       ) {
         setResponse(
-          `${realPoint ? `You can keep ${realPoint.name} as a mapped possibility. ` : "Choose a named mapped place to keep a possibility. "}Real places aren’t connected to dinner planning yet. The Our table and Tonight pages describe your separate fictional demo journey.`,
+          `${realPoint ? `You can keep ${realPoint.name} as a mapped possibility. ` : "Choose a named mapped place to keep a possibility. "}Use Find real restaurants to discover places for this table, then open a restaurant pin to carry it into your dinner plan.`,
         );
       } else {
         setResponse(
-          `I’m following ${realName} on the real map. Try “keep this place”, “another place”, or ask what’s known about it. Real menus, prices, ranking, and bookings aren’t connected.`,
+          `I’m following ${realName} on the real map. Try “keep this place”, “another place”, or ask what’s known about it. Mapped points have no verified menu or cost. Use restaurant discovery for places selected for your table.`,
         );
       }
       setRequest("");
@@ -519,7 +531,7 @@ export function Waiter({
     if (/reserv|booking|book a|invite|send|location|where am i/.test(text)) {
       setCourse("evening");
       setResponse(
-        "I can help shape a local dinner plan. Real reservations, invitations, and location sharing aren’t connected in this demo. Nothing is sent.",
+        sharedTableId ? "Manage private invitations in the folded note at Your table. For a real restaurant, Dinner plan offers its listed reservation page. Nothing is sent, booked or shared automatically." : "Open the folded invitation note at Your table to start a shared evening. For a real restaurant, Dinner plan offers its listed reservation page. Nothing is sent or booked automatically.",
       );
     } else if (/another|different|surprise|something else|new place/.test(text))
       nextPossibility();
@@ -529,23 +541,23 @@ export function Waiter({
       setCourse("place");
       setWhy(true);
       setResponse(
-        "Here’s the reasoning on my pad. It uses local demo metadata, not Qloo or an allergy guarantee.",
+        sample ? "Here’s the reasoning on my pad, using the sample venue notes. It isn’t an allergy guarantee." : "Here’s why this place was suggested. Menu, exact cost and dietary suitability need confirmation with the restaurant.",
       );
     } else if (/budget|cheap|cost|price|spend/.test(text)) {
       setCourse("table");
       setResponse(
-        `The tightest budget at this table is $${minimumBudget} per person. ${ranked.length} demo places fit everyone’s current limits. Change any seat’s budget at your table.`,
+        `The tightest budget at this table is $${minimumBudget} per person. ${sample ? `${ranked.length} sample places fit everyone’s current limits.` : "Real restaurant costs need confirmation; a price level is only a rough guide."} Change your budget at the table.`,
       );
     } else if (/friend|guest|table|taste|together|group/.test(text)) {
       setCourse("table");
       setResponse(
-        "Let’s give every seat a say. The shared table holds your local demo guests, tastes, budgets, and dietary needs.",
+        sharedTableId ? "Each member sets their own tastes, budget and dietary needs. The host edits the plan and everyone approves the current details." : "Let’s give every seat a say. You can try sample guests locally, or open the invitation note to start a shared table.",
       );
     } else if (/save|plan|tonight|dinner|finish|time|date/.test(text)) {
       setCourse("evening");
       setResponse(
         planned
-          ? `Your place is ${planned.name}. ${detailErrors.length ? "The date or time still needs a little attention." : !allAgreed ? "Next, collect a local demo nod from each seat." : "The evening is ready to review and save."}`
+          ? `Your place is ${planned.name}. ${detailErrors.length ? "The date or time still needs a little attention." : !allAgreed ? sharedTableId ? "Next, each member approves their own seat." : "Next, collect a local nod from each seat." : "The evening is ready to review and save."}`
           : "Pick a place first. Then we’ll put a date, a time, and a little agreement on the page.",
       );
     } else
@@ -682,7 +694,7 @@ export function Waiter({
                 </button>
               ))}
             </div>
-            {mode === "real" && course !== "place" && (
+            {mappedPlaceMode && course !== "place" && (
               <p className="cw-real-context">
                 This page describes your fictional demo{" "}
                 {course === "table" ? "table" : "dinner plan"}.{" "}
@@ -691,7 +703,7 @@ export function Waiter({
                   : "Real mapped places stay separate."}
               </p>
             )}
-            {course === "place" && mode === "real" ? (
+            {course === "place" && mappedPlaceMode ? (
               <div className="cw-course-content">
                 <span className="cw-order-kicker">
                   OPENSTREETMAP · REAL GEOGRAPHY
@@ -734,7 +746,7 @@ export function Waiter({
                         fill={realPointKept ? "currentColor" : "none"}
                       />
                       {realPointKept
-                        ? "Mapped place kept"
+                        ? storageAvailable ? "Kept on this device" : "Kept for this session"
                         : "Keep mapped place"}
                     </button>
                   ) : (
@@ -764,7 +776,7 @@ export function Waiter({
                     <p>
                       {selected.neighborhood}
                       <br />
-                      {selected.cuisine} · ${selected.price} / person
+                      {selected.cuisine} · {venuePriceLabel(selected)}
                     </p>
                   </div>
                   <span className="cw-note-corner" aria-hidden="true" />
@@ -820,8 +832,7 @@ export function Waiter({
                       {dietaryNeeds.length
                         ? `The table lists ${dietaryNeeds.join(", ")}. `
                         : ""}
-                      Fictional venue metadata. Confirm ingredients and allergy
-                      safety with the restaurant. Qloo is not connected.
+                      {sample ? "Fictional venue metadata. " : ""}Confirm ingredients, cost and allergy safety with the restaurant.
                     </p>
                   </div>
                 )}
@@ -866,7 +877,7 @@ export function Waiter({
                   ))}
                 </div>
                 <p className="cw-guidance">
-                  {mode === "real"
+                  {mappedPlaceMode
                     ? "“These are the tastes in your separate fictional demo table. Real mapped places haven’t been checked against these budgets or dietary needs.”"
                     : state.participants.length === 1
                       ? "“A table just for you is a very good table. Start with what you love; make room for company if you feel like it.”"
@@ -884,7 +895,7 @@ export function Waiter({
                     <dt>Places that fit</dt>
                     <dd>
                       {ranked.length}
-                      <small> demo venues</small>
+                      <small>{sample ? " sample venues" : " real places · confirm details"}</small>
                     </dd>
                   </div>
                   <div>
@@ -933,8 +944,7 @@ export function Waiter({
                         {state.plan.date} · {state.plan.time}
                         <br />
                         {state.participants.length}{" "}
-                        {state.participants.length === 1 ? "seat" : "seats"} · $
-                        {planned.price} / person
+                        {state.participants.length === 1 ? "seat" : "seats"} · {venuePriceLabel(planned)}
                       </p>
                     </div>
                   </div>
@@ -981,7 +991,7 @@ export function Waiter({
                       A nod around the table
                       <small>
                         {state.plan.approvals.length} /{" "}
-                        {state.participants.length} local demo approvals
+                        {state.participants.length} {sharedTableId ? "member approvals" : "local approvals"}
                       </small>
                     </div>
                   </li>
@@ -994,7 +1004,7 @@ export function Waiter({
                       <small>
                         {state.plan.saved
                           ? storageAvailable
-                            ? "Saved in this browser; ready to export"
+                            ? sharedTableId ? "Saved to your shared table; ready to export" : "Saved in this browser; ready to export"
                             : "Download a copy to keep it"
                           : "Review, save, and export the plan"}
                       </small>
@@ -1041,9 +1051,7 @@ export function Waiter({
             {guidance.reply && (
               <div className="cw-guidance-result" role="status">
                 <span className="cw-guidance-label">
-                  {guidance.reply.source === "mock"
-                    ? "OFFLINE DEMO · SAMPLE GUIDANCE"
-                    : "THE WAITER · GUIDANCE"}
+                  THE WAITER · LIVE GUIDANCE
                 </span>
                 <p>{guidance.reply.text}</p>
               </div>
@@ -1081,9 +1089,7 @@ export function Waiter({
                   <span>
                     {guidance.mode === "checking"
                       ? "checking"
-                      : guidance.mode === "mock"
-                        ? "offline demo"
-                        : guidance.mode === "live"
+                      : guidance.mode === "live"
                           ? "live"
                           : "unavailable"}
                   </span>
@@ -1091,15 +1097,19 @@ export function Waiter({
               </fieldset>
               {requestService === "guidance" && (
                 <p className="cw-provider-note" id="cw-provider-note">
-                  {guidance.mode === "mock"
-                    ? "Try a sample answer. No live AI service is called."
-                    : guidance.mode === "live"
-                      ? "Your question and demo table needs go to an AI service. Table context excludes guest names and map locations."
+                  {guidance.mode === "live"
+                      ? "Your question and table needs are used to prepare an answer. Guest names and map locations are excluded. Guidance cannot send invitations or confirm reservations."
                       : guidance.mode === "checking"
                         ? "Checking whether guidance is available…"
-                        : "Thoughtful guidance is not available here yet. Local tips are ready to help."}
+                        : guidance.mode === "sign_in"
+                          ? "Sign in to ask The Waiter about your evening."
+                          : guidance.canEnable
+                            ? "Your table is ready for live guidance. Enable it to begin."
+                            : "Thoughtful guidance is not available here yet. Local tips are ready to help."}
                 </p>
               )}
+              {requestService === "guidance" && guidance.mode === "sign_in" && <a className="text-button" target="_top" href={`/signin-with-chatgpt?return_to=${encodeURIComponent(location.pathname+location.search+location.hash)}`}>Sign in for guidance <ArrowUpRight size={14}/></a>}
+              {requestService === "guidance" && guidance.canEnable && <button type="button" className="text-button" disabled={guidance.busy} onClick={() => void guidance.enable()}>Enable guidance <ArrowUpRight size={14}/></button>}
               <div className="cw-request-field">
                 <input
                   ref={requestInput}
@@ -1118,7 +1128,7 @@ export function Waiter({
                   disabled={
                     !request.trim() ||
                     guidance.busy ||
-                    (requestService === "guidance" && !["mock", "live"].includes(guidance.mode))
+                    (requestService === "guidance" && guidance.mode !== "live")
                   }
                 >
                   <Send size={15} />
@@ -1142,11 +1152,11 @@ export function Waiter({
               {guidance.error && <p className="cw-request-error" role="alert">{guidance.error}</p>}
             </form>
             <p className="cw-disclosure">
-              {mode === "real"
+              {mappedPlaceMode
                 ? "REAL MAP · LOCAL GUIDANCE"
                 : "DEMO SERVICE · LOCAL GUIDANCE"}
               <span>
-                {mode === "real"
+                {mappedPlaceMode
                   ? "OpenStreetMap geography. No verified menus, fit ranking, or bookings."
                   : "Places, tastes & plans. No bookings, messages, or location sharing."}
               </span>

@@ -1,0 +1,140 @@
+{
+  "target": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "startedAt": "2026-11-02T03:13:30.398Z",
+  "historicalDefaultTargetUsed": false,
+  "transport": "Inherited HTTPS proxy; normal TLS verification",
+  "scope": "Anonymous public production UI; actual geographic assets/weather and native fictional local dinner flow. Authenticated sharing, invitations, paid guidance/ranking and reservations remain unverified.",
+  "requestsMocked": false,
+  "interventions": [
+    "Only tile.openstreetmap.org raster requests are blocked."
+  ],
+  "storageRead": "IndexedDB common-table / app / main; DeviceRecord.value is a serialized versioned app-state envelope. No LocalStorage read or state write is used.",
+  "scenarios": [
+    {
+      "id": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "steps": [
+        {
+          "name": "actual_application_and_anonymous_session",
+          "status": "pass",
+          "elapsedMs": 1740,
+          "details": {
+            "documentStatus": 200,
+            "sessionAnonymous": true,
+            "databaseBindingReportedAvailable": true,
+            "authenticatedSharingVerified": false
+          }
+        },
+        {
+          "name": "actual_real_map_renderer",
+          "status": "not_verified",
+          "elapsedMs": 18880,
+          "details": {
+            "renderer": "leaflet",
+            "status": "error",
+            "pointCount": 0,
+            "canvasWidth": 0,
+            "notVerified": true,
+            "reason": "Actual vector rendering unavailable. Raster fallback is deliberately blocked; no substitute image was supplied."
+          }
+        },
+        {
+          "name": "native_explicit_sample_atlas_then_menu",
+          "status": "pass",
+          "elapsedMs": 17398,
+          "details": {
+            "fictionalVenueChosen": "Juniper & Rye",
+            "nextPreviousVenueVerified": true,
+            "heldNativeCurlAndEscapeVerified": false,
+            "mobileStaticReducedMotion": true,
+            "paidDiscoveryRequested": false
+          }
+        },
+        {
+          "name": "native_guest_cancel_restores_focus",
+          "status": "pass",
+          "elapsedMs": 2613,
+          "details": {
+            "participants": 1,
+            "cancelledGuestWasNotAdded": true,
+            "focusRestored": true
+          }
+        },
+        {
+          "name": "native_local_guest_tastes_budget_and_restrictions",
+          "status": "fail",
+          "elapsedMs": 33997,
+          "error": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false"
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/weather",
+          "type": "fetch",
+          "error": "net::ERR_ABORTED",
+          "possibleNavigationCancellation": true
+        },
+        {
+          "url": "https://common-table-design-20261029.myles4miles.chatgpt.site/api/weather",
+          "type": "fetch",
+          "error": "net::ERR_ABORTED",
+          "possibleNavigationCancellation": true
+        }
+      ],
+      "badSiteAssets": [],
+      "apiResponses": [
+        {
+          "path": "/api/shared-tables/session",
+          "status": 200,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/shared-tables/session",
+          "status": 200,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/weather",
+          "status": 503,
+          "type": "fetch"
+        },
+        {
+          "path": "/api/weather",
+          "status": 503,
+          "type": "fetch"
+        }
+      ],
+      "externalHosts": {},
+      "rasterBlocked": 9,
+      "forbiddenSubmissions": [],
+      "screenshots": [
+        "mobile-01-real-map.png",
+        "mobile-02-explicit-sample-menu.png",
+        "mobile-native-local-guest-tastes-budget-and-restrictions-failed.png"
+      ],
+      "authenticatedSharingVerified": false,
+      "liveRankingVerified": false,
+      "liveModelVerified": false,
+      "reservationsVerified": false,
+      "finishedAt": "2026-11-02T03:14:46.226Z",
+      "noPaidOrSharedSubmissions": true
+    }
+  ],
+  "finishedAt": "2026-11-02T03:14:47.896Z",
+  "summary": {
+    "passedSteps": 3,
+    "failedSteps": 1,
+    "notVerifiedSteps": 1,
+    "pageErrors": 0,
+    "badSiteAssets": 0,
+    "unexpectedPaidOrSharedSubmissions": 0,
+    "authenticatedInvitationsVerified": false,
+    "livePaidGuidanceVerified": false,
+    "livePaidRankingVerified": false,
+    "actualReservationVerified": false
+  }
+}

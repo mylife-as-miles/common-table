@@ -10,7 +10,9 @@ body {
   padding-bottom: 1px;
 }
 .evening-room {
-  position: fixed;
+  /* Keep the set in the app's paint tree; a fixed software-composited layer
+     can paint over the flat folio and its controls in reduced-motion mode. */
+  position: absolute;
   inset: 0;
   z-index: -1;
   overflow: hidden;

@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1793584550875,
+      "tag": "0000_chilly_raider",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793584622179,
+      "tag": "0001_loose_calypso",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793584728423,
+      "tag": "0002_tidy_the_enforcers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793585075408,
+      "tag": "0003_demonic_leper_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793585458842,
+      "tag": "0004_romantic_prodigy",
+      "breakpoints": true
+    }
+  ]
+}

@@ -7,13 +7,15 @@ export interface WaiterContext {
   participantCount: number;
   budget: number;
   restrictions: string[];
+  tastes?: string[];
   planVenueId?: string;
   planSaved: boolean;
+  tableId?: string;
 }
 
-type Mode = "checking" | "mock" | "live" | "disabled" | "unavailable";
+type Mode = "checking" | "live" | "sign_in" | "disabled" | "unavailable";
 interface Reply {
-  source: "mock" | "anthropic";
+  source: "live";
   text: string;
 }
 
@@ -24,6 +26,8 @@ export function useWaiterGuidance(
   scope: string,
 ) {
   const [mode, setMode] = useState<Mode>("checking");
+  const [canEnable, setCanEnable] = useState(false);
+  const [statusRevision, setStatusRevision] = useState(0);
   const [reply, setReply] = useState<Reply | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -70,10 +74,10 @@ export function useWaiterGuidance(
           !body ||
           typeof body !== "object" ||
           !("mode" in body) ||
-          !["mock", "live", "disabled"].includes(String(body.mode))
+          !["live", "sign_in", "disabled", "unavailable"].includes(String(body.mode))
         )
           throw new Error("Unavailable");
-        if (current && !controller.signal.aborted) setMode(body.mode as Mode);
+        if (current && !controller.signal.aborted) {setMode(body.mode as Mode);setCanEnable("canEnable" in body && body.canEnable === true);}
       } catch {
         if (current) setMode("unavailable");
       } finally {
@@ -85,10 +89,10 @@ export function useWaiterGuidance(
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [open]);
+  }, [open,statusRevision]);
 
   async function ask(message: string) {
-    if (active.current || !open || !["mock", "live"].includes(mode)) return;
+    if (active.current || !open || mode !== "live") return;
     const controller = new AbortController();
     active.current = controller;
     const submittedScope = latestScope.current;
@@ -103,7 +107,7 @@ export function useWaiterGuidance(
     const timeout = setTimeout(() => {
       timedOut = true;
       controller.abort();
-    }, 15_000);
+    }, 25_000);
     try {
       const response = await fetch("/api/waiter/reply", {
         method: "POST",
@@ -127,16 +131,13 @@ export function useWaiterGuidance(
         typeof body !== "object" ||
         !("source" in body) ||
         !("text" in body) ||
-        !["mock", "anthropic"].includes(String(body.source)) ||
-        (mode === "mock" && body.source !== "mock") ||
+        body.source !== "live" ||
         typeof body.text !== "string" ||
         !body.text.trim() ||
         body.text.length > 8_000
       )
         throw new Error("unavailable");
-      const replyText = body.source === "mock"
-        ? body.text.replace(/^Offline demo · sample guidance\.\s*/, "")
-        : body.text;
+      const replyText = body.text;
       if (!replyText.trim()) throw new Error("unavailable");
       if (isCurrent())
         setReply({
@@ -165,5 +166,15 @@ export function useWaiterGuidance(
     }
   }
 
-  return { mode, reply, error, busy, ask, clear };
+  async function enable() {
+    if (!canEnable || active.current) return;
+    const controller=new AbortController();active.current=controller;setBusy(true);setError("");
+    try {
+      const response=await fetch("/api/waiter/enable",{method:"POST",credentials:"same-origin",signal:AbortSignal.any([controller.signal,AbortSignal.timeout(10000)]),headers:{"Content-Type":"application/json","X-Common-Table-Request":"waiter"},body:"{}"});
+      if (!response.ok) throw new Error("Unavailable");
+      if (!controller.signal.aborted) {setCanEnable(false);setStatusRevision(value=>value+1);}
+    } catch {if(!controller.signal.aborted)setError("Guidance could not be enabled. Your current table is unchanged.");}
+    finally {if(active.current===controller){active.current=null;setBusy(false);}}
+  }
+  return { mode, reply, error, busy, ask, clear,canEnable,enable };
 }

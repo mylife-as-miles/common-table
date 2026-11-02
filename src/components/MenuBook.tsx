@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import type { Venue } from "../domain/types";
+import { isDemoVenue, venuePriceLabel, venueRatingLabel, venueTravelLabel } from "../domain/catalog";
 import "./menu-book.css";
 import { playInteractionSound } from "../experience/interactionSound";
 import { PaperCurl } from "./book/PaperCurl";
@@ -598,13 +599,13 @@ export default function MenuBook({
                 ref={photo}
                 className="book-venue-photo"
                 src={venue.image}
-                alt={`Atmosphere at ${venue.name}, an illustrative demo restaurant`}
+                alt={isDemoVenue(venue) ? `Atmosphere at ${venue.name}, an illustrative demo restaurant` : venue.image === "/venue-placeholder.svg" ? "Illustrated place setting; restaurant photo not provided" : `Photo of ${venue.name}`}
                 loading="eager"
                 decoding="async"
               />
               <div className="book-photo-wash" aria-hidden="true" />
               <span className="book-photo-caption">
-                <MapPin size={11} /> {venue.neighborhood}, Brooklyn
+                <MapPin size={11} /> {venue.neighborhood}{isDemoVenue(venue) ? ", Brooklyn" : ""}
               </span>
               <div className="book-editor-stamp" aria-hidden="true">
                 <span>GOOD FOOD</span>
@@ -624,18 +625,18 @@ export default function MenuBook({
               <div className="book-details">
                 <span>
                   <Star size={12} fill="currentColor" />{" "}
-                  {venue.rating.toFixed(1)} <small>demo rating</small>
+                  {venueRatingLabel(venue)} <small>{isDemoVenue(venue) ? "demo rating" : venue.ratingKnown ? "listed rating" : "no listed rating"}</small>
                 </span>
                 <span>
-                  {venue.walkMinutes} min walk <small>illustrative</small>
+                  {venueTravelLabel(venue)} <small>{isDemoVenue(venue) ? "illustrative" : "route not estimated"}</small>
                 </span>
                 <span>
-                  ${venue.price} <small>/ person</small>
+                  {venuePriceLabel(venue)} <small>{isDemoVenue(venue) ? "/ person" : "with restaurant"}</small>
                 </span>
               </div>
             </div>
             <div className="book-page-number">
-              <span>Brooklyn, one good meal at a time.</span>
+              <span>{isDemoVenue(venue) ? "Brooklyn, one good meal at a time." : "One good meal at a time."}</span>
               <span>{String(index * 2 + 1).padStart(2, "0")}</span>
             </div>
           </section>
@@ -682,10 +683,10 @@ export default function MenuBook({
               <span /> <Utensils size={15} strokeWidth={1.15} /> <span />
             </div>
             <div className="book-menu-heading">
-              <span>A TASTE OF THE MENU</span>
-              <span>DEMO MENU</span>
+              <span>{isDemoVenue(venue) ? "A TASTE OF THE MENU" : "BEFORE YOU GO"}</span>
+              <span>{isDemoVenue(venue) ? "DEMO MENU" : "RESTAURANT NOTES"}</span>
             </div>
-            <ul className="book-menu-items">
+            {isDemoVenue(venue) ? <ul className="book-menu-items">
               {venue.menu.slice(0, 3).map((dish) => (
                 <li key={dish.name}>
                   <div className="book-dish-name">
@@ -696,7 +697,11 @@ export default function MenuBook({
                   <p>{dish.description}</p>
                 </li>
               ))}
-            </ul>
+            </ul> : <div className="book-real-notes">
+              <p>{venue.description}</p>
+              <p>The restaurant’s menu, per-person cost, opening hours and dietary options need confirmation.</p>
+              {venue.websiteUrl && <a href={venue.websiteUrl} target="_blank" rel="noopener noreferrer">Visit the restaurant <ArrowRight size={14} /></a>}
+            </div>}
             <div className="book-match-note">
               <Sparkles size={16} strokeWidth={1.4} />
               <div>

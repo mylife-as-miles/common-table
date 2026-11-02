@@ -1,0 +1,1 @@
+ALTER TABLE `shared_tables` ADD `last_operation` text;
