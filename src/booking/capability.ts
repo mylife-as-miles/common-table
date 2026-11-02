@@ -20,7 +20,7 @@ export function sanitizeBookingUrl(value: unknown): string | undefined {
 export function getBookingHandoff(venue: Venue | null | undefined): BookingHandoff {
   if (!venue) return { status: "no_venue" };
   if (!venue.source || venue.source === "demo") return { status: "demo" };
-  if (venue.source !== "qloo" && venue.source !== "osm") return { status: "unavailable" };
+  if (venue.source !== "osm") return { status: "unavailable" };
   const booking = sanitizeBookingUrl(venue.bookingUrl);
   const website = sanitizeBookingUrl(venue.websiteUrl);
   const href = booking || website;

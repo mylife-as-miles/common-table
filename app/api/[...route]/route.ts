@@ -7,8 +7,8 @@ async function handleApiRequest(request:Request) {
     identity:await getChatGPTUser(),
     db:runtime.DB as Parameters<typeof handleServices>[1]['db'],
     apiKey:typeof runtime.ANTHROPIC_API_KEY==='string'?runtime.ANTHROPIC_API_KEY:undefined,
-    qlooApiKey:typeof runtime.QLOO_API_KEY==='string'?runtime.QLOO_API_KEY:undefined,
     ownerEmail:typeof runtime.APP_OWNER_EMAIL==='string'?runtime.APP_OWNER_EMAIL:undefined,
+    verificationSecret:typeof runtime.SERVICE_VERIFICATION==='string'?runtime.SERVICE_VERIFICATION:undefined,
   });
 }
 export const dynamic = "force-dynamic";

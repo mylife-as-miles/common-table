@@ -4,17 +4,18 @@ import type { SharedDatabase } from '../shared-tables/index.ts';
 export const GUIDANCE_MODEL='claude-sonnet-5-5';
 export const GUIDANCE_VERSION='2026-10-21';
 export const MAX_PROMPT_BYTES=16*1024;
-export const MAX_OUTPUT_TOKENS=512;
+export const MAX_OUTPUT_TOKENS=1024;
 export const MAX_RESPONSE_BYTES=64*1024;
 const ORIGIN='https://api.anthropic.com';
 const record=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:{};
 const bytes=(v:string)=>new TextEncoder().encode(v).byteLength;
-export interface GuidanceClientOptions {apiKey:string;db:SharedDatabase;fetcher?:typeof fetch;signal?:AbortSignal;timeoutMs?:number;additionalSecrets?:string[]}
+export interface GuidanceClientOptions {apiKey:string;db:SharedDatabase;fetcher?:typeof fetch;signal?:AbortSignal;timeoutMs?:number;additionalSecrets?:string[];outputSchema?:Record<string,unknown>}
 export async function generateGuidance(message:string,system:string,options:GuidanceClientOptions):Promise<string>{
   const {apiKey,db}=options;
   if(typeof apiKey!=='string'||!apiKey||apiKey.length>4096||/[^\x21-\x7e]/.test(apiKey))throw new GuidanceError('unavailable',503);
-  if(typeof message!=='string'||!message.trim()||typeof system!=='string'||bytes(message)+bytes(system)>MAX_PROMPT_BYTES)throw new GuidanceError('body_too_large',413);
-  if([apiKey,...(options.additionalSecrets||[])].some(secret=>secret&&(message.includes(secret)||system.includes(secret))))throw new GuidanceError('invalid_request',400);
+  let schemaText='';try{if(options.outputSchema)schemaText=JSON.stringify(options.outputSchema);}catch{throw new GuidanceError('invalid_request',400);}
+  if(typeof message!=='string'||!message.trim()||typeof system!=='string'||bytes(message)+bytes(system)+bytes(schemaText)>MAX_PROMPT_BYTES)throw new GuidanceError('body_too_large',413);
+  if([apiKey,...(options.additionalSecrets||[])].some(secret=>secret&&(message.includes(secret)||system.includes(secret)||schemaText.includes(secret))))throw new GuidanceError('invalid_request',400);
   const fetcher=options.fetcher||((input,init)=>globalThis.fetch(input,init));
   const timeoutMs=options.timeoutMs??10_000;
   if(!Number.isFinite(timeoutMs)||timeoutMs<1||timeoutMs>15_000)throw new GuidanceError('unavailable',503);
@@ -31,7 +32,10 @@ export async function generateGuidance(message:string,system:string,options:Guid
     const response=await Promise.race([fetcher(new URL(path,ORIGIN),{method:body===undefined?'GET':'POST',redirect:'manual',signal:controller.signal,
       headers:{Authorization:`Bearer ${apiKey}`,'anthropic-version':GUIDANCE_VERSION,Accept:'application/json',...(body===undefined?{}:{'Content-Type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})}).then(response=>{if(controller.signal.aborted)void response.body?.cancel().catch(()=>{});return response;}),stopped]);
     if(controller.signal.aborted){void response.body?.cancel().catch(()=>{});throw new GuidanceError(timedOut?'timeout':'cancelled',timedOut?504:499);}
-    if(!response.ok||response.redirected){void response.body?.cancel().catch(()=>{});throw new GuidanceError('upstream_unavailable',502);}
+    if(!response.ok||response.redirected){
+      console.warn('Common Table guidance unavailable',{step:path==='/v1/messages'?'generation':path.includes('/models/')?'model':'organization',reason:'upstream_http',status:response.status});
+      void response.body?.cancel().catch(()=>{});throw new GuidanceError('upstream_unavailable',502);
+    }
     const length=response.headers.get('content-length');if(length&&/^\d+$/.test(length)&&Number(length)>MAX_RESPONSE_BYTES){void response.body?.cancel().catch(()=>{});throw new GuidanceError('invalid_response',502);}
     if(!response.body)throw new GuidanceError('invalid_response',502);
     activeReader=response.body.getReader();const chunks:Uint8Array[]=[];let size=0;
@@ -51,11 +55,17 @@ export async function generateGuidance(message:string,system:string,options:Guid
     await reserveGuidance(db);
     // The reservation is irrevocable, including unknown network outcomes. There is no retry path.
     if(controller.signal.aborted)throw new GuidanceError(timedOut?'timeout':'cancelled',timedOut?504:499);
-    const reply=await request('/v1/messages',{model:GUIDANCE_MODEL,max_tokens:MAX_OUTPUT_TOKENS,thinking:{type:'between_tools'},output_config:{effort:'low'},service_tier:'standard_only',system,messages:[{role:'user',content:message}]});
-    if(reply.model!==GUIDANCE_MODEL||reply.type!=='message'||reply.role!=='assistant'||!Array.isArray(reply.content)||!reply.content.length||reply.content.length>30)throw new GuidanceError('invalid_response',502);
-    const texts:string[]=[];for(const value of reply.content){const block=record(value);if(block.type==='text'&&typeof block.text==='string')texts.push(block.text);else if(block.type!=='thinking'&&block.type!=='redacted_thinking')throw new GuidanceError('invalid_response',502);}
+    const reply=await request('/v1/messages',{model:GUIDANCE_MODEL,max_tokens:MAX_OUTPUT_TOKENS,thinking:{type:'between_tools'},output_config:{effort:'low',...(options.outputSchema?{format:{type:'json_schema',schema:options.outputSchema}}:{})},service_tier:'standard_only',system,messages:[{role:'user',content:message}]});
+    const invalidReply=(reason:'invalid_envelope'|'output_limit'|'unsupported_block'|'invalid_content'):never=>{
+      const usage=record(reply.usage);
+      console.warn('Common Table guidance unavailable',{step:'generation',reason,outputTokens:Number.isSafeInteger(usage.output_tokens)&&Number(usage.output_tokens)>=0&&Number(usage.output_tokens)<=100_000?usage.output_tokens:undefined});
+      throw new GuidanceError('invalid_response',502);
+    };
+    if(reply.stop_reason==='max_tokens')invalidReply('output_limit');
+    if(reply.model!==GUIDANCE_MODEL||reply.type!=='message'||reply.role!=='assistant'||!Array.isArray(reply.content)||!reply.content.length||reply.content.length>30)invalidReply('invalid_envelope');
+    const texts:string[]=[];for(const value of reply.content as unknown[]){const block=record(value);if(block.type==='text'&&typeof block.text==='string')texts.push(block.text);else if(block.type!=='thinking'&&block.type!=='redacted_thinking')invalidReply('unsupported_block');}
     const text=texts.join('\n').trim(),usage=record(reply.usage);
-    if(!text||text.length>8000||[apiKey,...(options.additionalSecrets||[])].some(key=>key&&text.includes(key))||/sk-ant-[\w-]{10,}/.test(text)||!Number.isSafeInteger(usage.input_tokens)||Number(usage.input_tokens)<0||!Number.isSafeInteger(usage.output_tokens)||Number(usage.output_tokens)<0||Number(usage.output_tokens)>MAX_OUTPUT_TOKENS||(Number(usage.input_tokens)*2+Number(usage.output_tokens)*10)>50_000)throw new GuidanceError('invalid_response',502);
+    if(!text||text.length>8000||[apiKey,...(options.additionalSecrets||[])].some(key=>key&&text.includes(key))||/sk-ant-[\w-]{10,}/.test(text)||!Number.isSafeInteger(usage.input_tokens)||Number(usage.input_tokens)<0||!Number.isSafeInteger(usage.output_tokens)||Number(usage.output_tokens)<0||Number(usage.output_tokens)>MAX_OUTPUT_TOKENS||(Number(usage.input_tokens)*2+Number(usage.output_tokens)*10)>50_000)invalidReply('invalid_content');
     // UI prose stays in the voice of the companion, including when a question asks about infrastructure.
     return text.replace(/\b(?:Claude|Anthropic|Sonnet(?:\s*5\.5)?|Haiku)\b/gi,'The Waiter').replace(/\bQloo\b/gi,'restaurant discovery').replace(/\bAPIs?\b/gi,word=>word.toLowerCase().endsWith('s')?'services':'service');
   }catch(error){if(timedOut)throw new GuidanceError('timeout',504);if(options.signal?.aborted)throw options.signal.reason instanceof GuidanceError?options.signal.reason:new GuidanceError('cancelled',499);if(error instanceof GuidanceError)throw error;throw new GuidanceError('upstream_unavailable',502);}

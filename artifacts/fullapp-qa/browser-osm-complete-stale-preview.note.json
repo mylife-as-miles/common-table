@@ -1,0 +1,6 @@
+{
+  "scope": "Aborted environment-failure attempt; not a product regression result.",
+  "reason": "Root confirmed the old running Wrangler instance referenced a stale chunk map after dist was rebuilt. Pages remained on the dynamic-import placeholder.",
+  "action": "Interrupted runner with SIGINT, closed owned browser contexts, retained raw report unchanged, and requested fresh owned preview.",
+  "rawReport": "browser-osm-complete-stale-preview.json"
+}

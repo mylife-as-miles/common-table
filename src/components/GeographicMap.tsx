@@ -21,6 +21,7 @@ import type { Map as RasterMap, Marker as RasterMarker } from "leaflet";
 import "./geographic-map.css";
 import "./recommended-map.css";
 import type { Venue } from "../domain/types";
+import { isOsmVenue } from "../domain/catalog";
 
 export interface MapPoint {
   id: string;
@@ -34,7 +35,7 @@ export type GeographicVenue = Venue & { latitude: number; longitude: number };
 /** Real markers require real source coordinates; authored demo x/y are never projected. */
 export function geographicVenueCandidates(venues: Venue[]): GeographicVenue[] {
   return [...new Map(venues.filter((venue): venue is GeographicVenue =>
-    (venue.source === "qloo" || venue.source === "osm") && typeof venue.latitude === "number" && typeof venue.longitude === "number" && Number.isFinite(venue.latitude) && Number.isFinite(venue.longitude) && Math.abs(venue.latitude) <= 85 && Math.abs(venue.longitude) <= 180,
+    isOsmVenue(venue) && typeof venue.latitude === "number" && typeof venue.longitude === "number" && Number.isFinite(venue.latitude) && Number.isFinite(venue.longitude) && Math.abs(venue.latitude) <= 85 && Math.abs(venue.longitude) <= 180,
   ).map(venue => [venue.id, venue])).values()].slice(0, 20);
 }
 export interface GeographicMapProps {

@@ -1,5 +1,5 @@
 import { defaultSharedPreferences, emptySharedPlan, type SharedIdentity, type SharedPlan, type SharedPreferences, type SharedTableSnapshot } from "../../src/collaboration/types.ts";
-import { sanitizeVenueSnapshot } from "../../src/domain/catalog.ts";
+import { sanitizeVenueSnapshot, isSavedVenue } from "../../src/domain/catalog.ts";
 
 export interface SharedStatement {
   bind(...values: unknown[]): SharedStatement;
@@ -56,6 +56,14 @@ function validSchedule(p: SharedPlan, time: number) {
   const date = new Date(`${p.date}T${p.time}:00`);
   return /^\d{4}-\d{2}-\d{2}$/.test(p.date) && /^([01]\d|2[0-3]):[0-5]\d$/.test(p.time) && !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === p.date && date.getTime() > time;
 }
+/** Normalize metadata in the response only; never rewrite a saved plan on read. */
+function storedPlan(raw: unknown): SharedPlan {
+  const value = JSON.parse(String(raw)) as SharedPlan;
+  if (!value || typeof value !== "object") throw new SharedError("unavailable", 503);
+  const venueSnapshot = value.venueId === null ? null : sanitizeVenueSnapshot(value.venueSnapshot);
+  if (value.venueId !== null && (!venueSnapshot || venueSnapshot.id !== value.venueId)) throw new SharedError("unavailable", 503);
+  return { ...value, venueSnapshot: venueSnapshot ?? null };
+}
 async function readBody(request: Request): Promise<Row> {
   if (!/^application\/json(?:\s*;\s*charset=utf-8)?\s*$/i.test(request.headers.get("content-type") ?? "") || request.headers.has("content-encoding")) throw new SharedError("invalid_request", 415);
   if (Number(request.headers.get("content-length") ?? 0) > 24 * 1024) throw new SharedError("invalid_request", 413);
@@ -97,7 +105,7 @@ export async function handleSharedTablesRequest(request: Request, ctx: SharedReq
       const invites = row.owner_id === identity.userId ? (await q("SELECT id,expires_at,accepted_at,revoked_at FROM shared_invites WHERE table_id=? ORDER BY created_at DESC LIMIT 50", id).all<Row>()).results.map(i => ({ id: String(i.id), expiresAt: Number(i.expires_at), accepted: i.accepted_at !== null, revoked: i.revoked_at !== null })) : undefined;
       const latest = await q("SELECT version FROM shared_tables WHERE id=?", id).first<Row>();
       if (!latest || latest.version !== row.version) { if (attempt < 2) return snapshot(id, attempt + 1); throw new SharedError("unavailable", 503); }
-      return { id, title: String(row.title), ownerId: String(row.owner_id), viewerId: identity.userId, revision: Number(row.revision), version: Number(row.version), plan: JSON.parse(String(row.plan_json)), updatedAt: Number(row.updated_at), members: members.map(m => ({ userId: String(m.user_id), displayName: String(m.display_name), role: m.role as "owner" | "member", preferences: JSON.parse(String(m.preferences_json)), approvedRevision: m.approved_revision === null ? null : Number(m.approved_revision) })), ...(invites ? { invites } : {}) };
+      return { id, title: String(row.title), ownerId: String(row.owner_id), viewerId: identity.userId, revision: Number(row.revision), version: Number(row.version), plan: storedPlan(row.plan_json), updatedAt: Number(row.updated_at), members: members.map(m => ({ userId: String(m.user_id), displayName: String(m.display_name), role: m.role as "owner" | "member", preferences: JSON.parse(String(m.preferences_json)), approvedRevision: m.approved_revision === null ? null : Number(m.approved_revision) })), ...(invites ? { invites } : {}) };
     };
     if (request.method === "GET") {
       if (path === "/api/shared-tables") {
@@ -128,6 +136,7 @@ export async function handleSharedTablesRequest(request: Request, ctx: SharedReq
     if (path === "/api/shared-tables") {
       if (!keys(body, ["title", "preferences", "plan"]) || !string(body.title, 100)) throw new SharedError("invalid_request", 400);
       const prefs = preferences(body.preferences); const p = body.plan === undefined ? emptySharedPlan() : plan(body.plan); tableId = uuid();
+      if (p.venueSnapshot && isSavedVenue(p.venueSnapshot)) throw new SharedError("invalid_request", 400);
       statements = [q("INSERT INTO shared_tables(id,owner_id,title,revision,version,plan_json,created_at,updated_at,last_operation) SELECT ?,?,?,1,1,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM shared_operations WHERE actor_id=? AND idempotency_key=?)", tableId, identity.userId, body.title.trim(), JSON.stringify(p), timestamp, timestamp, marker, identity.userId, operationKey), q("INSERT INTO shared_members(table_id,user_id,display_name,role,preferences_json,approved_revision,joined_at) SELECT ?,?,?,'owner',?,NULL,? WHERE EXISTS(SELECT 1 FROM shared_tables WHERE id=? AND last_operation=?)", tableId, identity.userId, identity.displayName, JSON.stringify(prefs), timestamp, tableId, marker), receipt(tableId)];
     } else if (path === "/api/shared-tables/join") {
       if (!keys(body, ["token", "preferences"]) || typeof body.token !== "string" || !tokenPattern.test(body.token)) throw new SharedError("invalid_request", 400);
@@ -142,13 +151,20 @@ export async function handleSharedTablesRequest(request: Request, ctx: SharedReq
       const match = path.match(/^\/api\/shared-tables\/([a-zA-Z0-9-]{8,80})\/(preferences|plan|approval|save|invites|revoke-invite|remove-member|leave)$/); if (!match || !idPattern.test(match[1])) throw new SharedError("not_found", 404);
       tableId = match[1]; const action = match[2]; const ownerAction = ["plan", "save", "invites", "revoke-invite", "remove-member"].includes(action);
       const current = await owned(tableId, ownerAction); if (!isVersion(body.version)) throw new SharedError("invalid_request", 400); if (body.version !== current.version) throw new SharedError("conflict", 409);
-      const p: SharedPlan = JSON.parse(String(current.plan_json)); const extra: SharedStatement[] = []; let nextPlan = p; let contentChange = false;
+      const p = storedPlan(current.plan_json); const extra: SharedStatement[] = []; let nextPlan = p; let contentChange = false;
       if (action === "preferences") {
         if (!keys(body, ["version", "preferences"])) throw new SharedError("invalid_request", 400); const prefs = preferences(body.preferences);
         const mine = await q("SELECT preferences_json FROM shared_members WHERE table_id=? AND user_id=?", tableId, identity.userId).first<Row>(); contentChange = canonical(JSON.parse(String(mine?.preferences_json))) !== canonical(prefs);
         extra.push(q("UPDATE shared_members SET preferences_json=?,display_name=? WHERE table_id=? AND user_id=? AND EXISTS(SELECT 1 FROM shared_tables WHERE id=? AND last_operation=?)", JSON.stringify(prefs), identity.displayName, tableId, identity.userId, tableId, marker));
       } else if (action === "plan") {
-        if (!keys(body, ["version", "plan"])) throw new SharedError("invalid_request", 400); const candidate = plan(body.plan); contentChange = canonical({ ...p, saved: false }) !== canonical(candidate); nextPlan = contentChange ? candidate : p;
+        if (!keys(body, ["version", "plan"])) throw new SharedError("invalid_request", 400); const candidate = plan(body.plan);
+        if (candidate.venueSnapshot && isSavedVenue(candidate.venueSnapshot)) {
+          if (candidate.venueId !== p.venueId || !p.venueSnapshot || !isSavedVenue(p.venueSnapshot)) throw new SharedError("invalid_request", 400);
+          // A host can revise the existing evening, not manufacture fresh facts
+          // or select an archived provider entity as a new restaurant.
+          candidate.venueSnapshot = p.venueSnapshot;
+        }
+        contentChange = canonical({ ...p, saved: false }) !== canonical(candidate); nextPlan = contentChange ? candidate : p;
       } else if (action === "approval") {
         if (!keys(body, ["version", "approved"]) || typeof body.approved !== "boolean" || !p.venueId) throw new SharedError("invalid_request", 400);
         extra.push(q("UPDATE shared_members SET approved_revision=? WHERE table_id=? AND user_id=? AND EXISTS(SELECT 1 FROM shared_tables WHERE id=? AND last_operation=?)", body.approved ? current.revision : null, tableId, identity.userId, tableId, marker)); if (!body.approved) nextPlan = { ...p, saved: false };

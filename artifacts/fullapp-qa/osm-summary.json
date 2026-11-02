@@ -1,0 +1,75 @@
+{
+  "scope": "OSM-grounded, model-ranked catalog migration and late archive/local-tips guards on production preview4175.",
+  "browserBaseline": {
+    "total": 95,
+    "passed": 93,
+    "failed": 2,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 330105.241,
+    "report": "browser-osm-final.json",
+    "failedTestAssumptions": [
+      "The reservation handoff accessible name includes the correct opens-a-new-tab suffix.",
+      "Legacy snapshot normalization is read-time; raw archival JSON is preserved until a real local action commits normalized state."
+    ]
+  },
+  "focusedFollowup": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 61447.169,
+    "automatedWcagAandAAScans": 5,
+    "report": "browser-osm-followup.json",
+    "covers": [
+      "Both corrected baseline assumptions with assertions retained",
+      "OSM-only real pin → book → plan → IndexedDB/reload continuity",
+      "Unsafe booking URL exclusion and unknown ranked-ID rejection without destroying a saved plan",
+      "Historical saved ID remains unchanged, gains no fresh discovery seed or reservation authority, and preserves approvals",
+      "Archived selection cannot replace an existing saved plan or produce a false success navigation/toast",
+      "Two-person real restaurant Local tips show budgets/diet as preferences requiring confirmation; no paid submissions",
+      "Waiter source/branding, sign-in/enable, cancellation, duplicate submissions, stale response and AA regressions"
+    ]
+  },
+  "mockedServiceChecks": {
+    "passed": 27,
+    "failed": 0,
+    "report": "osm-service-final.tap",
+    "boundaries": [
+      "All outbound fetches are synthetic and unexpected network is blocked.",
+      "Only dummy keys/capabilities and isolated SQLite generated migrations are used.",
+      "Owner authorization occurs before quota mutation.",
+      "Waiter, restaurant ranking and temporary verification share one irrevocable500c/100-attempt cap.",
+      "Missing/expired/wrong capabilities, invalid Bearer forms, operation arrays, arbitrary prompt/location/shared-table fields and operation replay reject.",
+      "Temporary fixed-solo verification never reads shared records."
+    ]
+  },
+  "limits": [
+    "No configured key was read and no paid provider was called by this QA.",
+    "Model and recommendation browser successes are explicitly labelled fixtures; actual public paid API verification belongs to the root agent.",
+    "No invitations, shared production writes, location sharing to others or bookings were performed.",
+    "A separate startup attempt was aborted because the running preview referenced stale chunks after dist was rebuilt. Its raw environment-failure report is preserved separately and is excluded from product regression counts."
+  ],
+  "completedAt": "2026-11-02T04:45:03.703Z",
+  "completeBrowserRun": {
+    "scope": "One complete production-preview batch on the retained current build, after OSM catalog migration, archive guards and real-place Local tips fixes.",
+    "baseCommit": "cba326a",
+    "total": 96,
+    "passed": 96,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 342908.76,
+    "retriesConfigured": 0,
+    "automatedWcagAandAAScans": 26,
+    "report": "browser-osm-complete.json",
+    "externalPaidRequestsByQA": 0,
+    "productionSharedWritesByQA": 0
+  },
+  "stalePreviewAttempt": {
+    "raw": "browser-osm-complete-stale-preview.json",
+    "note": "browser-osm-complete-stale-preview.note.json",
+    "classification": "aborted environment failure; not included in final product counts"
+  }
+}

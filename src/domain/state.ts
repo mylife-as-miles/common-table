@@ -1,5 +1,5 @@
 import { defaultParticipant, initialVenueId } from "./data";
-import { getVenue, isDemoVenue, sanitizeVenueSnapshot, MAX_CATALOG_VENUES, venueVerificationWarnings } from "./catalog";
+import { getVenue, getVenueCatalog, isDemoVenue, isOsmVenue, isSavedVenue, sanitizeVenueSnapshot, sanitizeRecommendationRationales, MAX_CATALOG_VENUES, venueVerificationWarnings } from "./catalog";
 import { rankVenues, eligibilityReasons } from "./ranking";
 import type { AppAction, AppState, Participant, Plan } from "./types";
 
@@ -130,13 +130,14 @@ function validParticipant(value: unknown): value is Participant {
 export function reducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case "receive-recommendations": {
-      const received = action.venues.slice(0, 30).map(sanitizeVenueSnapshot).filter((v): v is NonNullable<typeof v> => Boolean(v) && !isDemoVenue(v!));
-      const merged = new Map((state.catalog || []).map(v => [v.id, v]));
+      const received = action.venues.slice(0, 30).map(sanitizeVenueSnapshot).filter((v): v is NonNullable<typeof v> => Boolean(v) && isOsmVenue(v!));
+      const merged = new Map(getVenueCatalog(state).filter(v => !isDemoVenue(v)).map(v => [v.id, v]));
       received.forEach(v => merged.set(v.id, v));
       const protectedIds = new Set([state.plan.venueId, state.selectedVenueId, ...state.shortlist, ...state.vetoes]);
       const catalog = [...merged.values()].sort((a,b) => Number(protectedIds.has(b.id))-Number(protectedIds.has(a.id))).slice(0, MAX_CATALOG_VENUES);
       const orderedIds = [...new Set(action.orderedIds)].filter(id => received.some(v => v.id===id) && !state.vetoes.includes(id));
       return { ...state, discoveryMode: "live", catalog, recommendationIds: orderedIds,
+        recommendationRationales: sanitizeRecommendationRationales(action.rationales, orderedIds),
         recommendationsRetrievedAt: Number.isFinite(Date.parse(action.retrievedAt)) ? action.retrievedAt : undefined,
         selectedVenueId: orderedIds.includes(state.selectedVenueId) ? state.selectedVenueId : (orderedIds[0] || state.selectedVenueId) };
     }
@@ -241,7 +242,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
     }
     case "choose-plan": {
       const venue = getVenue(state, action.venueId);
-      if (!venue || eligibilityReasons(venue, state).length) return state;
+      if (!venue || eligibilityReasons(venue, state).length || isSavedVenue(venue) && state.plan.venueId !== venue.id) return state;
       const discoveryMode = isDemoVenue(venue) ? "sample" : "live";
       if (state.plan.venueId === venue.id)
         return state.selectedVenueId === venue.id && state.discoveryMode === discoveryMode
@@ -305,10 +306,11 @@ export function hydrateState(raw: string | null): AppState {
     const catalog = Array.isArray(source.catalog) ? source.catalog.slice(0,MAX_CATALOG_VENUES).map(sanitizeVenueSnapshot).filter((v): v is NonNullable<typeof v> => Boolean(v) && !isDemoVenue(v!)) : [];
     const exists = (id: unknown): id is string => venueExists({ catalog }, id);
     const vetoes = [...new Set(source.vetoes.filter(exists))];
+    const recommendationIds = Array.isArray(source.recommendationIds) ? [...new Set(source.recommendationIds.filter(exists))].filter(id => !vetoes.includes(id) && Boolean(getVenue({ catalog }, id) && isOsmVenue(getVenue({ catalog }, id)!))) : undefined;
     const state: AppState = {
       discoveryMode: source.discoveryMode === "sample" || source.discoveryMode === "live" ? source.discoveryMode : Array.isArray(source.recommendationIds) || catalog.some(v => v.id === source.selectedVenueId) ? "live" : "sample",
       ...(catalog.length ? { catalog } : {}),
-      ...(Array.isArray(source.recommendationIds) ? { recommendationIds: [...new Set(source.recommendationIds.filter(exists))].filter(id=>!vetoes.includes(id)) } : {}),
+      ...(recommendationIds ? { recommendationIds, recommendationRationales: sanitizeRecommendationRationales(source.recommendationRationales, recommendationIds) } : {}),
       ...(typeof source.recommendationsRetrievedAt === 'string' && Number.isFinite(Date.parse(source.recommendationsRetrievedAt)) ? { recommendationsRetrievedAt: source.recommendationsRetrievedAt } : {}),
       participants: [
         ...source.participants.filter((person) => person.id === "you"),

@@ -1,0 +1,2811 @@
+{
+  "config": {
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/workspace/sites/common-table/node_modules/.bin/playwright",
+      "test",
+      "--output=/tmp/common-table-osm-complete",
+      "--reporter=json"
+    ],
+    "configFile": "/workspace/sites/common-table/playwright.config.ts",
+    "rootDir": "/workspace/sites/common-table/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/common-table-osm-complete",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/workspace/sites/common-table/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "app.spec.ts",
+          "immersive.spec.ts",
+          "location.spec.ts",
+          "cinematic.spec.ts",
+          "waiter-claude.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/tmp/common-table-osm-complete",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "name": "",
+        "testDir": "/workspace/sites/common-table/tests",
+        "snapshotDir": "/workspace/sites/common-table/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "app.spec.ts",
+          "immersive.spec.ts",
+          "location.spec.ts",
+          "cinematic.spec.ts",
+          "waiter-claude.spec.ts"
+        ],
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:4175",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screenshot": "only-on-failure",
+          "trace": "retain-on-failure",
+          "launchOptions": {
+            "executablePath": "/usr/bin/chromium",
+            "args": [
+              "--no-sandbox"
+            ]
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 2,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "app.spec.ts",
+      "file": "app.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "map, book, table and dinner plan retain the same chosen venue; Back returns to table",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5785,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.immersive-atlas')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('.immersive-atlas') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.immersive-atlas')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.immersive-atlas')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('.immersive-atlas') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.immersive-atlas')\u001b[22m\n\n    at /workspace/sites/common-table/tests/app.spec.ts:54:50",
+                    "location": {
+                      "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                      "column": 50,
+                      "line": 54
+                    },
+                    "snippet": "  52 | }) => {\n  53 |   await page.goto(\"/#explore\");\n> 54 |   await expect(page.locator(\".immersive-atlas\")).toBeVisible();\n     |                                                  ^\n  55 |   await page.getByRole(\"button\", { name: /^Places/ }).click();\n  56 |   await page\n  57 |     .getByRole(\"complementary\", { name: \"Restaurants on this map\" })"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 50,
+                        "line": 54
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.immersive-atlas')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('.immersive-atlas') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.immersive-atlas')\u001b[22m\n\n\n  52 | }) => {\n  53 |   await page.goto(\"/#explore\");\n> 54 |   await expect(page.locator(\".immersive-atlas\")).toBeVisible();\n     |                                                  ^\n  55 |   await page.getByRole(\"button\", { name: /^Places/ }).click();\n  56 |   await page\n  57 |     .getByRole(\"complementary\", { name: \"Restaurants on this map\" })\n    at /workspace/sites/common-table/tests/app.spec.ts:54:50"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:35:19.939Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-map-book-table-and-din-d52ce-venue-Back-returns-to-table/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-map-book-table-and-din-d52ce-venue-Back-returns-to-table/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-map-book-table-and-din-d52ce-venue-Back-returns-to-table/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                    "column": 50,
+                    "line": 54
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-963050e49ca7a7131b08",
+          "file": "app.spec.ts",
+          "line": 50,
+          "column": 1
+        },
+        {
+          "title": "shortlist toggles repeatedly without duplicate contenders",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "timedOut",
+                  "duration": 30089,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 8,
+                        "line": 31
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n\n  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at /workspace/sites/common-table/tests/app.spec.ts:91:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:35:19.930Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-shortlist-toggles-repe-b79b6-ithout-duplicate-contenders/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-shortlist-toggles-repe-b79b6-ithout-duplicate-contenders/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-shortlist-toggles-repe-b79b6-ithout-duplicate-contenders/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-5761cef25feed89c36f6",
+          "file": "app.spec.ts",
+          "line": 87,
+          "column": 1
+        },
+        {
+          "title": "repeated vetoes revise recommendations, reach an honest empty state and can be undone",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 30082,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 8,
+                        "line": 31
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n\n  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at /workspace/sites/common-table/tests/app.spec.ts:117:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:35:26.467Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-repeated-vetoes-revise-f8365-pty-state-and-can-be-undone/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-repeated-vetoes-revise-f8365-pty-state-and-can-be-undone/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-repeated-vetoes-revise-f8365-pty-state-and-can-be-undone/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-68a3a58bcc6b46add889",
+          "file": "app.spec.ts",
+          "line": 113,
+          "column": 1
+        },
+        {
+          "title": "guest creation handles cancel, Escape, focus return, adding and removing",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 1,
+                  "status": "timedOut",
+                  "duration": 30121,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 13,
+                        "line": 151
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Add a demo guest' })\u001b[22m\n\n\n  149 |   await page.goto(\"/#table\");\n  150 |   const add = page.getByRole(\"button\", { name: \"Add a demo guest\" });\n> 151 |   await add.click();\n      |             ^\n  152 |   await expect(page.getByLabel(\"Guest’s name\")).toBeFocused();\n  153 |   await page.getByLabel(\"Guest’s name\").fill(\"Unsent guest\");\n  154 |   await page.getByRole(\"button\", { name: \"Cancel\", exact: true }).click();\n    at /workspace/sites/common-table/tests/app.spec.ts:151:13"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:35:50.856Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-guest-creation-handles-5b024--return-adding-and-removing/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-guest-creation-handles-5b024--return-adding-and-removing/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-guest-creation-handles-5b024--return-adding-and-removing/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-52f4d41e9d1541abc307",
+          "file": "app.spec.ts",
+          "line": 146,
+          "column": 1
+        },
+        {
+          "title": "all dietary restrictions and the lowest budget are respected in candidate retrieval",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 30121,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 72,
+                        "line": 183
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Gluten-free', exact: true })\u001b[22m\n\n\n  181 | }) => {\n  182 |   await page.goto(\"/#table\");\n> 183 |   await page.getByRole(\"button\", { name: \"Gluten-free\", exact: true }).click();\n      |                                                                        ^\n  184 |   await page.getByRole(\"button\", { name: \"Add a demo guest\" }).click();\n  185 |   await page.getByLabel(\"Guest’s name\").fill(\"Maya\");\n  186 |   await page.getByRole(\"button\", { name: \"Set their place\" }).click();\n    at /workspace/sites/common-table/tests/app.spec.ts:183:72"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:35:57.220Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-all-dietary-restrictio-4fb7d-cted-in-candidate-retrieval/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-all-dietary-restrictio-4fb7d-cted-in-candidate-retrieval/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-all-dietary-restrictio-4fb7d-cted-in-candidate-retrieval/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-984e519309e5b37a8e8b",
+          "file": "app.spec.ts",
+          "line": 179,
+          "column": 1
+        },
+        {
+          "title": "save, edit, reload, save again and download produce the revised dinner plan",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 1,
+                  "status": "timedOut",
+                  "duration": 30109,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 8,
+                        "line": 31
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n\n  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at choosePlan (/workspace/sites/common-table/tests/app.spec.ts:41:3)\n    at /workspace/sites/common-table/tests/app.spec.ts:218:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:36:21.810Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-save-edit-reload-save--c506f-uce-the-revised-dinner-plan/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-save-edit-reload-save--c506f-uce-the-revised-dinner-plan/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-save-edit-reload-save--c506f-uce-the-revised-dinner-plan/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-57e6eed5175288fcfcb8",
+          "file": "app.spec.ts",
+          "line": 215,
+          "column": 1
+        },
+        {
+          "title": "invalid schedule cannot be saved and corrupted legacy browser storage recovers safely",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 30119,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 8,
+                        "line": 31
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n\n  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at choosePlan (/workspace/sites/common-table/tests/app.spec.ts:41:3)\n    at /workspace/sites/common-table/tests/app.spec.ts:271:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:36:28.142Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-invalid-schedule-canno-3cd81-ser-storage-recovers-safely/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-invalid-schedule-canno-3cd81-ser-storage-recovers-safely/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-invalid-schedule-canno-3cd81-ser-storage-recovers-safely/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-1c04c94baa18cdb12f08",
+          "file": "app.spec.ts",
+          "line": 265,
+          "column": 1
+        },
+        {
+          "title": "denied IndexedDB keeps a temporary usable plan without claiming persistence",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 1,
+                  "status": "timedOut",
+                  "duration": 30098,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 8,
+                        "line": 31
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n\n  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at choosePlan (/workspace/sites/common-table/tests/app.spec.ts:41:3)\n    at /workspace/sites/common-table/tests/app.spec.ts:305:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:36:52.759Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-denied-IndexedDB-keeps-1f599-ithout-claiming-persistence/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-denied-IndexedDB-keeps-1f599-ithout-claiming-persistence/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-denied-IndexedDB-keeps-1f599-ithout-claiming-persistence/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-54fdd180c99fc309a8a0",
+          "file": "app.spec.ts",
+          "line": 285,
+          "column": 1
+        },
+        {
+          "title": "a valid legacy plan migrates once into IndexedDB and survives reload without the old key",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 8,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5509,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveValue\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('A note for the evening')\nExpected: \u001b[32m\"A migrated local dinner.\"\u001b[39m\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveValue\" getByLabel('A note for the evening') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('A note for the evening')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveValue\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('A note for the evening')\nExpected: \u001b[32m\"A migrated local dinner.\"\u001b[39m\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveValue\" getByLabel('A note for the evening') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('A note for the evening')\u001b[22m\n\n    at /workspace/sites/common-table/tests/app.spec.ts:343:28",
+                    "location": {
+                      "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                      "column": 28,
+                      "line": 343
+                    },
+                    "snippet": "  341 |   });\n  342 |   await page.goto(\"/#plan\");\n> 343 |   await expect(note(page)).toHaveValue(\"A migrated local dinner.\");\n      |                            ^\n  344 |   await expect(\n  345 |     page.getByRole(\"button\", { name: \"Saved for a good evening\", exact: true }),\n  346 |   ).toBeVisible();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 28,
+                        "line": 343
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveValue\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('A note for the evening')\nExpected: \u001b[32m\"A migrated local dinner.\"\u001b[39m\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveValue\" getByLabel('A note for the evening') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('A note for the evening')\u001b[22m\n\n\n  341 |   });\n  342 |   await page.goto(\"/#plan\");\n> 343 |   await expect(note(page)).toHaveValue(\"A migrated local dinner.\");\n      |                            ^\n  344 |   await expect(\n  345 |     page.getByRole(\"button\", { name: \"Saved for a good evening\", exact: true }),\n  346 |   ).toBeVisible();\n    at /workspace/sites/common-table/tests/app.spec.ts:343:28"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:36:59.007Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-a-valid-legacy-plan-mi-1b528--reload-without-the-old-key/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-a-valid-legacy-plan-mi-1b528--reload-without-the-old-key/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-a-valid-legacy-plan-mi-1b528--reload-without-the-old-key/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                    "column": 28,
+                    "line": 343
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-3cb22535e93b1c817c18",
+          "file": "app.spec.ts",
+          "line": 323,
+          "column": 1
+        },
+        {
+          "title": "quota failure retains the last committed device plan and labels later edits as session-only",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 9,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 30087,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 8,
+                        "line": 31
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n\n  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at choosePlan (/workspace/sites/common-table/tests/app.spec.ts:41:3)\n    at /workspace/sites/common-table/tests/app.spec.ts:371:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:37:05.313Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-quota-failure-retains--2f0dc-later-edits-as-session-only/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-quota-failure-retains--2f0dc-later-edits-as-session-only/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-quota-failure-retains--2f0dc-later-edits-as-session-only/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-24ca29df85794b0ccfdc",
+          "file": "app.spec.ts",
+          "line": 368,
+          "column": 1
+        },
+        {
+          "title": "a failed hydration read cannot overwrite an existing device plan with an empty fallback",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 10,
+                  "parallelIndex": 1,
+                  "status": "timedOut",
+                  "duration": 30086,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 8,
+                        "line": 31
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n\n  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at choosePlan (/workspace/sites/common-table/tests/app.spec.ts:41:3)\n    at /workspace/sites/common-table/tests/app.spec.ts:418:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:37:23.607Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-a-failed-hydration-rea-4d619-plan-with-an-empty-fallback/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-a-failed-hydration-rea-4d619-plan-with-an-empty-fallback/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-a-failed-hydration-rea-4d619-plan-with-an-empty-fallback/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-ec6e9507a5b7870b5dc5",
+          "file": "app.spec.ts",
+          "line": 414,
+          "column": 1
+        },
+        {
+          "title": "keyboard dialog focus is contained; Escape and Waiter close return focus without actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 11,
+                  "parallelIndex": 0,
+                  "status": "interrupted",
+                  "duration": 20977,
+                  "error": {
+                    "message": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'About your evening' })\u001b[22m\n",
+                    "stack": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'About your evening' })\u001b[22m\n\n    at /workspace/sites/common-table/tests/app.spec.ts:488:15",
+                    "location": {
+                      "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                      "column": 15,
+                      "line": 488
+                    },
+                    "snippet": "  486 |   await page.goto(\"/#explore\");\n  487 |   const about = page.getByRole(\"button\", { name: \"About your evening\" });\n> 488 |   await about.click();\n      |               ^\n  489 |   await expect(page.getByRole(\"dialog\")).toBeVisible();\n  490 |   for (let i = 0; i < 4; i++) {\n  491 |     await page.keyboard.press(\"Tab\");"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 15,
+                        "line": 488
+                      },
+                      "message": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'About your evening' })\u001b[22m\n\n\n  486 |   await page.goto(\"/#explore\");\n  487 |   const about = page.getByRole(\"button\", { name: \"About your evening\" });\n> 488 |   await about.click();\n      |               ^\n  489 |   await expect(page.getByRole(\"dialog\")).toBeVisible();\n  490 |   for (let i = 0; i < 4; i++) {\n  491 |     await page.keyboard.press(\"Tab\");\n    at /workspace/sites/common-table/tests/app.spec.ts:488:15"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:37:36.151Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-keyboard-dialog-focus--df1bc-eturn-focus-without-actions/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-keyboard-dialog-focus--df1bc-eturn-focus-without-actions/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-keyboard-dialog-focus--df1bc-eturn-focus-without-actions/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                    "column": 15,
+                    "line": 488
+                  }
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-e42dbc55791b731526b4",
+          "file": "app.spec.ts",
+          "line": 483,
+          "column": 1
+        },
+        {
+          "title": "mobile pages support keyboard switching, no horizontal overflow and motion fallbacks",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 12,
+                  "parallelIndex": 1,
+                  "status": "failed",
+                  "duration": 385,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4175/#explore\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4175/#explore\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4175/#explore\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4175/#explore\", waiting until \"load\"\u001b[22m\n\n    at /workspace/sites/common-table/tests/app.spec.ts:528:14",
+                    "location": {
+                      "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                      "column": 14,
+                      "line": 528
+                    },
+                    "snippet": "  526 |   await page.setViewportSize({ width: 390, height: 844 });\n  527 |   await page.emulateMedia({ reducedMotion: \"reduce\" });\n> 528 |   await page.goto(\"/#explore\");\n      |              ^\n  529 |   await openMenu(page);\n  530 |   await expect(page.getByRole(\"tab\", { name: \"The menu\" })).toHaveAttribute(\n  531 |     \"aria-selected\","
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 14,
+                        "line": 528
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4175/#explore\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4175/#explore\", waiting until \"load\"\u001b[22m\n\n\n  526 |   await page.setViewportSize({ width: 390, height: 844 });\n  527 |   await page.emulateMedia({ reducedMotion: \"reduce\" });\n> 528 |   await page.goto(\"/#explore\");\n      |              ^\n  529 |   await openMenu(page);\n  530 |   await expect(page.getByRole(\"tab\", { name: \"The menu\" })).toHaveAttribute(\n  531 |     \"aria-selected\",\n    at /workspace/sites/common-table/tests/app.spec.ts:528:14"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:37:54.393Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-mobile-pages-support-k-c70af-erflow-and-motion-fallbacks/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-mobile-pages-support-k-c70af-erflow-and-motion-fallbacks/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-mobile-pages-support-k-c70af-erflow-and-motion-fallbacks/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                    "column": 14,
+                    "line": 528
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-fac17d825ebe4286fffb",
+          "file": "app.spec.ts",
+          "line": 523,
+          "column": 1
+        },
+        {
+          "title": "WCAG A/AA automated scan: desktop explore",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 13,
+                  "parallelIndex": 1,
+                  "status": "failed",
+                  "duration": 461,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4175/#explore\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4175/#explore\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4175/#explore\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4175/#explore\", waiting until \"load\"\u001b[22m\n\n    at /workspace/sites/common-table/tests/app.spec.ts:586:20",
+                    "location": {
+                      "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                      "column": 20,
+                      "line": 586
+                    },
+                    "snippet": "  584 |       if (view === \"plan\") await choosePlan(page);\n  585 |       else {\n> 586 |         await page.goto(`/#${view === \"menu\" ? \"explore\" : view}`);\n      |                    ^\n  587 |         if (view === \"menu\") await openMenu(page);\n  588 |       }\n  589 |       await expect(page.locator(\".app.cinematic\")).toBeVisible();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 20,
+                        "line": 586
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4175/#explore\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4175/#explore\", waiting until \"load\"\u001b[22m\n\n\n  584 |       if (view === \"plan\") await choosePlan(page);\n  585 |       else {\n> 586 |         await page.goto(`/#${view === \"menu\" ? \"explore\" : view}`);\n      |                    ^\n  587 |         if (view === \"menu\") await openMenu(page);\n  588 |       }\n  589 |       await expect(page.locator(\".app.cinematic\")).toBeVisible();\n    at /workspace/sites/common-table/tests/app.spec.ts:586:20"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:37:55.522Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-WCAG-A-AA-automated-scan-desktop-explore/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-WCAG-A-AA-automated-scan-desktop-explore/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                    "column": 20,
+                    "line": 586
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-1c4d6f701d82199127a6",
+          "file": "app.spec.ts",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "title": "WCAG A/AA automated scan: desktop menu",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 14,
+                  "parallelIndex": 1,
+                  "status": "interrupted",
+                  "duration": 503,
+                  "error": {
+                    "message": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n",
+                    "stack": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at /workspace/sites/common-table/tests/app.spec.ts:587:30",
+                    "location": {
+                      "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                      "column": 8,
+                      "line": 31
+                    },
+                    "snippet": "  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                        "column": 8,
+                        "line": 31
+                      },
+                      "message": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Open (the )?menu$/ })\u001b[22m\n\n\n  29 |     await page\n  30 |       .getByRole(\"button\", { name: /^Open (the )?menu$/, exact: true })\n> 31 |       .click();\n     |        ^\n  32 |   }\n  33 |   await expect(page.locator(\".menu-book\")).toBeVisible();\n  34 | }\n    at openMenu (/workspace/sites/common-table/tests/app.spec.ts:31:8)\n    at /workspace/sites/common-table/tests/app.spec.ts:587:30"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-02T04:37:56.795Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/common-table-osm-complete/app-WCAG-A-AA-automated-scan-desktop-menu/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/common-table-osm-complete/app-WCAG-A-AA-automated-scan-desktop-menu/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/common-table-osm-complete/app-WCAG-A-AA-automated-scan-desktop-menu/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/sites/common-table/tests/app.spec.ts",
+                    "column": 8,
+                    "line": 31
+                  }
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-1c5728fb640ec614d14b",
+          "file": "app.spec.ts",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "title": "WCAG A/AA automated scan: desktop table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-9fd2d5b8b11f707b29de",
+          "file": "app.spec.ts",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "title": "WCAG A/AA automated scan: desktop plan",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-509afe49979705c3b45b",
+          "file": "app.spec.ts",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "title": "WCAG A/AA automated scan: mobile explore",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-09aa1f36090cb49c5e29",
+          "file": "app.spec.ts",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "title": "WCAG A/AA automated scan: mobile menu",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-869c401e3818da2d807a",
+          "file": "app.spec.ts",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "title": "WCAG A/AA automated scan: mobile table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-9a57240540fe18a70138",
+          "file": "app.spec.ts",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "title": "WCAG A/AA automated scan: mobile plan",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c31ff144dc4fee3acd0a-5abc187f47beb54d4ece",
+          "file": "app.spec.ts",
+          "line": 580,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "cinematic.spec.ts",
+      "file": "cinematic.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "saving persists immediately while the physical cycle remains finite and ignores repeated busy-lever presses",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-f38011d89d99f0b497f6",
+          "file": "cinematic.spec.ts",
+          "line": 270,
+          "column": 1
+        },
+        {
+          "title": "reprinting changes the physical impression without rewriting the saved plan or starting an export",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-7d57b3a038b2c90dc3be",
+          "file": "cinematic.spec.ts",
+          "line": 321,
+          "column": 1
+        },
+        {
+          "title": "editing during a press cancels stale paper and approvals, and a later cycle prints the revised draft",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-ca9d61709a1ebf259444",
+          "file": "cinematic.spec.ts",
+          "line": 348,
+          "column": 1
+        },
+        {
+          "title": "leaving a running press tears down its presentation and cannot revive an invalidated plan on return",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-4a7619ced6e41cf481e7",
+          "file": "cinematic.spec.ts",
+          "line": 383,
+          "column": 1
+        },
+        {
+          "title": "the physical lever supports keyboard operation and retained focus through save and reprint",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-fbc26072042783df7cfe",
+          "file": "cinematic.spec.ts",
+          "line": 407,
+          "column": 1
+        },
+        {
+          "title": "reduced motion keeps folio and press functional with immediate, static presentation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-2a70c5f531d3e6d462b8",
+          "file": "cinematic.spec.ts",
+          "line": 447,
+          "column": 3
+        },
+        {
+          "title": "low power keeps folio and press functional with immediate, static presentation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-567214071bf9c40e1edf",
+          "file": "cinematic.spec.ts",
+          "line": 447,
+          "column": 3
+        },
+        {
+          "title": "folio cover and folded page corner retain venue continuity and cancel active motion on navigation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-46aa3053c32f3d7096a6",
+          "file": "cinematic.spec.ts",
+          "line": 552,
+          "column": 1
+        },
+        {
+          "title": "fine-pointer folio lighting responds to motion, resets on leave and leaves the main action unobstructed",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-476ea55b6ab9ff31fece",
+          "file": "cinematic.spec.ts",
+          "line": 628,
+          "column": 1
+        },
+        {
+          "title": "interaction sound creates no audio context before opt-in and switching it off stops subsequent cues",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-0db4c1fe0dc4833c3b1f",
+          "file": "cinematic.spec.ts",
+          "line": 690,
+          "column": 1
+        },
+        {
+          "title": "map look-around is finite, stops on command, and Escape cancels it before folding the atlas",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-93e043bb5d6e8af5c911",
+          "file": "cinematic.spec.ts",
+          "line": 783,
+          "column": 1
+        },
+        {
+          "title": "physical folio and printed ticket remain usable without horizontal overflow at 320px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-082017cc8b6947c44642",
+          "file": "cinematic.spec.ts",
+          "line": 835,
+          "column": 3
+        },
+        {
+          "title": "physical folio and printed ticket remain usable without horizontal overflow at 390px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-bf2486edc86f2d14401f",
+          "file": "cinematic.spec.ts",
+          "line": 835,
+          "column": 3
+        },
+        {
+          "title": "the motor feeds a rigid current ticket through several distinct dwell positions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-0709520216005537ccda",
+          "file": "cinematic.spec.ts",
+          "line": 907,
+          "column": 1
+        },
+        {
+          "title": "keyboard tear keeps focus, is repeat-safe, and never saves or exports a second time",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-3077e97abf8b00720bed",
+          "file": "cinematic.spec.ts",
+          "line": 984,
+          "column": 1
+        },
+        {
+          "title": "short pulls, Escape and native touch cancellation leave the ticket attached and allow a later deliberate tear",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-5305212da19c2af8bad0",
+          "file": "cinematic.spec.ts",
+          "line": 1019,
+          "column": 1
+        },
+        {
+          "title": "a full pull detaches the same ticket clear of the console and reprint reattaches without another domain write",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-d174f316507b09140ce6",
+          "file": "cinematic.spec.ts",
+          "line": 1080,
+          "column": 1
+        },
+        {
+          "title": "editing during an unfinished pull cancels the old gesture and leaves one live current proof",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-f265eea8218509614aa9",
+          "file": "cinematic.spec.ts",
+          "line": 1139,
+          "column": 1
+        },
+        {
+          "title": "navigation during a captured pull releases the old gesture and returns to an attached saved plan",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-450bd67583a31dadb898",
+          "file": "cinematic.spec.ts",
+          "line": 1181,
+          "column": 1
+        },
+        {
+          "title": "tapping actual mobile seats reveals the single existing taste editor for the selected person",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-cebf413f465ed507ec65",
+          "file": "cinematic.spec.ts",
+          "line": 1199,
+          "column": 1
+        },
+        {
+          "title": "a closed folio keeps its paper inaccessible after resize and a window blur event, then reopens to one live menu",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-4d5a1fbb21e5b5e50caa",
+          "file": "cinematic.spec.ts",
+          "line": 1242,
+          "column": 1
+        },
+        {
+          "title": "a real paper pull returns when short, cancels on Escape, and turns forward and back into the same dinner plan",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-b23fdbd6bc9827354e31",
+          "file": "cinematic.spec.ts",
+          "line": 1275,
+          "column": 1
+        },
+        {
+          "title": "queued native page turns settle once per action and engine motion stops on Escape, navigation and low power",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-4ec2d0ad43729a9bc11f",
+          "file": "cinematic.spec.ts",
+          "line": 1346,
+          "column": 1
+        },
+        {
+          "title": "touch paper curls return, turn in both directions, and cancel without exposing duplicate actions on mobile",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-17188873204f5b6a196c",
+          "file": "cinematic.spec.ts",
+          "line": 1462,
+          "column": 1
+        },
+        {
+          "title": "projected table keeps 1 native place cards individually usable at 1440px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-d2368433406b4d93e8ca",
+          "file": "cinematic.spec.ts",
+          "line": 1557,
+          "column": 5
+        },
+        {
+          "title": "projected table keeps 3 native place cards individually usable at 1440px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-543e5e331d46fe26684c",
+          "file": "cinematic.spec.ts",
+          "line": 1557,
+          "column": 5
+        },
+        {
+          "title": "projected table keeps 6 native place cards individually usable at 1440px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-89894d1b1d764a6edb43",
+          "file": "cinematic.spec.ts",
+          "line": 1557,
+          "column": 5
+        },
+        {
+          "title": "projected table keeps 1 native place cards individually usable at 390px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-5c343b13ff4e8953ebe3",
+          "file": "cinematic.spec.ts",
+          "line": 1557,
+          "column": 5
+        },
+        {
+          "title": "projected table keeps 3 native place cards individually usable at 390px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-ca1c94a0129ca4f58b03",
+          "file": "cinematic.spec.ts",
+          "line": 1557,
+          "column": 5
+        },
+        {
+          "title": "projected table keeps 6 native place cards individually usable at 390px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b496d51900683cab0ab4-482ecc875fa6a8a006d3",
+          "file": "cinematic.spec.ts",
+          "line": 1557,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "immersive.spec.ts",
+      "file": "immersive.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "map distinguishes a background tap, a drag and a photo-pin selection; keyboard Home resets",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-39d9d0a89e18aa1bd628",
+          "file": "immersive.spec.ts",
+          "line": 75,
+          "column": 1
+        },
+        {
+          "title": "camera zoom clamps, pan controls and compass reset work repeatedly; lighting and depth change the scene",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-1c6d6b4f2264ee7913a0",
+          "file": "immersive.spec.ts",
+          "line": 108,
+          "column": 1
+        },
+        {
+          "title": "restaurant index is a keyboard equivalent and rapid book/map changes retain the selected venue",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-e8d73dc9ccd1051ec5d0",
+          "file": "immersive.spec.ts",
+          "line": 187,
+          "column": 1
+        },
+        {
+          "title": "mobile keyboard pin focus moves the camera without scrolling the clipped canvas",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-f14bd34013bba3ab3ceb",
+          "file": "immersive.spec.ts",
+          "line": 228,
+          "column": 1
+        },
+        {
+          "title": "group limits filter map pins and index, and The Waiter explains the actual group budget and needs",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-a3b17f98f2ed52131d0a",
+          "file": "immersive.spec.ts",
+          "line": 273,
+          "column": 1
+        },
+        {
+          "title": "reduced-motion and low-power map views are flat, stable and still usable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-5737946ab62a22ec8633",
+          "file": "immersive.spec.ts",
+          "line": 331,
+          "column": 1
+        },
+        {
+          "title": "mobile postcard bookmark has an unobstructed hit target when revealed and after page-bottom scrolling",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-47af9ca6611dc8727cf4",
+          "file": "immersive.spec.ts",
+          "line": 375,
+          "column": 1
+        },
+        {
+          "title": "Waiter alternatives cycle through eligible venues, preserve a chosen plan and actually update the shortlist",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-32536a13819e4625a0ca",
+          "file": "immersive.spec.ts",
+          "line": 420,
+          "column": 1
+        },
+        {
+          "title": "Waiter accepts useful typed requests and honestly handles unsupported services without sending or replacing a plan",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-6b4f37163c06bcd49369",
+          "file": "immersive.spec.ts",
+          "line": 484,
+          "column": 1
+        },
+        {
+          "title": "Waiter is a real modal with native keyboard focus, Escape return and an explicit finish-plan action",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-093f0e3b05b1550a1915",
+          "file": "immersive.spec.ts",
+          "line": 527,
+          "column": 1
+        },
+        {
+          "title": "WCAG A/AA automated scan: desktop Waiter modal and fit details",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-3a00f28a2e45b6417a58",
+          "file": "immersive.spec.ts",
+          "line": 570,
+          "column": 3
+        },
+        {
+          "title": "WCAG A/AA automated scan: mobile Waiter modal and fit details",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "30afde42ea2f96b2b15f-08af77c15f617ce18bc9",
+          "file": "immersive.spec.ts",
+          "line": 570,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "location.spec.ts",
+      "file": "location.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real geography loads without device permission when weather is unavailable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-27032452e47a716d0d85",
+          "file": "location.spec.ts",
+          "line": 309,
+          "column": 1
+        },
+        {
+          "title": "device location is used only after the explicit button and updates the actual map coordinates",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-54cb0dba0d3cf0d5acab",
+          "file": "location.spec.ts",
+          "line": 331,
+          "column": 1
+        },
+        {
+          "title": "denied device permission keeps the map usable and city search remains available",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-91ea20b988c2ab972f9a",
+          "file": "location.spec.ts",
+          "line": 363,
+          "column": 1
+        },
+        {
+          "title": "the standard geographic map actually pans by keyboard and recenters the chosen area without requesting location",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-ededf095761dc053ac3f",
+          "file": "location.spec.ts",
+          "line": 393,
+          "column": 1
+        },
+        {
+          "title": "cancelling a location request prevents a late GPS response from replacing a chosen city",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-cbdc2548c8d9172c5b4b",
+          "file": "location.spec.ts",
+          "line": 424,
+          "column": 1
+        },
+        {
+          "title": "city search handles empty results, repeated submissions, network errors and timeout recovery",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-b6518b27f5a96046c1de",
+          "file": "location.spec.ts",
+          "line": 463,
+          "column": 1
+        },
+        {
+          "title": "newer city searches and clear/cancel cannot be overwritten by late search responses",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-926ec884345ad46cfd9f",
+          "file": "location.spec.ts",
+          "line": 526,
+          "column": 1
+        },
+        {
+          "title": "real city geography never relocates fictional restaurants, and the authored dinner demo remains separate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-ec85dc47ca2925479366",
+          "file": "location.spec.ts",
+          "line": 607,
+          "column": 1
+        },
+        {
+          "title": "the real vector renderer can load a local minimal style fixture without external map requests",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-9ed1981e7d2b42c230ce",
+          "file": "location.spec.ts",
+          "line": 644,
+          "column": 1
+        },
+        {
+          "title": "rendered named map places can be selected while fictional dinner venues stay separate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-090d1a6f047c0ca002be",
+          "file": "location.spec.ts",
+          "line": 680,
+          "column": 1
+        },
+        {
+          "title": "area lenses filter actual rendered place categories and parking never becomes an outdoors suggestion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-97f9560514f216ed0491",
+          "file": "location.spec.ts",
+          "line": 698,
+          "column": 1
+        },
+        {
+          "title": "mapped place notes support repeated keep and unkeep, close focus, and revisiting after a city and demo detour",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-f986fc2609fe7e5bd6fc",
+          "file": "location.spec.ts",
+          "line": 762,
+          "column": 1
+        },
+        {
+          "title": "changing to Paris discovers a localized mapped name and selecting it cancels a late GPS result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-bdeeb350a45b339fa58b",
+          "file": "location.spec.ts",
+          "line": 878,
+          "column": 1
+        },
+        {
+          "title": "area atmosphere and unfolded view respond to repeated controls and Escape preserves search focus before folding",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-0f16ff0fc1a63f1ef4ef",
+          "file": "location.spec.ts",
+          "line": 926,
+          "column": 1
+        },
+        {
+          "title": "The Waiter follows the same real mapped place and shares its keep state without touching the demo shortlist",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-e5e8043a860f561e2eae",
+          "file": "location.spec.ts",
+          "line": 957,
+          "column": 1
+        },
+        {
+          "title": "mobile mapped-place selection reveals a useful peek and Read notes transfers keyboard focus to that place",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-ee9df02394eb534b882a",
+          "file": "location.spec.ts",
+          "line": 1024,
+          "column": 1
+        },
+        {
+          "title": "WCAG A/AA automated scan: desktop real location controls and attribution",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-cf48183c9a96b20247ad",
+          "file": "location.spec.ts",
+          "line": 1065,
+          "column": 3
+        },
+        {
+          "title": "WCAG A/AA automated scan: mobile real location controls and attribution",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-91955bedf9a1a69d8d85",
+          "file": "location.spec.ts",
+          "line": 1065,
+          "column": 3
+        },
+        {
+          "title": "a restaurant response enters the map, book and saved plan without inventing missing facts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-4645c13b71c535addbc4",
+          "file": "location.spec.ts",
+          "line": 1092,
+          "column": 1
+        },
+        {
+          "title": "a historical saved restaurant remains a private saved plan and is excluded from new discovery seeds",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-f5367497e2e496cd769f",
+          "file": "location.spec.ts",
+          "line": 1277,
+          "column": 1
+        },
+        {
+          "title": "an archived choice cannot replace a saved plan and real group tips never guarantee budget or dietary fit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-9776263b4b200386b0fc",
+          "file": "location.spec.ts",
+          "line": 1405,
+          "column": 1
+        },
+        {
+          "title": "weather separates current conditions from dinner and cancels a stale-area refresh",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-bcf8d0be37646f4b09c7",
+          "file": "location.spec.ts",
+          "line": 1550,
+          "column": 3
+        },
+        {
+          "title": "unknown weather values stay absent through stale, cancel and area changes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab8a465736113eb11d5a-ab3c9819786b65c57203",
+          "file": "location.spec.ts",
+          "line": 1550,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "waiter-claude.spec.ts",
+      "file": "waiter-claude.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "the actual anonymous service is honest, sends no paid request and leaves local planning useful",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-ccc89ffeee331ed68354",
+          "file": "waiter-claude.spec.ts",
+          "line": 111,
+          "column": 1
+        },
+        {
+          "title": "repeated Enter sends one pending request, Cancel restores input focus, and a later explicit request works",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-6823512bd706c67bfa28",
+          "file": "waiter-claude.spec.ts",
+          "line": 165,
+          "column": 1
+        },
+        {
+          "title": "course and venue changes clear old answers and discard a pending answer for the previous venue",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-14ad94a104e4822d1f65",
+          "file": "waiter-claude.spec.ts",
+          "line": 214,
+          "column": 1
+        },
+        {
+          "title": "closing cancels the request, restores the opener and sends fresh aggregate context after editing the table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-8bbb9682b52b519301f1",
+          "file": "waiter-claude.spec.ts",
+          "line": 253,
+          "column": 1
+        },
+        {
+          "title": "reply text stays literal, failed/mislabeled responses are sanitized, and errors never auto-resubmit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-cc4ace8daad854f088ee",
+          "file": "waiter-claude.spec.ts",
+          "line": 309,
+          "column": 1
+        },
+        {
+          "title": "disabled thoughtful guidance cannot submit and local guidance remains useful",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-7939692205239cfbc996",
+          "file": "waiter-claude.spec.ts",
+          "line": 362,
+          "column": 1
+        },
+        {
+          "title": "anonymous guidance offers a safe top-level sign-in link without enabling a paid request",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-1b2e2407c027a6a4d592",
+          "file": "waiter-claude.spec.ts",
+          "line": 386,
+          "column": 1
+        },
+        {
+          "title": "an authorized fixture enables once explicitly, refreshes availability and never requests an automatic top-up",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-3324257f2888b48b3768",
+          "file": "waiter-claude.spec.ts",
+          "line": 414,
+          "column": 1
+        },
+        {
+          "title": "live guidance fixture meets WCAG AA and has a reachable exit on desktop",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-2773d9751bb00980bb9f",
+          "file": "waiter-claude.spec.ts",
+          "line": 472,
+          "column": 3
+        },
+        {
+          "title": "live guidance fixture meets WCAG AA and has a reachable exit on mobile",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "36be263885161608933d-025fa612c5cf05805f6f",
+          "file": "waiter-claude.spec.ts",
+          "line": 472,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-02T04:35:19.286Z",
+    "duration": 158381.411,
+    "expected": 0,
+    "skipped": 83,
+    "unexpected": 13,
+    "flaky": 0
+  }
+}

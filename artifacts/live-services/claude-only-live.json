@@ -1,0 +1,218 @@
+{
+  "checkedAt": "2026-11-02T04:56:16.416Z",
+  "site": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "version": 18,
+  "sourceCommit": "bae4438b77050530a38a6545802b2a2d1de7bed0",
+  "deployment": {
+    "id": "appgdep_6ae8179706b48191b99b8824512fd814",
+    "project_id": "appgprj_6ae3844c39308191844738fe4334ad14",
+    "title": "Common Table — Interactive Dining Demo",
+    "version_id": "appgprj_6ae3844c39308191844738fe4334ad14~appgver_2fae309fcf7881918f506776e4295cb8",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6ae3844c39308191844738fe4334ad14",
+    "failure_message": null,
+    "env_set_revision": 7,
+    "updated_at": "2026-11-02T04:54:59.846403+00:00"
+  },
+  "serverSecrets": {
+    "modelKeyMasked": true,
+    "removedRecommendationProviderKey": true,
+    "temporaryVerificationCapability": "disabled",
+    "oldCapabilityHttpStatus": 404,
+    "anonymousVerificationHttpStatus": 404
+  },
+  "freeAuthenticationChecks": {
+    "organizationHttpStatus": 200,
+    "authorizedOrganization": true,
+    "modelHttpStatus": 200,
+    "requestedModelAvailable": true,
+    "paidGenerations": 0
+  },
+  "liveChecks": {
+    "initialSampleWaiter": {
+      "version": 16,
+      "operation": "waiter",
+      "httpStatus": 200,
+      "source": "live",
+      "text": "Juniper & Rye is a fictional sample, so its Italian-seasonal profile and illustrative $48 per person price are placeholders. They fit your reported Italian and Seasonal tastes and sit under your $65 minimum budget, but a sample can't confirm real costs, menus, or availability.\n\nOne useful next step: refresh discovery to see real restaurant candidates that match Italian and Seasonal. Then compare those, and once you pick one, use the app's explicit plan controls to save it. Keep in mind a saved plan is not a confirmed reservation, so you'd still need to contact the restaurant directly for availability and any dietary questions."
+    },
+    "realVenueWaiter": {
+      "version": 17,
+      "coldCache": true,
+      "operation": "waiter",
+      "httpStatus": 200,
+      "source": "live",
+      "text": "Here is what the supplied record supports for Hungry Ghost: it is a real restaurant from the catalog, listed as a coffee shop. Beyond that, nothing is verified. I have no confirmed exact cost, menu, hours, walking time, reservation availability, or allergy safety, and the price level is blank, so I can't say whether it fits your $65 minimum budget. Your saved tastes are Italian and Seasonal, and a coffee shop listing doesn't tell me whether either applies. I also can't say whether it works for a dinner at all.\n\nBefore choosing it, confirm directly with the restaurant:\n1. Whether it serves dinner, its hours, and whether it takes reservations for your date.\n2. What the menu looks like, whether it matches Italian or seasonal, and what a meal costs per person.\n\nIf you'd rather compare options that fit Italian and seasonal, refresh discovery. Your dinner plan isn't saved yet, and saving one wouldn't be a reservation either way."
+    },
+    "ranking": {
+      "version": 18,
+      "operation": "recommendations",
+      "httpStatus": 200,
+      "source": "osm",
+      "venueCount": 8,
+      "orderedIds": [
+        "osm:node:9528668470",
+        "osm:node:4871640124",
+        "osm:node:5768346318",
+        "osm:node:6465763264",
+        "osm:node:12480632412",
+        "osm:node:6391739434",
+        "osm:node:5866582854",
+        "osm:way:248156367"
+      ],
+      "venues": [
+        {
+          "id": "osm:node:9528668470",
+          "name": "Lele's Roman",
+          "latitude": 40.6878617,
+          "longitude": -73.9835994,
+          "priceKnown": false,
+          "menuItems": 0
+        },
+        {
+          "id": "osm:node:4871640124",
+          "name": "Bacchus",
+          "latitude": 40.6869246,
+          "longitude": -73.9843598,
+          "priceKnown": false,
+          "menuItems": 0
+        },
+        {
+          "id": "osm:node:5768346318",
+          "name": "Café Paulette",
+          "latitude": 40.6896146,
+          "longitude": -73.9758873,
+          "priceKnown": false,
+          "menuItems": 0
+        },
+        {
+          "id": "osm:node:6465763264",
+          "name": "Atti",
+          "latitude": 40.688351,
+          "longitude": -73.9828201,
+          "priceKnown": false,
+          "menuItems": 0
+        },
+        {
+          "id": "osm:node:12480632412",
+          "name": "Fogo de Chão",
+          "latitude": 40.6914216,
+          "longitude": -73.9828851,
+          "priceKnown": false,
+          "menuItems": 0
+        },
+        {
+          "id": "osm:node:6391739434",
+          "name": "Grand Canyon Bistro",
+          "latitude": 40.6875403,
+          "longitude": -73.9827409,
+          "priceKnown": false,
+          "menuItems": 0
+        },
+        {
+          "id": "osm:node:5866582854",
+          "name": "Tacombi",
+          "latitude": 40.6869924,
+          "longitude": -73.9779035,
+          "priceKnown": false,
+          "menuItems": 0
+        },
+        {
+          "id": "osm:way:248156367",
+          "name": "Junior's",
+          "latitude": 40.6901455,
+          "longitude": -73.9819887,
+          "priceKnown": false,
+          "menuItems": 0
+        }
+      ]
+    },
+    "weather": {
+      "version": 16,
+      "check": "real-production-weather",
+      "httpStatus": 200,
+      "keys": [
+        "status",
+        "area",
+        "requested",
+        "timezone",
+        "utcOffsetSeconds",
+        "fetchedAt",
+        "freshUntil",
+        "staleUntil",
+        "stale",
+        "current",
+        "dinner",
+        "dinnerStatus"
+      ],
+      "weather": {
+        "time": "2026-11-02T00:00",
+        "temperatureC": 9.8,
+        "feelsLikeC": null,
+        "precipitationMm": 0,
+        "precipitationProbability": null,
+        "windKmh": 10.1,
+        "weatherCode": 1,
+        "isDay": false
+      }
+    }
+  },
+  "earlierFailures": [
+    {
+      "version": 16,
+      "operation": "recommendations",
+      "httpStatus": 504,
+      "code": "timeout",
+      "paidReservation": false
+    },
+    {
+      "version": 17,
+      "operation": "recommendations",
+      "httpStatus": 502,
+      "code": "invalid_response",
+      "paidReservation": true,
+      "reservedCents": 5
+    }
+  ],
+  "budget": [
+    {
+      "scope": "global-test-v1",
+      "cap_cents": 500,
+      "reserved_cents": 20,
+      "attempts": 4,
+      "updated_at": 1793595150520
+    }
+  ],
+  "automatedChecks": {
+    "unit": {
+      "passed": 220,
+      "failed": 0,
+      "skipped": 0,
+      "report": "claude-only-unit-tests.txt"
+    },
+    "browser": {
+      "baseCommit": "cba326a",
+      "passed": 96,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "automatedAccessibilityScans": 26,
+      "report": "../fullapp-qa/browser-osm-complete.json"
+    },
+    "build": "passed",
+    "appAndServerTypes": "passed",
+    "targetedLint": "passed"
+  },
+  "notes": [
+    "Real production requests used a temporary fixed-operation machine capability, with no visitor impersonation or private table reads.",
+    "Claude is the sole intelligence service. Real venue records and weather remain factual external data.",
+    "The ledger records irrevocable reservations, not exact billing or available account credits. Four generation attempts reserved20 cents against the unchanged500-cent cap.",
+    "The verification capability is now disabled; both the previously valid capability and anonymous requests return404.",
+    "No invitations or reservations were sent. Real two-person production collaboration remains unverified; bookings remain explicit venue-site handoffs.",
+    "Browser checks used labelled model fixtures. Later backend-only ranking changes were tested in the220-case unit suite and a separate actual production ranking request."
+  ]
+}

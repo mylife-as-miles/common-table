@@ -1,6 +1,6 @@
 # Live Waiter service
 
-`handleGuidance(request, options)` is the Worker-safe service used by the request-scoped dispatcher. It uses only Web APIs and the supplied D1 binding; it does not import the older Node/SQLite transport. All verification tests use injected mocked fetch responses. No live provider request or account-credit check has been performed in this implementation.
+`handleGuidance(request, options)` is the Worker-safe service used by the request-scoped dispatcher. It uses only Web APIs and the supplied D1 binding; it does not import the older Node/SQLite transport. Automated tests use injected mocked fetch responses. Separately authorized production results are recorded in `artifacts/live-services/claude-only-live.json`; mocked tests make no available-credit claim.
 
 ## Secure setup
 
@@ -8,7 +8,7 @@ Enter secrets only in the site's server-side secret/environment settings:
 
 - `ANTHROPIC_API_KEY`: a valid key for the already authorized Startrz organization.
 - `APP_OWNER_EMAIL`: the exact email of the authenticated owner allowed to use the bounded test allowance.
-- `QLOO_API_KEY`: required when the question references a real discovered restaurant, so its facts can be re-resolved on the server.
+- Real restaurant facts are re-resolved from their canonical map IDs; no second recommendation-provider credential is required.
 
 Apply the generated D1 migrations through `0004` before enabling guidance. Never use browser-prefixed environment variables, paste keys into chat, write keys into source or IndexedDB, or pass secrets through the client. The authenticated wrapper supplies `identity`; request JSON and headers cannot choose an identity or owner.
 
@@ -19,7 +19,6 @@ handleGuidance(request, {
   apiKey, db,
   identity: { userId, displayName, email }, // or null
   ownerEmail,
-  qlooApiKey,
   fetcher, // optional test/server transport
 });
 ```
@@ -36,7 +35,7 @@ The fixed `global-test-v1` allowance is 500 cents, with an irrevocable five-cent
 
 Before every paid request, the service verifies the normalized organization name against `Startrz` using `GET https://api.anthropic.com/v1/organizations/me`, and verifies the exact authorized model using `GET /v1/models/claude-sonnet-5-5`. A mismatch never reaches generation or reserves paid credit. Requests use Bearer authentication and version `2026-10-21`.
 
-Generation is fixed to `claude-sonnet-5-5`, 512 output tokens, `standard_only`, `thinking:{type:'between_tools'}`, and low effort. User text plus the complete server system context is limited to 16 KiB. There are no tools. Requests use manual redirect handling with non-success rejection, a ten-second overall transport timeout, strict response parsing, and a 64 KiB response cap. Reported usage must fit the output limit and the five-cent reservation at the authorized model's configured token rates. No real billing reconciliation or available-credit claim is made by these mocked tests.
+Generation is fixed to `claude-sonnet-5-5`, 1,024 output tokens, `standard_only`, `thinking:{type:'between_tools'}`, and low effort. User text plus the complete server system context is limited to 16 KiB. Restaurant ranking may supply a server-generated JSON schema; its serialized bytes share the 16 KiB prompt limit. The model output limit leaves headroom for thinking while remaining within the original five-cent reservation at the configured rates. Token-limited output is rejected without returning partial text. There are no tools. Requests use manual redirect handling with non-success rejection, a ten-second overall transport timeout, strict response parsing, and a 64 KiB response cap. Reported usage must fit the output limit and the five-cent reservation at the authorized model's configured token rates. No real billing reconciliation or available-credit claim is made by these mocked tests.
 
 ## Context and privacy
 

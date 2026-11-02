@@ -3,7 +3,7 @@ import { GuidanceError } from './errors.ts';
 import { readBudget, initializeBudget, MAX_ATTEMPTS } from './budget.ts';
 import { generateGuidance } from './client.ts';
 import { parseGuidanceContext, buildGuidanceSystem } from './context.ts';
-export interface GuidanceOptions {apiKey?:string;db?:SharedDatabase|null;identity:{userId:string;displayName:string;email?:string}|null;ownerEmail?:string;qlooApiKey?:string;fetcher?:typeof fetch;timeoutMs?:number}
+export interface GuidanceOptions {apiKey?:string;db?:SharedDatabase|null;identity:{userId:string;displayName:string;email?:string}|null;ownerEmail?:string;fetcher?:typeof fetch;timeoutMs?:number}
 const json=(payload:unknown,status=200,headers:Record<string,string>={})=>Response.json(payload,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Cross-Origin-Resource-Policy':'same-origin',...headers}});
 const record=(v:unknown):v is Record<string,unknown>=>Boolean(v&&typeof v==='object'&&!Array.isArray(v));
 const email=(v:unknown)=>typeof v==='string'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())?v.trim().toLowerCase():'';
@@ -51,14 +51,14 @@ export async function handleGuidance(request:Request,options:GuidanceOptions):Pr
     try{
       const value=await body(request,controller.signal);
       if(isEnable){if(Object.keys(value).length)throw new GuidanceError('invalid_request',400);const state=await initializeBudget(options.db!);return json({enabled:true,mode:state.attempts<MAX_ATTEMPTS?'live':'disabled'});}
-      if(Object.keys(value).length!==2||typeof value.message!=='string'||!value.message.trim()||value.message.length>600||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value.message)||/sk-ant-[\w-]{10,}/.test(value.message)||[options.apiKey,options.qlooApiKey].some(secret=>secret&&String(value.message).includes(secret)))throw new GuidanceError('invalid_request',400);
+      if(Object.keys(value).length!==2||typeof value.message!=='string'||!value.message.trim()||value.message.length>600||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value.message)||/sk-ant-[\w-]{10,}/.test(value.message)||(options.apiKey&&value.message.includes(options.apiKey)))throw new GuidanceError('invalid_request',400);
       const context=parseGuidanceContext(value.context);
       const budget=await readBudget(options.db!);if(!budget.initialized)throw new GuidanceError('budget_unavailable',503);if(budget.attempts>=MAX_ATTEMPTS)throw new GuidanceError('budget_exhausted',429);
-      const system=await buildGuidanceSystem(context,{db:options.db!,userId:options.identity.userId,qlooApiKey:options.qlooApiKey,fetcher:options.fetcher,signal:controller.signal});
+      const system=await buildGuidanceSystem(context,{db:options.db!,userId:options.identity.userId,fetcher:options.fetcher,signal:controller.signal});
       let message=value.message.trim();
       // Explicitly known personal fields are never forwarded even if pasted into the question.
       for(const personal of [options.identity.displayName,options.identity.email].filter((s):s is string=>Boolean(s&&s.length>2)))message=message.split(personal).join('[private detail]');
-      const text=await generateGuidance(message,system,{apiKey:options.apiKey!,db:options.db!,fetcher:options.fetcher,signal:controller.signal,timeoutMs:options.timeoutMs,additionalSecrets:options.qlooApiKey?[options.qlooApiKey]:[]});
+      const text=await generateGuidance(message,system,{apiKey:options.apiKey!,db:options.db!,fetcher:options.fetcher,signal:controller.signal,timeoutMs:options.timeoutMs});
       return json({source:'live',text});
     }finally{request.signal.removeEventListener('abort',abort);}
   }catch(error){const safe=error instanceof GuidanceError?error:new GuidanceError('unavailable',503);return json({code:safe.code,message:safe.message},safe.status);}

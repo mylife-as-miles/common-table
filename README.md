@@ -28,15 +28,14 @@ Provider keys are **server secrets**. Enter them in the Site's runtime environme
 
 | Secret | Purpose |
 | --- | --- |
-| `ANTHROPIC_API_KEY` | Live Waiter guidance |
-| `QLOO_API_KEY` | Real restaurant retrieval and ranking |
+| `ANTHROPIC_API_KEY` | Waiter guidance and restaurant selection/ranking |
 | `APP_OWNER_EMAIL` | Site owner permitted to enable and test paid guidance |
 
 The live Waiter uses `claude-sonnet-5-5`. It verifies the authorized Startrz organization and model before a paid request. An authenticated owner enables the one-time test allowance. Its persistent D1 ledger reserves five cents per attempt, up to 100 attempts and a hard total of $5. Reservations are never refunded after failed or uncertain network outcomes; there is no retry, top-up or automatic reload. A durable initialization marker prevents a missing ledger from silently reopening the allowance. The browser never receives provider credentials or model metadata. Configuration alone is not evidence of a successful live request.
 
-Qloo discovery is an explicit authenticated action. It uses the group's tastes, lowest budget tier, geography and vetoes, preserves provider candidate order, and returns real venue coordinates. Missing menus, exact costs and dietary guarantees remain unknown and require acknowledgement. There is no silent sample fallback after service failures. Persistent daily request limits bound discovery across Worker instances.
+Claude powers all recommendation intelligence and the Waiter. Discovery first retrieves named restaurants and cafés from real map records, then asks the same model to select and order only those verified place IDs using the group's tastes, budgets, restrictions and vetoes. Missing menus, prices, ratings, travel times and dietary guarantees stay unknown. The model cannot invent a venue, coordinate or reservation. There is no second taste/recommendation provider and no silent sample fallback after failures. Discovery and guidance share one persistent spending allowance. Old saved plans remain readable as unrefreshed archives; they are never silently presented as newly retrieved results.
 
-Weather uses a real keyless Open-Meteo forecast with coarse coordinates, local timezone, dinner date/hour, bounded caching and explicit stale/unavailable states. Device GPS remains session-only unless a user explicitly bookmarks a place. Legal source attribution is linked from the product.
+Weather uses real keyless forecasts with a second source when the primary is rate limited. It combines no invented observations, preserves unavailable fields as unknown, with coarse coordinates, local timezone, dinner date/hour, bounded caching and explicit stale/unavailable states. Device GPS remains session-only unless a user explicitly bookmarks a place. Legal source attribution is linked from the product.
 
 ## Shared tables and invitations
 
@@ -49,6 +48,10 @@ IndexedDB stores local plans, preferences, venue snapshots, searched areas, book
 ## Reservations
 
 The app offers a venue's published booking page or website as an explicit external handoff. The user completes and confirms the reservation with the restaurant. **An in-app confirmed reservation is not implemented**: it requires an authorized reservation-provider account, availability integration and booking transaction. No booking is fabricated, and saved plans are not reservations.
+
+## Bounded live verification
+
+A temporary `SERVICE_VERIFICATION` server secret can authorize exactly one fixed solo guidance check, one fixed discovery check and budget initialization. It expires, accepts no arbitrary prompts or private-table identifiers, has no shared-record permissions, and uses the same global $5 ledger as normal requests. The secret is removed after verification; with it absent the internal route returns 404. It is not a frontend credential or a visitor login.
 
 ## Verification boundaries
 
