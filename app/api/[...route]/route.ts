@@ -8,6 +8,7 @@ async function handleApiRequest(request:Request) {
     db:runtime.DB as Parameters<typeof handleServices>[1]['db'],
     apiKey:typeof runtime.ANTHROPIC_API_KEY==='string'?runtime.ANTHROPIC_API_KEY:undefined,
     ownerEmail:typeof runtime.APP_OWNER_EMAIL==='string'?runtime.APP_OWNER_EMAIL:undefined,
+    publicAiLimitKey:typeof runtime.AI_VISITOR_SIGNING_KEY==='string'?runtime.AI_VISITOR_SIGNING_KEY:undefined,
     verificationSecret:typeof runtime.SERVICE_VERIFICATION==='string'?runtime.SERVICE_VERIFICATION:undefined,
   });
 }

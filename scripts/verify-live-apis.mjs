@@ -4,7 +4,7 @@ import { resolve, join } from "node:path";
 // ACTUAL public deployment only. No fixtures, auth credentials, discovery calls,
 // invitations, reservations, budget enablement or valid paid-guidance questions.
 // Run: LIVE_APP_URL=https://your-published-site node --use-env-proxy scripts/verify-live-apis.mjs --services
-// Modes: --mapping (two public city lookups), --waiter (anonymous gates), --services
+// Modes: --mapping (two public city lookups), --waiter (public availability and invalid requests), --services
 // (weather + read-only shared-table gates). Missing service configuration is
 // reported as not_verified, never passed off as a successful live integration.
 const args = process.argv.slice(2);
@@ -63,15 +63,15 @@ if (phase === "mapping") {
 } else if (phase === "waiter") {
   const status = await check("Anonymous Waiter availability", "/api/waiter/status", {}, (response, body) => {
     if (response.status === 503) return notVerified({ liveGuidanceVerified: false, reason: "Guidance status explicitly unavailable.", code: code(body) });
-    if (response.status !== 200 || !["disabled", "sign_in"].includes(body?.mode) || body?.canEnable !== false) return fail({ mode: body?.mode ?? "unknown", reason: "Anonymous users must not receive enabled live or sample model service." });
-    return pass({ mode: body.mode, canEnable: false, liveGuidanceVerified: false, reason: "Anonymous availability is honest; no model call was attempted." });
+    if (response.status !== 200 || !["disabled", "live"].includes(body?.mode) || body?.canEnable !== false) return fail({ mode: body?.mode ?? "unknown", reason: "Public availability must report live or disabled without administrator setup permission." });
+    return pass({ mode: body.mode, canEnable: false, liveGuidanceVerified: false, reason: "Anonymous availability was read without a model call; live completion requires a separate bounded test." });
   });
   // Deliberately INVALID input can never reach a model, even if authentication
   // were regressed. A real successful completion is deliberately not tested.
-  await check("Anonymous reply POST cannot invoke guidance", "/api/waiter/reply", { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", "X-Common-Table-Request": "waiter" }, body: JSON.stringify({ message: "", context: {} }) }, (response, body) => {
-    if (response.status === 401 && code(body) === "authentication_required") return pass({ rejectedBeforeModel: true, validModelQuestionSent: false, observedMode: status.body?.mode ?? "unknown", liveGuidanceVerified: false });
-    if (response.status === 503 && code(body) === "unavailable") return notVerified({ validModelQuestionSent: false, liveGuidanceVerified: false, reason: "Guidance unavailable; anonymous authorization not independently verified." });
-    return fail({ code: code(body), reason: "Expected anonymous authentication rejection. The deliberately invalid request is incapable of a paid completion." });
+  await check("Invalid anonymous reply cannot invoke guidance", "/api/waiter/reply", { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", "X-Common-Table-Request": "waiter" }, body: JSON.stringify({ message: "", context: {} }) }, (response, body) => {
+    if (response.status === 400 && code(body) === "invalid_request") return pass({ rejectedBeforeModel: true, validModelQuestionSent: false, observedMode: status.body?.mode ?? "unknown", liveGuidanceVerified: false });
+    if (response.status === 503 && code(body) === "unavailable") return notVerified({ validModelQuestionSent: false, liveGuidanceVerified: false, reason: "Guidance unavailable; public completion remains unverified." });
+    return fail({ code: code(body), reason: "Expected invalid-input rejection. The deliberately invalid request is incapable of a paid completion." });
   });
   await check("Guidance origin gate", "/api/waiter/reply", { method: "POST", headers: { Origin: "https://verification.example.invalid", "Content-Type": "application/json", "X-Common-Table-Request": "waiter" }, body: "{}" }, (response, body) => response.status === 403 && code(body) === "origin_rejected" ? pass({ rejected: true }) : fail({ code: code(body) }));
   await check("Guidance GET does not submit a question", "/api/waiter/reply", {}, (response, body) => response.status === 405 && code(body) === "method_not_allowed" ? pass({ rejected: true }) : fail({ code: code(body) }));

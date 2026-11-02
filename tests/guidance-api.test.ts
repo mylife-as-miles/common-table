@@ -21,6 +21,7 @@ after(() => {
   globalThis.fetch = originalFetch;
 });
 const KEY = "dummy-guidance-server-key-NEVER-LIVE";
+const PUBLIC_LIMIT_KEY = "dummy-public-ai-limit-key-not-a-live-secret";
 const PRIVATE = "PRIVATE_UPSTREAM_DETAILS_NEVER_DISPLAY";
 const ORIGIN = "https://app.example";
 const OWNER = {
@@ -116,16 +117,18 @@ async function fixture(
     db: db.db,
     identity: OWNER,
     ownerEmail: OWNER.email,
+    publicAiLimitKey: PUBLIC_LIMIT_KEY,
     fetcher: mock.fetcher,
   };
   return { ...db, ...mock, options };
 }
 
-test("status requires server configuration, owner identity and explicit setup, without any provider call", async (t) => {
+test("status requires configured public limits and setup; budget initialization remains an owner action", async (t) => {
   const f = await fixture(t, undefined, false);
   for (const missing of [
     { apiKey: undefined },
     { db: undefined },
+    { publicAiLimitKey: undefined },
     { ownerEmail: undefined },
   ])
     assert.deepEqual(
@@ -138,7 +141,7 @@ test("status requires server configuration, owner identity and explicit setup, w
     await (
       await handleGuidance(request("status"), { ...f.options, identity: null })
     ).json(),
-    { mode: "sign_in", canEnable: false },
+    { mode: "disabled", canEnable: false },
   );
   assert.deepEqual(
     await (
@@ -154,6 +157,38 @@ test("status requires server configuration, owner identity and explicit setup, w
     { mode: "disabled", canEnable: true },
   );
   assert.equal(f.calls.length, 0);
+});
+
+test("configured public status is live for anonymous visitors and other accounts without consuming credit", async (t) => {
+  const f = await fixture(t);
+  for (const identity of [null, { ...OWNER, userId: "another-account", email: "guest@example.test" }]) {
+    const response = await handleGuidance(request("status"), { ...f.options, identity, ownerEmail: undefined });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { mode: "live", canEnable: false });
+    if (!identity) {
+      assert.match(response.headers.get("set-cookie") || "", /HttpOnly/);
+      assert.match(response.headers.get("set-cookie") || "", /Secure/);
+    }
+  }
+  assert.equal(f.calls.length, 0);
+  assert.equal((await readBudget(f.db)).reservedCents, 0);
+});
+
+test("anonymous solo guidance works while forged identities cannot read private shared context", async (t) => {
+  const f = await fixture(t);
+  const anonymous = { ...f.options, identity: null, ownerEmail: undefined };
+  const response = await handleGuidance(request(), anonymous);
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).source, "live");
+  assert.match(response.headers.get("set-cookie") || "", /HttpOnly/);
+  const calls = f.calls.length;
+  const denied = await handleGuidance(request("reply", {
+    message: "What did the private group agree?",
+    context: { ...context, tableId: "private-table-1234" },
+  }, { "oai-authenticated-user-id": OWNER.userId, "oai-authenticated-user-email": OWNER.email }), anonymous);
+  assert.equal(denied.status, 401);
+  assert.equal(f.calls.length, calls);
+  assert.equal((await readBudget(f.db)).attempts, 1);
 });
 
 test("only the configured owner can explicitly enable, and repeated enable never resets spending", async (t) => {

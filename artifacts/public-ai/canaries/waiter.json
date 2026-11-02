@@ -1,0 +1,101 @@
+{
+  "origin": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "phase": "waiter",
+  "checkedAt": "2026-11-02T06:10:20.482Z",
+  "historicalDefaultTargetUsed": true,
+  "requestsMocked": false,
+  "credentialsUsed": false,
+  "paidProviderCalls": 0,
+  "validGuidanceQuestionsSent": 0,
+  "sharedWrites": 0,
+  "invitationsCreated": 0,
+  "reservationRequests": 0,
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "notVerified": 1
+  },
+  "results": [
+    {
+      "name": "Published Common Table application",
+      "method": "GET",
+      "path": "/",
+      "httpStatus": 200,
+      "elapsedMs": 177,
+      "status": "pass",
+      "details": {
+        "actualHtml": true
+      }
+    },
+    {
+      "name": "Anonymous Waiter availability",
+      "method": "GET",
+      "path": "/api/waiter/status",
+      "httpStatus": 200,
+      "elapsedMs": 383,
+      "status": "pass",
+      "details": {
+        "mode": "live",
+        "canEnable": false,
+        "liveGuidanceVerified": false,
+        "reason": "Anonymous availability was read without a model call; live completion requires a separate bounded test."
+      }
+    },
+    {
+      "name": "Invalid anonymous reply cannot invoke guidance",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "httpStatus": 400,
+      "elapsedMs": 61,
+      "status": "pass",
+      "details": {
+        "rejectedBeforeModel": true,
+        "validModelQuestionSent": false,
+        "observedMode": "live",
+        "liveGuidanceVerified": false
+      }
+    },
+    {
+      "name": "Guidance origin gate",
+      "method": "POST",
+      "path": "/api/waiter/reply",
+      "httpStatus": 403,
+      "elapsedMs": 79,
+      "status": "pass",
+      "details": {
+        "rejected": true
+      }
+    },
+    {
+      "name": "Guidance GET does not submit a question",
+      "method": "GET",
+      "path": "/api/waiter/reply",
+      "httpStatus": 405,
+      "elapsedMs": 96,
+      "status": "pass",
+      "details": {
+        "rejected": true
+      }
+    },
+    {
+      "name": "Live guidance completion",
+      "status": "not_verified",
+      "details": {
+        "observedMode": "live",
+        "liveGuidanceVerified": false,
+        "reason": "No valid model question or guidance enablement was submitted."
+      }
+    },
+    {
+      "name": "Unknown service route is rejected",
+      "method": "GET",
+      "path": "/api/live-verification-not-a-route",
+      "httpStatus": 404,
+      "elapsedMs": 354,
+      "status": "pass",
+      "details": {
+        "rejected": true
+      }
+    }
+  ]
+}

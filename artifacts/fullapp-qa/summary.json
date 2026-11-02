@@ -1,6 +1,6 @@
 {
   "scope": "One complete production-preview batch on the retained current build, after OSM catalog migration, archive guards and real-place Local tips fixes.",
-  "completedAt": "2026-11-02T04:45:03.703Z",
+  "completedAt": "2026-11-02T06:13:45.515Z",
   "browser": {
     "scope": "One complete production-preview batch on the retained current build, after OSM catalog migration, archive guards and real-place Local tips fixes.",
     "baseCommit": "cba326a",
@@ -39,7 +39,7 @@
   ],
   "limits": [
     "Optional model/ranking/weather success responses in the browser suite are explicit fixtures; the root agent owns separate actual public API verification.",
-    "This QA made no paid model calls, external invitations, bookings, production shared writes or location sharing to others.",
+    "Local suites used fixtures and no paid calls. A later explicitly authorized signed-out public proof made exactly one actual Waiter request; this agent made no other paid request, production shared write, invitation, booking or location-sharing action.",
     "Authenticated multi-user protocol tests use isolated trusted synthetic identities; production authentication requires separate deployed-edge evidence.",
     "Server-only factual-retrieval fallback changes made after the retained preview build require their own mocked/live verification and do not change this frontend batch."
   ],
@@ -82,5 +82,101 @@
       "Missing/expired/wrong capabilities, invalid Bearer forms, operation arrays, arbitrary prompt/location/shared-table fields and operation replay reject.",
       "Temporary fixed-solo verification never reads shared records."
     ]
+  },
+  "publicAiFrontendValidation": {
+    "scope": "Public-AI frontend changes on production preview2107740; signed-out session and live service responses are explicit fixtures.",
+    "builtCommit": "2107740",
+    "total": 13,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 42880.567,
+    "retriesConfigured": 0,
+    "automatedWcagAandAAScans": 3,
+    "report": "browser-public-ai-focused.json",
+    "previousAttempt": {
+      "report": "browser-public-ai-focused-first.json",
+      "result": "12 passed; one new test incorrectly expected the folded book controls after Explore opened the actual map. Test now asserts real map readiness and uses its visible discovery control."
+    },
+    "verified": [
+      "Anonymous live guidance without sign-in or provider/identity headers",
+      "Repeated submit lock, cancel, fresh response and stale context removal",
+      "429 current-limit copy, no timing promise or raw upstream details, Local tips still usable",
+      "Anonymous discovery429 recovery, obsolete401 without auth wall and rejected redirect with zero external preference requests",
+      "Saved plan remains intact through discovery failure/recovery",
+      "Owner-only one-time bootstrap compatibility retained; stale enable permission clears",
+      "OSM catalog continuity, archived selection guard, real-place budget/diet honesty and provider-free UI labels"
+    ],
+    "limits": [
+      "The focused browser suite used fixtures and no paid requests. A later separately authorized public UI proof made exactly one actual Waiter request; no key was read.",
+      "Public server quota/security tests are separate from these browser response fixtures.",
+      "No production shared writes, invitations, bookings or location sharing were performed."
+    ],
+    "completedAt": "2026-11-02T06:13:45.515Z",
+    "actualPublicUiProof": {
+      "deployment": "v19",
+      "sourceCommit": "6f49268",
+      "scope": "One actual public Waiter question from a fresh signed-out browser. No API response fixtures or storage seeding.",
+      "report": "../public-ai-ui-v19/results.json",
+      "screenshot": "../public-ai-ui-v19/public-waiter-mobile.png",
+      "anonymous": true,
+      "status": {
+        "status": 200,
+        "mode": "live",
+        "canEnable": false
+      },
+      "quotaCookie": {
+        "httpOnly": true,
+        "secure": true,
+        "visibleToJavaScript": false,
+        "sentWithRequest": true
+      },
+      "actualWaiterPosts": 1,
+      "replyStatus": 200,
+      "replySource": "live",
+      "replyCharacters": 654,
+      "pageErrors": 0,
+      "badSiteAssets": 0,
+      "directBrowserProviderRequests": 0,
+      "productionSharedWrites": 0,
+      "bookings": 0,
+      "externalInvitations": 0,
+      "geolocationCalls": 0,
+      "retries": 0,
+      "finishedAt": "2026-11-02T06:11:43.102Z"
+    }
+  },
+  "actualPublicWaiterUiProof": {
+    "deployment": "v19",
+    "sourceCommit": "6f49268",
+    "scope": "One actual public Waiter question from a fresh signed-out browser. No API response fixtures or storage seeding.",
+    "report": "../public-ai-ui-v19/results.json",
+    "screenshot": "../public-ai-ui-v19/public-waiter-mobile.png",
+    "anonymous": true,
+    "status": {
+      "status": 200,
+      "mode": "live",
+      "canEnable": false
+    },
+    "quotaCookie": {
+      "httpOnly": true,
+      "secure": true,
+      "visibleToJavaScript": false,
+      "sentWithRequest": true
+    },
+    "actualWaiterPosts": 1,
+    "replyStatus": 200,
+    "replySource": "live",
+    "replyCharacters": 654,
+    "pageErrors": 0,
+    "badSiteAssets": 0,
+    "directBrowserProviderRequests": 0,
+    "productionSharedWrites": 0,
+    "bookings": 0,
+    "externalInvitations": 0,
+    "geolocationCalls": 0,
+    "retries": 0,
+    "finishedAt": "2026-11-02T06:11:43.102Z"
   }
 }

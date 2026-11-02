@@ -1101,14 +1101,11 @@ export function Waiter({
                       ? "Your question and table needs are used to prepare an answer. Guest names and map locations are excluded. Guidance cannot send invitations or confirm reservations."
                       : guidance.mode === "checking"
                         ? "Checking whether guidance is available…"
-                        : guidance.mode === "sign_in"
-                          ? "Sign in to ask The Waiter about your evening."
-                          : guidance.canEnable
+                      : guidance.canEnable
                             ? "Your table is ready for live guidance. Enable it to begin."
                             : "Thoughtful guidance is not available here yet. Local tips are ready to help."}
                 </p>
               )}
-              {requestService === "guidance" && guidance.mode === "sign_in" && <a className="text-button" target="_top" href={`/signin-with-chatgpt?return_to=${encodeURIComponent(location.pathname+location.search+location.hash)}`}>Sign in for guidance <ArrowUpRight size={14}/></a>}
               {requestService === "guidance" && guidance.canEnable && <button type="button" className="text-button" disabled={guidance.busy} onClick={() => void guidance.enable()}>Enable guidance <ArrowUpRight size={14}/></button>}
               <div className="cw-request-field">
                 <input

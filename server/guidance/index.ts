@@ -3,8 +3,9 @@ import { GuidanceError } from './errors.ts';
 import { readBudget, initializeBudget, MAX_ATTEMPTS } from './budget.ts';
 import { generateGuidance } from './client.ts';
 import { parseGuidanceContext, buildGuidanceSystem } from './context.ts';
-export interface GuidanceOptions {apiKey?:string;db?:SharedDatabase|null;identity:{userId:string;displayName:string;email?:string}|null;ownerEmail?:string;fetcher?:typeof fetch;timeoutMs?:number}
-const json=(payload:unknown,status=200,headers:Record<string,string>={})=>Response.json(payload,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Cross-Origin-Resource-Policy':'same-origin',...headers}});
+import { resolvePublicAiVisitor, reservePublicAiQuota } from '../public-ai.ts';
+export interface GuidanceOptions {apiKey?:string;db?:SharedDatabase|null;identity:{userId:string;displayName:string;email?:string}|null;ownerEmail?:string;publicAiLimitKey?:string;fetcher?:typeof fetch;timeoutMs?:number}
+const responseJson=(payload:unknown,status=200,headers:Record<string,string>={})=>Response.json(payload,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Cross-Origin-Resource-Policy':'same-origin',...headers}});
 const record=(v:unknown):v is Record<string,unknown>=>Boolean(v&&typeof v==='object'&&!Array.isArray(v));
 const email=(v:unknown)=>typeof v==='string'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())?v.trim().toLowerCase():'';
 function enforceOrigin(request:Request,required:boolean){
@@ -29,23 +30,25 @@ async function body(request:Request,signal:AbortSignal):Promise<Record<string,un
 /** Identity is supplied by the authenticated server wrapper, never by request headers or JSON. */
 export async function handleGuidance(request:Request,options:GuidanceOptions):Promise<Response>{
   let timer:ReturnType<typeof setTimeout>|undefined;
+  let visitorCookie:string|undefined;
+  const json=(payload:unknown,status=200,headers:Record<string,string>={})=>responseJson(payload,status,{...headers,...(visitorCookie?{'Set-Cookie':visitorCookie}:{})});
   try{
     const url=new URL(request.url),isStatus=url.pathname==='/api/waiter/status',isEnable=url.pathname==='/api/waiter/enable';
     if(!isStatus&&!isEnable&&url.pathname!=='/api/waiter/reply')throw new GuidanceError('not_found',404);
     if(url.search||url.hash)throw new GuidanceError('invalid_request',400);
     if(request.method!==(isStatus?'GET':'POST'))return json({code:'method_not_allowed',message:'Use the supported action for this route.'},405,{Allow:isStatus?'GET':'POST'});
     enforceOrigin(request,!isStatus);
-    const configured=Boolean(options.apiKey?.trim()&&options.db&&email(options.ownerEmail));
+    const configured=Boolean(options.apiKey?.trim()&&options.db&&options.publicAiLimitKey?.trim());
     const owner=Boolean(options.identity&&email(options.identity.email)&&email(options.identity.email)===email(options.ownerEmail));
     if(isStatus){
       if(!configured)return json({mode:'disabled',canEnable:false});
-      if(!options.identity)return json({mode:'sign_in',canEnable:false});
-      if(!owner)return json({mode:'disabled',canEnable:false});
-      const state=await readBudget(options.db!);return json({mode:state.initialized&&state.attempts<MAX_ATTEMPTS?'live':'disabled',canEnable:!state.initialized});
+      const state=await readBudget(options.db!);
+      if(state.initialized&&state.attempts<MAX_ATTEMPTS){const visitor=await resolvePublicAiVisitor(request,{secret:options.publicAiLimitKey!,identity:options.identity});visitorCookie=visitor.setCookie;}
+      return json({mode:state.initialized&&state.attempts<MAX_ATTEMPTS?'live':'disabled',canEnable:owner&&!state.initialized});
     }
-    if(!options.identity)throw new GuidanceError('authentication_required',401);
     if(!configured)throw new GuidanceError('unavailable',503);
-    if(!owner)throw new GuidanceError('forbidden',403);
+    if(isEnable&&!options.identity)throw new GuidanceError('authentication_required',401);
+    if(isEnable&&!owner)throw new GuidanceError('forbidden',403);
     const controller=new AbortController();const abort=()=>controller.abort(new GuidanceError('cancelled',499));request.signal.addEventListener('abort',abort,{once:true});
     timer=setTimeout(()=>controller.abort(new GuidanceError('timeout',504)),25_000);if(request.signal.aborted)abort();
     try{
@@ -53,11 +56,14 @@ export async function handleGuidance(request:Request,options:GuidanceOptions):Pr
       if(isEnable){if(Object.keys(value).length)throw new GuidanceError('invalid_request',400);const state=await initializeBudget(options.db!);return json({enabled:true,mode:state.attempts<MAX_ATTEMPTS?'live':'disabled'});}
       if(Object.keys(value).length!==2||typeof value.message!=='string'||!value.message.trim()||value.message.length>600||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value.message)||/sk-ant-[\w-]{10,}/.test(value.message)||(options.apiKey&&value.message.includes(options.apiKey)))throw new GuidanceError('invalid_request',400);
       const context=parseGuidanceContext(value.context);
+      if(context.tableId&&!options.identity)throw new GuidanceError('authentication_required',401);
       const budget=await readBudget(options.db!);if(!budget.initialized)throw new GuidanceError('budget_unavailable',503);if(budget.attempts>=MAX_ATTEMPTS)throw new GuidanceError('budget_exhausted',429);
-      const system=await buildGuidanceSystem(context,{db:options.db!,userId:options.identity.userId,fetcher:options.fetcher,signal:controller.signal});
+      const visitor=await resolvePublicAiVisitor(request,{secret:options.publicAiLimitKey!,identity:options.identity});visitorCookie=visitor.setCookie;
+      if(!await reservePublicAiQuota(options.db!,visitor.quotaKey))throw new GuidanceError('rate_limited',429);
+      const system=await buildGuidanceSystem(context,{db:options.db!,userId:options.identity?.userId??'',fetcher:options.fetcher,signal:controller.signal});
       let message=value.message.trim();
       // Explicitly known personal fields are never forwarded even if pasted into the question.
-      for(const personal of [options.identity.displayName,options.identity.email].filter((s):s is string=>Boolean(s&&s.length>2)))message=message.split(personal).join('[private detail]');
+      for(const personal of [options.identity?.displayName,options.identity?.email].filter((s):s is string=>Boolean(s&&s.length>2)))message=message.split(personal).join('[private detail]');
       const text=await generateGuidance(message,system,{apiKey:options.apiKey!,db:options.db!,fetcher:options.fetcher,signal:controller.signal,timeoutMs:options.timeoutMs});
       return json({source:'live',text});
     }finally{request.signal.removeEventListener('abort',abort);}

@@ -1,5 +1,9 @@
 # Service integration verification
 
+Current public access is verified on published version 19. Signed-out visitors can use live guidance and restaurant ranking; see [public verification](../public-ai/verification.json) and the [actual public Waiter capture](../public-ai-ui-v19/results.json). The private-table boundary and shared $5 cap remain enforced.
+
+## Previous version 18 verification
+
 Published version 18 uses Claude Sonnet 5.5 for both The Waiter and restaurant selection/ranking. The previous recommendation integration and its server key are removed. Product UI uses only the companion and discovery names. Native Sites stores the model credential as a masked server secret; it is never sent to the browser or IndexedDB.
 
 The published source is `bae4438b77050530a38a6545802b2a2d1de7bed0`. Actual production checks returned HTTP 200 for a sample Waiter answer, a cold-cache real-restaurant answer, eight model-ranked real nearby places, and weather. See `claude-only-live.json` for exact versions, responses, failed initial attempts, the final deployment and the spending ledger. The weather check predates the backend-only ranking fix; its implementation was unchanged.

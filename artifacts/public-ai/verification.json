@@ -1,0 +1,73 @@
+{
+  "checkedAt": "2026-11-02T06:13:58.569Z",
+  "site": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+  "publishedVersion": 19,
+  "sourceCommit": "6f49268904478d55a1031e36f3dfd51cfa9a0323",
+  "deployment": {
+    "id": "appgdep_6ae8291172ec8191b2b99d987d056178",
+    "project_id": "appgprj_6ae3844c39308191844738fe4334ad14",
+    "title": "Common Table — Interactive Dining Demo",
+    "version_id": "appgprj_6ae3844c39308191844738fe4334ad14~appgver_aa287570b86c81918643e483b7cab6c4",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://common-table-design-20261029.myles4miles.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6ae3844c39308191844738fe4334ad14",
+    "failure_message": null,
+    "env_set_revision": 8,
+    "updated_at": "2026-11-02T06:09:37.762085+00:00"
+  },
+  "access": {
+    "siteAudience": "public",
+    "anonymousGuidance": "confirmed_real_UI_reply",
+    "anonymousRecommendations": "confirmed_HTTP_200_eight_real_places",
+    "ownerSignInRequired": false,
+    "privateSharedTablesRequireAuthenticationAndMembership": true
+  },
+  "fairUse": {
+    "requestsPerVisitorPerUtcDay": 5,
+    "globalRequestsPerMinute": 6,
+    "guestMarker": "Signed Secure HttpOnly SameSite cookie, never authentication",
+    "anonymousCookieClearing": "May change the soft visitor marker; global budget remains the hard spending bound."
+  },
+  "budgetBefore": [
+    {
+      "scope": "global-test-v1",
+      "cap_cents": 500,
+      "reserved_cents": 20,
+      "attempts": 4,
+      "updated_at": 1793595150520
+    }
+  ],
+  "budgetAfter": [
+    {
+      "scope": "global-test-v1",
+      "cap_cents": 500,
+      "reserved_cents": 30,
+      "attempts": 6,
+      "updated_at": 1793599899615
+    }
+  ],
+  "checks": {
+    "unitPassed": 236,
+    "unitFailed": 0,
+    "focusedBrowserPassed": 13,
+    "focusedBrowserFailed": 0,
+    "focusedAccessibilityScans": 3,
+    "appAndServerTypeChecks": "passed",
+    "targetedLint": "passed",
+    "productionBuild": "passed",
+    "anonymousDiscovery": "live-discovery.json",
+    "actualSignedOutWaiter": "../public-ai-ui-v19/results.json",
+    "privateIngressAndWeatherCanary": "canaries/services.json",
+    "publicAvailabilityAndInvalidRequestCanary": "canaries/waiter.json"
+  },
+  "notes": [
+    "Exactly two new live generation requests were authorized and confirmed: one public restaurant ranking and one public Waiter UI reply. The total ledger rose from20 to30 cents reserved; it does not report exact billing.",
+    "Public access does not grant membership or access to private tables. Actual ingress ignored forged reserved identity headers and denied anonymous private-table reads.",
+    "Only quota markers are signed in the browser cookie. Provider and signing keys remain masked server secrets, absent from client code and IndexedDB.",
+    "No budget reset, top-up, automatic retry, reload, invitation delivery, location sharing or reservation occurred.",
+    "Private two-person production collaboration remains unverified; bookings remain explicit venue-site handoffs."
+  ]
+}

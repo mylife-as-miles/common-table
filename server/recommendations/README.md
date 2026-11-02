@@ -1,6 +1,6 @@
 # Factual restaurant discovery, ranked by the companion
 
-`handleRecommendations(request,{apiKey,db,identity,ownerEmail,fetcher?})` is authenticated owner-only. The existing test allowance must already be explicitly enabled. Ranking shares the same 500-cent D1 cap and irrevocable five-cent reservations as The Waiter; there is no second allowance or top-up.
+`handleRecommendations(request,{apiKey,db,identity,publicAiLimitKey,fetcher?})` is public, including anonymous visitors. A signed HttpOnly fair-use marker or a stable hashed authenticated-account key limits use; it grants no private-record access. The existing test allowance must already be explicitly enabled. Ranking shares the same 500-cent D1 cap and irrevocable five-cent reservations as The Waiter; there is no second allowance or top-up. Discovery and The Waiter share five requests per visitor per UTC day and six globally per minute, enforced by persistent D1 counters.
 
 ## Working public map source
 
